@@ -29,10 +29,10 @@ const Users = () => {
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
 
-  const tokenString = localStorage.getItem('token');
-  const userToken = JSON.parse(tokenString);
-  console.log(userToken)
-  console.log(tokenString)
+  // const tokenString = localStorage.getItem('token');
+  // const userToken = JSON.parse(tokenString);
+  // console.log(userToken)
+  // console.log(userToken)
 
   const handleSearch = async (values) => {
 
@@ -42,7 +42,7 @@ const Users = () => {
       },
         {
           headers: {
-            Authorization: `Bearer ${userToken}`,
+            //Authorization: `Bearer ${userToken}`,
             "Content-Type": "application/json",
             "language": "tr-TR", // veya "en-US" gibi
             "version":"panel"
