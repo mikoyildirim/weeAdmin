@@ -1,0 +1,7 @@
+import React from "react";
+
+const PageName = () => {
+  return <h1>PAGE TITLE</h1>;
+};
+
+export default PageName;
