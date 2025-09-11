@@ -20,7 +20,7 @@ const MainLayout = ({ children }) => {
   const navigate = useNavigate();
 
   const menuItems = [
-    { key: "/panel", icon: <DashboardOutlined />, label: "Dashboard" },
+    { key: "/panel", icon: <DashboardOutlined />, label: "AnaSayfa" },
 
     {
       key: "raporlar",
