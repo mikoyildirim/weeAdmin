@@ -1,9 +1,11 @@
-import React from "react";
+// src/App.js
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { loadUserFromStorage } from "./store/userSlice";
+
 import MainLayout from "./layouts/MainLayout";
 import Login from "./pages/Login";
-
-// Sayfaları import et
 import Dashboard from "./pages/Dashboard";
 
 // Reports
@@ -41,63 +43,59 @@ import Fraud from "./pages/Management/Fraud";
 import Rentals from "./pages/Rentals";
 
 function App() {
-  const token = localStorage.getItem("token");
+  const token = useSelector((state) => state.user.token);
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        {/* Login */}
+        <Route path="/login" element={!token ? <Login /> : <Navigate to="/panel/dashboard" />} />
 
-        <Route
-          path="/panel/*"
-          element={
-            token ? (
-              <MainLayout>
-                <Routes>
-                  <Route path="" element={<Dashboard />} />
+        {/* Panel ve nested routes */}
+        <Route path="/panel/*" element={token ? <MainLayout /> : <Navigate to="/login" />}>
+          {/* /panel → /panel/dashboard yönlendirme */}
+          <Route index element={<Navigate to="dashboard" replace />} />
 
-                  {/* Reports */}
-                  <Route path="reports/rentals" element={<RentalsReport />} />
-                  <Route path="reports/weepuan" element={<WeePuanReport />} />
-                  <Route path="reports/transactions" element={<TransactionsReport />} />
-                  <Route path="reports/staff" element={<StaffReport />} />
+          {/* Dashboard */}
+          <Route path="dashboard" element={<Dashboard />} />
 
-                  {/* Maps */}
-                  <Route path="maps/active" element={<ActiveMap />} />
-                  <Route path="maps/passive" element={<PassiveMap />} />
-                  <Route path="maps/lost" element={<LostMap />} />
-                  <Route path="maps/polygons" element={<Polygons />} />
-                  <Route path="maps/heatmap" element={<Heatmap />} />
-                  <Route path="maps/distribution" element={<Distribution />} />
+          {/* Reports */}
+          <Route path="reports/rentals" element={<RentalsReport />} />
+          <Route path="reports/weepuan" element={<WeePuanReport />} />
+          <Route path="reports/transactions" element={<TransactionsReport />} />
+          <Route path="reports/staff" element={<StaffReport />} />
 
-                  {/* Devices */}
-                  <Route path="devices/active" element={<ActiveDevices />} />
-                  <Route path="devices/passive" element={<PassiveDevices />} />
-                  <Route path="devices/unused" element={<UnusedDevices />} />
-                  <Route path="devices/all" element={<DeviceManagement />} />
+          {/* Maps */}
+          <Route path="maps/active" element={<ActiveMap />} />
+          <Route path="maps/passive" element={<PassiveMap />} />
+          <Route path="maps/lost" element={<LostMap />} />
+          <Route path="maps/polygons" element={<Polygons />} />
+          <Route path="maps/heatmap" element={<Heatmap />} />
+          <Route path="maps/distribution" element={<Distribution />} />
 
-                  {/* Users */}
-                  <Route path="users" element={<Users />} />
-                  <Route path="users/negative" element={<NegativeUsers />} />
+          {/* Devices */}
+          <Route path="devices/active" element={<ActiveDevices />} />
+          <Route path="devices/passive" element={<PassiveDevices />} />
+          <Route path="devices/unused" element={<UnusedDevices />} />
+          <Route path="devices/all" element={<DeviceManagement />} />
 
-                  {/* Others */}
-                  <Route path="calls" element={<Calls />} />
-                  <Route path="supports" element={<Supports />} />
-                  <Route path="management/campaigns" element={<Campaigns />} />
-                  <Route path="management/financial" element={<Financial />} />
-                  <Route path="management/notifications" element={<Notifications />} />
-                  <Route path="management/staff" element={<Staff />} />
-                  <Route path="management/fraud" element={<Fraud />} />
-                  <Route path="rentals" element={<Rentals />} />
-                </Routes>
-              </MainLayout>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
+          {/* Users */}
+          <Route path="users" element={<Users />} />
+          <Route path="users/negative" element={<NegativeUsers />} />
 
-        <Route path="*" element={<Navigate to={token ? "/panel" : "/login"} />} />
+          {/* Others */}
+          <Route path="calls" element={<Calls />} />
+          <Route path="supports" element={<Supports />} />
+          <Route path="management/campaigns" element={<Campaigns />} />
+          <Route path="management/financial" element={<Financial />} />
+          <Route path="management/notifications" element={<Notifications />} />
+          <Route path="management/staff" element={<Staff />} />
+          <Route path="management/fraud" element={<Fraud />} />
+          <Route path="rentals" element={<Rentals />} />
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to={token ? "/panel/dashboard" : "/login"} />} />
       </Routes>
     </Router>
   );

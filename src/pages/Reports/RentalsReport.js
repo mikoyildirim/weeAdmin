@@ -12,6 +12,36 @@ const RentalsReport = () => {
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
 
+  // Cities'i backend'den veya mock ile çek
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        let cityList = [];
+        try {
+          const res = await axios.get("/cities/list"); // backend cities endpoint
+          cityList = res.data || [];
+        } catch (err) {
+          // Backend yoksa mock data
+          cityList = ["Sivas", "Ankara", "Istanbul"];
+        }
+        setCities(cityList);
+
+        // localStorage'daki permissions.city değerlerini default seçili yap
+        const permissions = JSON.parse(localStorage.getItem("permissions") || "{}");
+        if (permissions.city) {
+          const defaultCities = Array.isArray(permissions.city) ? permissions.city : [permissions.city];
+          // sadece backend veya mock'tan gelen şehirler içinde olanları seç
+          const validCities = defaultCities.filter(city => cityList.includes(city));
+          setSelectedCities(validCities);
+        }
+      } catch (err) {
+        message.error("Şehirler alınamadı!");
+      }
+    };
+
+    fetchCities();
+  }, []);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -23,7 +53,6 @@ const RentalsReport = () => {
           cities: selectedCities,
         }
       );
-
       setData(response.data || []);
     } catch (error) {
       message.error("Veri alınırken hata oluştu!");
@@ -32,10 +61,12 @@ const RentalsReport = () => {
     }
   };
 
-  // Sayfa ilk açıldığında veriyi çek
+  // cities geldiğinde ilk veriyi çek
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (cities.length > 0) {
+      fetchData();
+    }
+  }, [cities]);
 
   const columns = [
     {
@@ -56,7 +87,7 @@ const RentalsReport = () => {
   ];
 
   return (
-    <Card title="Kiralama Raporları" bordered={false}>
+    <Card title="Kiralama Raporları" variant="outlined">
       <div style={{ marginBottom: 16, display: "flex", gap: "8px" }}>
         <RangePicker
           value={dates}
@@ -80,7 +111,7 @@ const RentalsReport = () => {
         columns={columns}
         dataSource={data}
         loading={loading}
-        rowKey={(record, index) => index}
+        rowKey={(record) => `${record.date}-${record.city}`} // benzersiz key
       />
     </Card>
   );

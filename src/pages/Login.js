@@ -1,62 +1,102 @@
-import React from "react";
-import { Form, Input, Button, message, Card, Typography } from "antd";
+// src/pages/Login.js
+import React, { useState } from "react";
+import { Form, Input, Button, message, Card, Typography, Spin } from "antd";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { loginSuccess } from "../store/userSlice";
+import { setUser } from "../store/userSlice";
 
 const { Title } = Typography;
 
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
 
-const onFinish = async (values) => {
-  try {
-    const response = await axios.post("/users/login", values);
-    const user = response.data.user || response.data;
-    const token = response.data.token;
+  const onFinish = async (values) => {
+    setLoading(true);
 
-    dispatch(loginSuccess({ user, token }));
+    try {
+      const response = await axios.post("/users/login", values);
+      console.log("Login response data:", response.data);
 
-    message.success(`Hoşgeldiniz ${user.name || "Kullanıcı"}`);
-    navigate("/panel");  // ✅ Dashboard'a yönlendir
-  } catch (err) {
-    message.error("Email veya şifre hatalı");
-    console.error(err);
-  }
-};
+      if (response.status === 200 && response.data.accessToken) {
+        // Yapay 2-3 saniye bekleme
+        setTimeout(() => {
+          dispatch(
+            setUser({
+              user: {
+                name: response.data.name,
+                email: response.data.email,
+                gsm: response.data.gsm,
+                user_type: response.data.user_type,
+                permissions: response.data.permissions,
+              },
+              token: response.data.accessToken,
+              refreshToken: response.data.refreshToken,
+            })
+          );
+
+          message.success("Giriş başarılı!");
+          navigate("/panel/dashboard");
+          setLoading(false);
+        }, 1500); // 1.5 saniye bekleme sağlıkı veri için
+      } else {
+        message.error("Giriş başarısız!");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error(error);
+      if (error.response?.status === 401) {
+        message.error("Kullanıcı adı veya şifre hatalı!");
+      } else {
+        message.error("Sunucu hatası. Lütfen tekrar deneyin.");
+      }
+      setLoading(false);
+    }
+  };
 
   return (
-    <div style={{display:"flex",justifyContent:"center",alignItems:"center",height:"100vh",background:"#f0f2f5",padding:16}}>
-      <Card style={{ width: 400, padding: 24, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-        <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
-          Wee Scooter Panel
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+      }}
+    >
+      <Card style={{ width: 400 }}>
+        <Title level={3} style={{ textAlign: "center" }}>
+          Giriş Yap
         </Title>
-
-        <Form onFinish={onFinish} layout="vertical">
+        <Form name="login" onFinish={onFinish} layout="vertical">
           <Form.Item
+            label="E-posta"
             name="email"
-            label="Email"
-            rules={[{ required: true, message: "Lütfen email girin" }]}
+            rules={[{ required: true, message: "Lütfen e-posta giriniz!" }]}
           >
-            <Input placeholder="Email" />
+            <Input disabled={loading} />
           </Form.Item>
 
           <Form.Item
-            name="password"
             label="Şifre"
-            rules={[{ required: true, message: "Lütfen şifre girin" }]}
+            name="password"
+            rules={[{ required: true, message: "Lütfen şifre giriniz!" }]}
           >
-            <Input.Password placeholder="Şifre" />
+            <Input.Password disabled={loading} />
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button type="primary" htmlType="submit" block loading={loading}>
               Giriş Yap
             </Button>
           </Form.Item>
         </Form>
+        {loading && (
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <Spin tip="Giriş yapılıyor..." />
+          </div>
+        )}
       </Card>
     </div>
   );
