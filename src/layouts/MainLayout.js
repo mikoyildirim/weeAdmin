@@ -1,6 +1,6 @@
 // src/layouts/MainLayout.js
-import React from "react";
-import { Layout, Menu, Dropdown, Avatar } from "antd";
+import React, { useState } from "react";
+import { Layout, Menu, Dropdown, Avatar, Button } from "antd";
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -12,6 +12,8 @@ import {
   SettingOutlined,
   LogoutOutlined,
   UserOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,6 +26,10 @@ const MainLayout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
+
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleCollapsed = () => setCollapsed(!collapsed);
 
   const menuItems = [
     { key: "/panel/dashboard", icon: <DashboardOutlined />, label: "Ana Sayfa" },
@@ -94,11 +100,7 @@ const MainLayout = () => {
 
   const userMenu = {
     items: [
-      {
-        key: "profile",
-        label: "Profil",
-        icon: <UserOutlined />,
-      },
+      { key: "profile", label: "Profil", icon: <UserOutlined /> },
       {
         key: "logout",
         label: "Çıkış Yap",
@@ -113,7 +115,16 @@ const MainLayout = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider theme="dark" width={220} style={{ boxShadow: "2px 0 6px rgba(0,0,0,0.1)" }}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        breakpoint="lg"
+        collapsedWidth="0"
+        theme="dark"
+        width={220}
+        style={{ boxShadow: "2px 0 6px rgba(0,0,0,0.1)" }}
+      >
         <div
           className="logo"
           style={{
@@ -146,7 +157,15 @@ const MainLayout = () => {
             boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
           }}
         >
-          <div style={{ fontWeight: "bold", fontSize: 16 }}>Yönetim Paneli</div>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={toggleCollapsed}
+              style={{ fontSize: 18, marginRight: 16 }}
+            />
+            <span style={{ fontWeight: "bold", fontSize: 16 }}>Yönetim Paneli</span>
+          </div>
           <Dropdown menu={userMenu} placement="bottomRight">
             <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
               <Avatar style={{ backgroundColor: "#1890ff", marginRight: 8 }} icon={<UserOutlined />} />
