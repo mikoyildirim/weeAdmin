@@ -1,6 +1,6 @@
 // src/layouts/MainLayout.js
 import React, { useState } from "react";
-import { Layout, Menu, Avatar, Dropdown, Button } from "antd";
+import { Layout, Menu, Avatar, Dropdown, Button, Grid } from "antd";
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/userSlice";
 
 const { Sider, Content, Header } = Layout;
+const { useBreakpoint } = Grid;
 
 const MainLayout = () => {
   const navigate = useNavigate();
@@ -28,6 +29,8 @@ const MainLayout = () => {
   const user = useSelector((state) => state.user.user);
 
   const [collapsed, setCollapsed] = useState(false);
+  const screens = useBreakpoint();
+
   const toggleCollapsed = () => setCollapsed(!collapsed);
 
   const menuItems = [
@@ -97,7 +100,6 @@ const MainLayout = () => {
 
   const userMenu = {
     items: [
-      { key: "profile", label: "Profil", icon: <UserOutlined /> },
       {
         key: "logout",
         label: "Çıkış Yap",
@@ -118,6 +120,11 @@ const MainLayout = () => {
         collapsed={collapsed}
         onCollapse={setCollapsed}
         width={220}
+        breakpoint="lg"
+        collapsedWidth={screens.lg ? 80 : 0}
+        onBreakpoint={(broken) => {
+          if (!broken) setCollapsed(false);
+        }}
         style={{ background: "#001529" }}
       >
         <div
@@ -150,7 +157,7 @@ const MainLayout = () => {
         <Header
           style={{
             background: "#fff",
-            padding: "0 24px",
+            padding: "0 16px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -164,7 +171,6 @@ const MainLayout = () => {
               onClick={toggleCollapsed}
               style={{ fontSize: 18, marginRight: 16 }}
             />
-            <span style={{ fontWeight: 500, fontSize: 16 }}>Yönetim Paneli</span>
           </div>
           <Dropdown menu={userMenu} placement="bottomRight">
             <div
@@ -182,17 +188,13 @@ const MainLayout = () => {
         </Header>
 
         {/* Content */}
-        <Content style={{ margin: 16 }}>
-          <div
-            style={{
-              background: "#f0f2f5",
-              padding: 24,
-              minHeight: "calc(100vh - 64px)",
-              borderRadius: 8,
-            }}
-          >
-            <Outlet />
-          </div>
+        <Content
+          style={{
+            margin: screens.xs ? 0 : 16,
+            minHeight: "calc(100vh - 64px)",
+          }}
+        >
+          <Outlet />
         </Content>
       </Layout>
     </Layout>
