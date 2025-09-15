@@ -165,8 +165,8 @@ const Dashboard = () => {
 
       {/* Rentals Kartı */}
       <Col xs={24} sm={12} md={12} lg={6}>
-        <Card hoverable style={cardStyle}>
-          <Tabs defaultActiveKey="daily" onChange={(key) => fetchRentals(key)}>
+        <Card hoverable style={cardStyle} >
+          <Tabs defaultActiveKey="daily" onChange={(key) => fetchRentals(key)} style={{ justifyContent: 'center' }}>
             <TabPane tab="Günlük" key="daily">
               {loadingRentals ? <Spin /> : <Title level={3}>{dailyTotal}</Title>}
             </TabPane>

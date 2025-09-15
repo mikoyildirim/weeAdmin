@@ -1,6 +1,6 @@
 // src/layouts/MainLayout.js
 import React, { useState } from "react";
-import { Layout, Menu, Dropdown, Avatar, Button } from "antd";
+import { Layout, Menu, Avatar, Dropdown, Button } from "antd";
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -28,7 +28,6 @@ const MainLayout = () => {
   const user = useSelector((state) => state.user.user);
 
   const [collapsed, setCollapsed] = useState(false);
-
   const toggleCollapsed = () => setCollapsed(!collapsed);
 
   const menuItems = [
@@ -94,9 +93,7 @@ const MainLayout = () => {
     { key: "/panel/rentals", icon: <FileTextOutlined />, label: "Aktif Kiralamalar" },
   ];
 
-  const handleMenuClick = ({ key }) => {
-    navigate(key);
-  };
+  const handleMenuClick = ({ key }) => navigate(key);
 
   const userMenu = {
     items: [
@@ -115,25 +112,24 @@ const MainLayout = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      {/* Sidebar */}
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
-        breakpoint="lg"
-        collapsedWidth="0"
-        theme="dark"
         width={220}
-        style={{ boxShadow: "2px 0 6px rgba(0,0,0,0.1)" }}
+        style={{ background: "#001529" }}
       >
         <div
-          className="logo"
           style={{
+            height: 64,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             color: "#fff",
-            padding: "16px",
             fontWeight: "bold",
             fontSize: 18,
-            textAlign: "center",
-            borderBottom: "1px solid rgba(255,255,255,0.2)",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
           }}
         >
           WeeScooter
@@ -144,9 +140,13 @@ const MainLayout = () => {
           selectedKeys={[location.pathname]}
           onClick={handleMenuClick}
           items={menuItems}
+          style={{ borderRight: 0 }}
         />
       </Sider>
+
+      {/* Main layout */}
       <Layout>
+        {/* Header */}
         <Header
           style={{
             background: "#fff",
@@ -154,7 +154,7 @@ const MainLayout = () => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -164,23 +164,31 @@ const MainLayout = () => {
               onClick={toggleCollapsed}
               style={{ fontSize: 18, marginRight: 16 }}
             />
-            <span style={{ fontWeight: "bold", fontSize: 16 }}>Yönetim Paneli</span>
+            <span style={{ fontWeight: 500, fontSize: 16 }}>Yönetim Paneli</span>
           </div>
           <Dropdown menu={userMenu} placement="bottomRight">
-            <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
-              <Avatar style={{ backgroundColor: "#1890ff", marginRight: 8 }} icon={<UserOutlined />} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+                gap: 8,
+              }}
+            >
+              <Avatar style={{ backgroundColor: "#1890ff" }} icon={<UserOutlined />} />
               <span>{user?.name || "Admin"}</span>
             </div>
           </Dropdown>
         </Header>
-        <Content style={{ margin: "16px", background: "#f5f6fa", minHeight: "calc(100vh - 64px)" }}>
+
+        {/* Content */}
+        <Content style={{ margin: 16 }}>
           <div
             style={{
-              background: "#fff",
-              padding: "24px",
-              borderRadius: "8px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-              minHeight: "100%",
+              background: "#f0f2f5",
+              padding: 24,
+              minHeight: "calc(100vh - 64px)",
+              borderRadius: 8,
             }}
           >
             <Outlet />
