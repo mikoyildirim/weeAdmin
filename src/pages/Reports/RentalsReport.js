@@ -20,33 +20,29 @@ const RentalsReport = () => {
 
   // Cities'i backend'den veya mock ile çek
   useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        let cityList = [];
-        try {
-          const res = await axios.get("/cities/list"); // backend cities endpoint
-          cityList = res.data || [];
-        } catch (err) {
-          // Backend yoksa mock data
-          cityList = ["Sivas", "Ankara", "Istanbul"];
-        }
-        setCities(cityList);
-
-        // localStorage'daki permissions.city değerlerini default seçili yap
-        const permissions = JSON.parse(localStorage.getItem("permissions") || "{}");
-        if (permissions.city) {
-          const defaultCities = Array.isArray(permissions.city) ? permissions.city : [permissions.city];
-          // sadece backend veya mock'tan gelen şehirler içinde olanları seç
-          const validCities = defaultCities.filter(city => cityList.includes(city));
-          setSelectedCities(validCities);
-        }
-      } catch (err) {
-        message.error("Şehirler alınamadı!");
-      }
-    };
-
     fetchCities();
+    fetchData() // sayfayı açar açmaz kullanıcının erişim izni olan şehirlere ait kiralama raporunu ekrana basması için eklendi
   }, []);
+  
+  const fetchCities = async () => {
+    try {
+      let cityList = locations;
+      setCities(cityList);
+      if (locations) {
+        const defaultCities = Array.isArray(locations) ? locations : [locations];
+        // sadece backend veya mock'tan gelen şehirler içinde olanları seç
+        const validCities = defaultCities.filter(city => cityList.includes(city));
+        console.log(validCities)
+        setSelectedCities(validCities);
+      }
+
+      setSelectedCities(selectedCities => [...selectedCities])
+
+    } catch (err) {
+      message.error("Şehirler alınamadı!");
+    }
+  };
+
 
   const fetchData = async () => {
     setLoading(true);
