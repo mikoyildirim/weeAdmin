@@ -18,7 +18,7 @@ const RentalsReport = () => {
       try {
         let cityList = [];
         try {
-          const res = await axios.get("/cities/list"); // backend cities endpoint
+          const res = await axios.get(""); // backend cities endpoint
           cityList = res.data || [];
         } catch (err) {
           // Backend yoksa mock data
