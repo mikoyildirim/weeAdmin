@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, DatePicker, Button, Select, message, Card, ConfigProvider } from "antd";
+import { Space, Table, DatePicker, Button, Select, message, Card, ConfigProvider, Col, Row } from "antd";
 import axios from "../../api/axios"; // senin axios instance
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
@@ -130,41 +130,77 @@ const RentalsReport = () => {
 
   return (
     <Card title="Kiralama Raporları" variant="outlined">
-      <div style={{ marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", }}>
-        <div style={{ flex: 1, marginBottom: 16, display: "flex", gap: "8px", height: "fit-content", }}>
+      <Row gutter={[16, 16]}>
+        {/* Filtreleme alanı */}
+        <Col xs={24} sm={24} md={24} lg={16}>
+          <Row gutter={[8, 8]}>
+            {/* Tarih filtresi */}
+            <Col xs={24} sm={24} md={24} lg={8}>
+              <ConfigProvider locale={trTR}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
+                  <RangePicker
+                    value={dates}
+                    onChange={(val) => setDates(val)}
+                    format="YYYY-MM-DD"
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              </ConfigProvider>
+            </Col>
 
-          <ConfigProvider locale={trTR}>
-            <RangePicker
-              value={dates}
-              onChange={(val) => setDates(val)}
-              format="YYYY-MM-DD"
-            />
-          </ConfigProvider>
+            {/* Şehir filtresi */}
+            <Col xs={24} sm={24} md={24} lg={8}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <label style={{ marginBottom: 4 }}>Şehir Seçiniz</label>
+                <Select
+                  mode="multiple"
+                  style={{ width: "100%" }}
+                  placeholder="Şehir seçiniz"
+                  value={selectedCities}
+                  onChange={(val) => setSelectedCities(val)}
+                  options={cities.map((c) => ({ label: c, value: c }))}
+                />
+              </div>
+            </Col>
 
-          <Select
-            mode="multiple"
-            style={{ minWidth: 200 }}
-            placeholder="Şehir seçiniz"
-            value={selectedCities}
-            onChange={(val) => setSelectedCities(val)}
-            options={cities.map((c) => ({ label: c, value: c }))}
-          />
-          <Button type="primary" onClick={fetchData}>
-            Filtrele
-          </Button>
+            {/* Filtreleme butonu */}
+            <Col xs={24} sm={24} md={24} lg={8}>
+              <Button type="primary" onClick={fetchData} style={{ width: "100%", marginTop: 24 }}>
+                Filtrele
+              </Button>
+            </Col>
+          </Row>
+        </Col>
 
-        </div>
-        <div style={{ flex: 1 }}>
-          <Card style={{ justifyContent: "center", alignItems: "center" }}>
-            <div style={{ margin: 16, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-              <p style={{ fontSize: "32px", justifyContent: "center", alignItems: "center" }}>Toplam Kiralama</p>
-              <span style={{ fontSize: "24px", justifyContent: "center", alignItems: "center" }}>{formatTL(totalRentals)}</span>
+        {/* Toplam Kiralama Kartı */}
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Card>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 24,
+                  margin: 0,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {formatTL(totalRentals)}
+              </p>
+              <span style={{ fontSize: 20 }}>Toplam Kiralama</span>
             </div>
-
           </Card>
-        </div>
-
-      </div>
+        </Col>
+      </Row>
 
 
       <Space style={{ marginBottom: 16 }}>
