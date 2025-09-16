@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, DatePicker, Button, Select, message, Card, ConfigProvider, Col, Row } from "antd";
+import { Space, Table, DatePicker, Button, Select, message, Card, ConfigProvider, Col, Row, Pagination } from "antd";
 import axios from "../../api/axios"; // senin axios instance
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
@@ -25,8 +25,8 @@ const PageName = () => {
   //const userName = user?.name || user?.username || "Admin";
   const locations = user?.permissions?.locations || [];
   const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
-  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.pdf`
+  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.xlsx`
+  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.pdf`
 
 
   const [isMobile, setIsMobile] = useState(false);
@@ -118,7 +118,7 @@ const PageName = () => {
     {
       title: "Toplam WeePuan",
       dataIndex: "total",
-      key: "total",
+      key: "totalTL",
       sorter: (a, b) => a.total - b.total, // sayısal sıralama
       sortDirections: ["ascend", "descend"], // cancel sorting yok
       align: "center",
@@ -212,8 +212,14 @@ const PageName = () => {
         columns={columns}
         dataSource={data}
         loading={loading}
-        rowKey={(record) => `${record.date}-${record.city}`} // benzersiz key
+        pagination={{
+          position: ["bottomCenter"],
+          pageSizeOptions: ["5", "10", "20", "50"], // dropdown’daki seçenekler
+          size: "small",
+        }}
+        rowKey={(record) => `${record.date}-${record.city}-${record.total}-${record.city}`} // benzersiz key
       />
+      {/* <Pagination size="small" total={50} /> */}
     </Card>
   );
 };

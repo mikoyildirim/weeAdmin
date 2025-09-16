@@ -34,8 +34,8 @@ const PageName = () => {
   const locations = user?.permissions?.locations || [];
 
   const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
-  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.pdf`
+  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.xlsx`
+  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.pdf`
   const totalAmount = data.reduce((acc, item) => acc + Number(item.amount), 0);
   console.log(formatTL(totalAmount));
 
@@ -155,7 +155,7 @@ const PageName = () => {
   ];
 
   return (
-    <Card title="Kiralama Raporları" variant="outlined">
+    <Card title="Yükleme Raporları" variant="outlined">
       <Row gutter={[16, 16]}>
         {/* Filtreleme alanı */}
         <Col xs={24} sm={24} md={24} lg={16}>
@@ -234,7 +234,7 @@ const PageName = () => {
         columns={columns}
         dataSource={data}
         loading={loading}
-        rowKey={(record) => `${record.date}-${record.city}`} // benzersiz key
+        rowKey={(record) => `${record.date}-${record.transaction_id}-${record.amount}-${record.status}`} // benzersiz key
       />
     </Card>
   );
