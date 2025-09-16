@@ -28,6 +28,14 @@ const RentalsReport = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+
+
+  useEffect(() => {
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium")
+    console.log(isMobile,)
+  }, [isMobile])
+
+
   const user = useSelector((state) => state.user.user);
   //const userName = user?.name || user?.username || "Admin";
   const locations = user?.permissions?.locations || [];
@@ -36,7 +44,9 @@ const RentalsReport = () => {
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`
   const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.pdf`
   const totalRentals = data.reduce((acc, item) => acc + Number(item.total), 0);
-  console.log(formatTL(totalRentals));
+  const [paginationSize, setPaginationSize] = useState([]);
+
+  //console.log(formatTL(totalRentals));
 
   // Cities'i backend'den veya mock ile çek
   useEffect(() => {
@@ -228,6 +238,11 @@ const RentalsReport = () => {
         columns={columns}
         dataSource={data}
         loading={loading}
+        pagination={{
+          position: ["bottomCenter"],
+          pageSizeOptions: ["5", "10", "20", "50"],
+          size: { paginationSize },
+        }}
         rowKey={(record) => `${record.date}-${record.city}`} // benzersiz key
       />
     </Card>

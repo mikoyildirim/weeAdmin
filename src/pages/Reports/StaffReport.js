@@ -20,6 +20,7 @@ const PageName = () => {
   const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]); // ilk açılışta bugünün tarihi
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
+  const [paginationSize, setPaginationSize] = useState([]);
 
   const user = useSelector((state) => state.user.user);
   //const userName = user?.name || user?.username || "Admin";
@@ -39,6 +40,10 @@ const PageName = () => {
   }, []);
 
 
+  useEffect(() => {
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium")
+    console.log(isMobile,)
+  }, [isMobile])
 
 
   useEffect(() => {
@@ -211,6 +216,11 @@ const PageName = () => {
       columns={columns}
       dataSource={data}
       loading={loading}
+      pagination={{
+        position: ["bottomCenter"],
+        pageSizeOptions: ["5", "10", "20", "50"],
+        size: { paginationSize },
+      }}
       rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`} // benzersiz key
     />
   </Card>;

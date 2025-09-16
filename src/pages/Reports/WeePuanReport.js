@@ -20,6 +20,9 @@ const PageName = () => {
   const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]); // ilk açılışta bugünün tarihi
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
+  const [paginationSize, setPaginationSize] = useState([]);
+
+
 
   const user = useSelector((state) => state.user.user);
   //const userName = user?.name || user?.username || "Admin";
@@ -38,6 +41,11 @@ const PageName = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+
+  useEffect(() => {
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium")
+    console.log(isMobile,)
+  }, [isMobile])
 
 
 
@@ -214,8 +222,8 @@ const PageName = () => {
         loading={loading}
         pagination={{
           position: ["bottomCenter"],
-          pageSizeOptions: ["5", "10", "20", "50"], // dropdown’daki seçenekler
-          size: "small",
+          pageSizeOptions: ["5", "10", "20", "50"],
+          size: { paginationSize },
         }}
         rowKey={(record) => `${record.date}-${record.city}-${record.total}-${record.city}`} // benzersiz key
       />

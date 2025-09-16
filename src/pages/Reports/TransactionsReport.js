@@ -21,6 +21,7 @@ const PageName = () => {
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [paginationSize, setPaginationSize] = useState([]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768); // 768px altı mobil
@@ -28,6 +29,12 @@ const PageName = () => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+
+  useEffect(() => {
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium")
+    console.log(isMobile,)
+  }, [isMobile])
 
   const user = useSelector((state) => state.user.user);
   //const userName = user?.name || user?.username || "Admin";
@@ -185,7 +192,7 @@ const PageName = () => {
               </ConfigProvider>
             </Col>
 
-            
+
 
             {/* Filtreleme butonu */}
             <Col xs={24} sm={24} md={24} lg={8}>
@@ -234,6 +241,11 @@ const PageName = () => {
         columns={columns}
         dataSource={data}
         loading={loading}
+        pagination={{
+          position: ["bottomCenter"],
+          pageSizeOptions: ["5", "10", "20", "50"],
+          size: { paginationSize },
+        }}
         rowKey={(record) => `${record.date}-${record.transaction_id}-${record.amount}-${record.status}`} // benzersiz key
       />
     </Card>
