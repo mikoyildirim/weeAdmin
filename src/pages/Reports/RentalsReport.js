@@ -19,7 +19,14 @@ const RentalsReport = () => {
   const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]); // ilk açılışta bugünün tarihi
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768); // 768px altı mobil
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const user = useSelector((state) => state.user.user);
   //const userName = user?.name || user?.username || "Admin";
@@ -139,12 +146,22 @@ const RentalsReport = () => {
               <ConfigProvider locale={trTR}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
-                  <RangePicker
-                    value={dates}
-                    onChange={(val) => setDates(val)}
-                    format="YYYY-MM-DD"
-                    style={{ width: "100%" }}
-                  />
+                  {isMobile ? (
+                    // HTML5 mobil tarih inputları
+                    <Space direction="vertical" size={12} xs={24} sm={24} md={24}>
+                      <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, ...prev.slice(0)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Başlangıç tarihi'} />
+                      <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [...prev.slice(0, 1), val, ...prev.slice(2)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Bitiş tarihi'} />
+                    </Space>
+
+                  ) : (
+                    // Normal AntD RangePicker
+                    <RangePicker
+                      value={dates}
+                      onChange={(val) => setDates(val)}
+                      format="YYYY-MM-DD"
+                      style={{ width: "100%" }}
+                    />
+                  )}
                 </div>
               </ConfigProvider>
             </Col>
