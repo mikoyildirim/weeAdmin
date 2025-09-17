@@ -44,11 +44,14 @@ const PassiveMap = () => {
   const [polygons, setPolygons] = useState([]);
 
   const fetchPolygons = async () => { // polygonları backend den çekiyoruz 
+    setLoading(true);
     try {
       const res = await axios.get("/geofences");
       setPolygons(res.data || []);
     } catch {
       console.log("Geofence alınamadı");
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -88,13 +91,7 @@ const PassiveMap = () => {
     const activeDevicesQrlabels = new Set(activeDevices.map(item => item.qrlabel));
     const filtered = allDevices.filter(item => !activeDevicesQrlabels.has(item.qrlabel))
     setPassiveDevices(filtered)
-  }, [loading])
-
-  useEffect(() => {
-    const activeDevicesQrlabels = new Set(activeDevices.map(item => item.qrlabel));
-    const filtered = allDevices.filter(item => !activeDevicesQrlabels.has(item.qrlabel));
-    setPassiveDevices(filtered);
-  }, [activeDevices, allDevices]);
+  }, [loading,activeDevices, allDevices])
 
   const devicesWithLocation = passiveDevices.filter(
     (d) =>
