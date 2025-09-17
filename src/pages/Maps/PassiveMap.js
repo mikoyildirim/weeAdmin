@@ -90,6 +90,12 @@ const PassiveMap = () => {
     setPassiveDevices(filtered)
   }, [loading])
 
+  useEffect(() => {
+    const activeDevicesQrlabels = new Set(activeDevices.map(item => item.qrlabel));
+    const filtered = allDevices.filter(item => !activeDevicesQrlabels.has(item.qrlabel));
+    setPassiveDevices(filtered);
+  }, [activeDevices, allDevices]);
+
   const devicesWithLocation = passiveDevices.filter(
     (d) =>
       d?.last_location?.location &&
@@ -139,7 +145,7 @@ const PassiveMap = () => {
           <Spin size="large" tip="Harita yükleniyor..." />
         </div>
       ) : (
-        <MapContainer center={center} zoom={devicesWithLocation.length ? 13 : 6} style={{ height: "100%", width: "100%" }}>
+        <MapContainer center={center} zoom={13}   style={{ height: "100%", width: "100%" }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
