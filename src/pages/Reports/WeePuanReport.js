@@ -134,7 +134,7 @@ const PageName = () => {
         const formatted = new Intl.NumberFormat("tr-TR", {
           maximumFractionDigits: 2,
         }).format(value);
-        return formatted; // Örn: "132,50" veya "1.234,50"
+        return formatted+" Wee Puan"; // Örn: "132,50" veya "1.234,50"
       }
 
     },
