@@ -42,28 +42,29 @@ const ActiveMap = () => {
   const [geofences, setGeofences] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const devRes = await axios.get("/devices/connected");
-        setDevices(Array.isArray(devRes.data) ? devRes.data : []);
+  const fetchConnectedDevices = async () => {
+    setLoading(true);
+    try {
+      const devRes = await axios.get("/devices/connected");
+      setDevices(Array.isArray(devRes.data) ? devRes.data : []);
 
-        try {
-          const geoRes = await axios.get("/geofences/list");
-          setGeofences(Array.isArray(geoRes.data) ? geoRes.data : []);
-        } catch (e) {
-          setGeofences([]);
-        }
-      } catch (err) {
-        console.error("devices/connected alınırken hata:", err);
-        setDevices([]);
+      try {
+        const geoRes = await axios.get("/geofences/list");
+        setGeofences(Array.isArray(geoRes.data) ? geoRes.data : []);
+      } catch (e) {
         setGeofences([]);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetch();
+    } catch (err) {
+      console.error("devices/connected alınırken hata:", err);
+      setDevices([]);
+      setGeofences([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConnectedDevices();
   }, []);
 
   const devicesWithLocation = devices.filter(
@@ -79,14 +80,14 @@ const ActiveMap = () => {
 
   const center = devicesWithLocation.length
     ? [
-        parseFloat(devicesWithLocation[0].last_location.location.coordinates[1]),
-        parseFloat(devicesWithLocation[0].last_location.location.coordinates[0]),
-      ]
+      parseFloat(devicesWithLocation[0].last_location.location.coordinates[1]),
+      parseFloat(devicesWithLocation[0].last_location.location.coordinates[0]),
+    ]
     : [39.75, 37.02]; // Sivas fallback
 
   const handleRing = async (imei) => {
     try {
-      await axios.post("/devices/sendAlarm", { imei });
+      await axios.post("/devices/command", { imei });
       alert("Zil çalma komutu gönderildi.");
     } catch {
       alert("Zil gönderilemedi.");
@@ -162,30 +163,30 @@ const ActiveMap = () => {
             geofences.map((area, i) =>
               Array.isArray(area.locations)
                 ? area.locations.map((loc, j) => {
-                    if (!loc || !loc.polygon || !Array.isArray(loc.polygon.coordinates)) return null;
-                    const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
-                    let color = "grey";
-                    let fill = 0.2;
-                    switch (loc.type) {
-                      case "DENY":
-                        color = "red";
-                        fill = 0.2;
-                        break;
-                      case "SCORE":
-                        color = "yellow";
-                        fill = 0.5;
-                        break;
-                      case "STATION":
-                        color = "green";
-                        fill = 0.3;
-                        break;
-                      case "SpeedLimitedZone":
-                        color = "black";
-                        fill = 0.4;
-                        break;
-                    }
-                    return <Polygon key={`${i}-${j}`} positions={coords} pathOptions={{ color, fillColor: color, fillOpacity: fill }} />;
-                  })
+                  if (!loc || !loc.polygon || !Array.isArray(loc.polygon.coordinates)) return null;
+                  const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
+                  let color = "grey";
+                  let fill = 0.2;
+                  switch (loc.type) {
+                    case "DENY":
+                      color = "red";
+                      fill = 0.2;
+                      break;
+                    case "SCORE":
+                      color = "yellow";
+                      fill = 0.5;
+                      break;
+                    case "STATION":
+                      color = "green";
+                      fill = 0.3;
+                      break;
+                    case "SpeedLimitedZone":
+                      color = "black";
+                      fill = 0.4;
+                      break;
+                  }
+                  return <Polygon key={`${i}-${j}`} positions={coords} pathOptions={{ color, fillColor: color, fillOpacity: fill }} />;
+                })
                 : null
             )}
         </MapContainer>
