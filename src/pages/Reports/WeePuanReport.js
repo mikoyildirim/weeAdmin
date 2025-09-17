@@ -146,7 +146,7 @@ const PageName = () => {
       sortDirections: ["ascend", "descend"], // cancel sorting yok
       align: "center",
       render: (value) => {
-        const tlValue = value / 100
+        const tlValue = value / 10
         const formatted = new Intl.NumberFormat("tr-TR", {
           style: "currency",
           currency: "TRY",
