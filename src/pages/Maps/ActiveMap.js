@@ -1,4 +1,3 @@
-// src/pages/Maps/ActiveMap.js
 import React, { useEffect, useState } from "react";
 import { Spin, Button } from "antd";
 import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
@@ -25,7 +24,7 @@ const colorIcon = (color) =>
     shadowSize: [41, 41],
   });
 
-const getIconByDevice = (device) => {
+const getIconByDevice = (device) => { // backendden çekilen cihazların durumuna göre iconların rengini ayarlıyoruz
   if (device.status === "BUSY") return colorIcon("black");
   const battery = Number(device.battery);
   if (!isNaN(battery)) {
@@ -39,38 +38,26 @@ const getIconByDevice = (device) => {
 
 const ActiveMap = () => {
   const [devices, setDevices] = useState([]);
-  const [geofences, setGeofences] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [polygon, setPolygon] = useState([]);
+  const [polygons, setPolygons] = useState([]);
 
-
-  const fetchPolygons = async () => {
+  const fetchPolygons = async () => { // polygonları backend den çekiyoruz 
     try {
       const res = await axios.get("/geofences");
-      setPolygon(res.data || []);
+      setPolygons(res.data || []);
     } catch {
       console.log("Geofence alınamadı");
     }
   };
 
-
-
-  const fetchConnectedDevices = async () => {
+  const fetchConnectedDevices = async () => { // bağlı cihazları backend den çekiyoruz
     setLoading(true);
     try {
       const devRes = await axios.get("/devices/connected");
       setDevices(Array.isArray(devRes.data) ? devRes.data : []);
-
-      try {
-        const geoRes = await axios.get("/geofences/list");
-        setGeofences(Array.isArray(geoRes.data) ? geoRes.data : []);
-      } catch (e) {
-        setGeofences([]);
-      }
     } catch (err) {
       console.error("devices/connected alınırken hata:", err);
       setDevices([]);
-      setGeofences([]);
     } finally {
       setLoading(false);
     }
@@ -78,14 +65,12 @@ const ActiveMap = () => {
 
   useEffect(() => {
     fetchConnectedDevices();
-    fetchPolygons()
+    fetchPolygons();
   }, []);
 
   const devicesWithLocation = devices.filter(
     (d) =>
-      d &&
-      d.last_location &&
-      d.last_location.location &&
+      d?.last_location?.location &&
       Array.isArray(d.last_location.location.coordinates) &&
       d.last_location.location.coordinates.length >= 2 &&
       d.last_location.location.coordinates[0] != null &&
@@ -94,14 +79,14 @@ const ActiveMap = () => {
 
   const center = devicesWithLocation.length
     ? [
-      parseFloat(devicesWithLocation[0].last_location.location.coordinates[1]),
-      parseFloat(devicesWithLocation[0].last_location.location.coordinates[0]),
-    ]
+        parseFloat(devicesWithLocation[0].last_location.location.coordinates[1]),
+        parseFloat(devicesWithLocation[0].last_location.location.coordinates[0]),
+      ]
     : [39.75, 37.02]; // Sivas fallback
 
   const handleRing = async (imei) => {
     try {
-      await axios.post("/devices/command", { imei, cmd: "beep" })
+      await axios.post("/devices/command", { imei, cmd: "beep" });
       alert("Zil çalma komutu gönderildi.");
     } catch {
       alert("Zil gönderilemedi.");
@@ -110,39 +95,25 @@ const ActiveMap = () => {
 
   const handleRequestLocation = async (imei) => {
     try {
-      await axios.post("/devices/command", { imei })
-      // .then((response) => {
-      //   console.log("Response:", response);        // tüm response objesi
-      //   console.log("Status:", response.status);   // 200 gibi http status code
-      //   console.log("Data:", response.data);       // asıl backend'in gönderdiği veri
-      //   console.log("Headers:", response.headers); // header bilgileri
-      // })
-      // .catch((error) => {
-      //   console.error("Hata:", error);
-      //   if (error.response) {
-      //     // Sunucu cevap döndürdüyse ama hata kodu (404, 500 vs.)
-      //     console.error("Status:", error.response.status);
-      //     console.error("Data:", error.response.data);
-      //   }
-      // });
+      await axios.post("/devices/command", { imei });
       alert("Konum isteği gönderildi.");
     } catch {
       alert("Konum isteği gönderilemedi.");
     }
   };
 
+  // Dünya poligonu (gri arkaplan)
+  const worldPolygon = [
+    [-90, -180],
+    [-90, 180],
+    [90, 180],
+    [90, -180],
+  ];
+
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative", background: "#f5f7fa" }}>
       {loading ? (
-        <div
-          style={{
-            height: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "#f5f7fa",
-          }}
-        >
+        <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
           <Spin size="large" tip="Harita yükleniyor..." />
         </div>
       ) : (
@@ -154,11 +125,8 @@ const ActiveMap = () => {
 
           {/* Markers */}
           {devicesWithLocation.map((device) => {
-            const coords = device.last_location.location.coordinates;
-            const lon = parseFloat(coords[0]);
-            const lat = parseFloat(coords[1]);
+            const [lon, lat] = device.last_location.location.coordinates.map(Number);
             const key = device.imei || device.id || `${lat}-${lon}`;
-
             return (
               <Marker key={key} position={[lat, lon]} icon={getIconByDevice(device)}>
                 <Popup minWidth={200}>
@@ -168,11 +136,8 @@ const ActiveMap = () => {
                     <div><strong>BATARYA:</strong> %{device.battery ?? "-"}</div>
                     <div><strong>DURUM:</strong> {device.status ?? "-"}</div>
                     <div style={{ marginTop: 6 }}>
-                      <a
-                        target="_blank"
-                        rel="noreferrer"
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`}
-                      >
+                      <a target="_blank" rel="noreferrer"
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`}>
                         Konuma Git
                       </a>
                     </div>
@@ -187,34 +152,60 @@ const ActiveMap = () => {
           })}
 
           {/* Geofences */}
-          {Array.isArray(polygon) &&
-            polygon.map((area) =>
-              Array.isArray(area.locations) &&
-              area.locations.map((loc) => {
-                if (!loc?.polygon?.coordinates) return null;
+          {Array.isArray(polygons) &&
+            (() => {
+              const allowHoles = []; // ALLOW bölgeleri için delik
+              const denyPolygons = [];
+              const allowBorders = [];
 
-                // GeoJSON → Leaflet [lat, lon]
-                const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
+              polygons.forEach((area) => {
+                if (!Array.isArray(area.locations)) return;
 
-                // Renk seçimi
-                let color = "grey";
-                if (loc.type === "DENY") color = "red";
-                if (loc.type === "ALLOW") color = "green";
+                area.locations.forEach((loc) => {
+                  if (!loc?.polygon?.coordinates) return;
 
-                return (
+                  const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
+
+                  if (loc.type === "ALLOW") {
+                    allowHoles.push(coords); // gri poligon içinde delik
+                    allowBorders.push(
+                      <Polygon
+                        key={`allow-${loc._id}`}
+                        positions={coords}
+                        pathOptions={{ color: "black", fillOpacity: 0, weight: 2 }}
+                      />
+                    );
+                  }
+
+                  if (loc.type === "DENY") {
+                    denyPolygons.push(
+                      <Polygon
+                        key={`deny-${loc._id}`}
+                        positions={coords}
+                        pathOptions={{ color: "red", fillColor: "red", fillOpacity: 0.3 }}
+                      >
+                        <Popup>
+                          <strong>{loc.name}</strong> <br />
+                          Tip: {loc.type}
+                        </Popup>
+                      </Polygon>
+                    );
+                  }
+                });
+              });
+
+              return (
+                <>
+                  {/* Gri dünya poligonu + ALLOW delikleri */}
                   <Polygon
-                    key={loc._id}
-                    positions={coords}
-                    pathOptions={{ color, fillColor: color, fillOpacity: 0.3 }}
-                  >
-                    <Popup>
-                      <strong>{loc.name}</strong> <br />
-                      Tip: {loc.type}
-                    </Popup>
-                  </Polygon>
-                );
-              })
-            )}
+                    positions={[worldPolygon, ...allowHoles]}
+                    pathOptions={{ color: "grey", fillColor: "grey", fillOpacity: 0.3, stroke: false }}
+                  />
+                  {denyPolygons}
+                  {allowBorders}
+                </>
+              );
+            })()}
         </MapContainer>
       )}
     </div>
