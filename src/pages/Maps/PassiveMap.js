@@ -50,7 +50,7 @@ const PassiveMap = () => {
       setPolygons(res.data || []);
     } catch {
       console.log("Geofence alınamadı");
-    }finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -91,7 +91,7 @@ const PassiveMap = () => {
     const activeDevicesQrlabels = new Set(activeDevices.map(item => item.qrlabel));
     const filtered = allDevices.filter(item => !activeDevicesQrlabels.has(item.qrlabel))
     setPassiveDevices(filtered)
-  }, [loading,activeDevices, allDevices])
+  }, [loading, activeDevices, allDevices])
 
   const devicesWithLocation = passiveDevices.filter(
     (d) =>
@@ -124,7 +124,7 @@ const PassiveMap = () => {
           <Spin size="large" tip="Harita yükleniyor..." />
         </div>
       ) : (
-        <MapContainer center={center} zoom={13}   style={{ height: "100%", width: "100%" }}>
+        <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
@@ -146,6 +146,12 @@ const PassiveMap = () => {
                       <a target="_blank" rel="noreferrer"
                         href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`}>
                         Konuma Git
+                      </a>
+                    </div>
+                    <div style={{ marginTop: 6 }}>
+                      <a rel="noreferrer"
+                        href={`/panel/devices/detail/${device.qrlabel}`}>
+                        Son Kullanıcı
                       </a>
                     </div>
                   </div>
@@ -175,7 +181,7 @@ const PassiveMap = () => {
                       <Polygon
                         key={`allow-${loc._id}`}
                         positions={coords}
-                        pathOptions={{ color: "black", fillOpacity: 0, weight: 2 }}
+                        pathOptions={{ color: "grey", fillOpacity: 0, weight: 2 }}
                       />
                     );
                   }

@@ -79,9 +79,9 @@ const ActiveMap = () => {
 
   const center = devicesWithLocation.length
     ? [
-        parseFloat(devicesWithLocation[0].last_location.location.coordinates[1]),
-        parseFloat(devicesWithLocation[0].last_location.location.coordinates[0]),
-      ]
+      parseFloat(devicesWithLocation[0].last_location.location.coordinates[1]),
+      parseFloat(devicesWithLocation[0].last_location.location.coordinates[0]),
+    ]
     : [39.75, 37.02]; // Sivas fallback
 
   const handleRing = async (imei) => {
@@ -141,6 +141,12 @@ const ActiveMap = () => {
                         Konuma Git
                       </a>
                     </div>
+                    <div style={{ marginTop: 6 }}>
+                      <a rel="noreferrer"
+                        href={`/panel/devices/detail/${device.qrlabel}`}>
+                        Son Kullanıcı
+                      </a>
+                    </div>
                     <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
                       <Button size="small" onClick={() => handleRing(device.imei)}>Zil Çal</Button>
                       <Button size="small" onClick={() => handleRequestLocation(device.imei)}>Konum İste</Button>
@@ -172,7 +178,7 @@ const ActiveMap = () => {
                       <Polygon
                         key={`allow-${loc._id}`}
                         positions={coords}
-                        pathOptions={{ color: "black", fillOpacity: 0, weight: 2 }}
+                        pathOptions={{ color: "grey", fillOpacity: 0, weight: 2 }}
                       />
                     );
                   }

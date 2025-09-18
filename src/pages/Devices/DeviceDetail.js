@@ -1,13 +1,13 @@
 import { useParams } from 'react-router-dom';
 
 const DeviceDetail = () => {
-  const { deviceId } = useParams(); // URL'deki :deviceId burada
+  const { id } = useParams(); // URL'deki :deviceId burada
 
-  console.log(deviceId); // örn: 222414
+  console.log(id); // örn: 222414
 
   return (
     <div>
-      <h1>Device Detail: {deviceId}</h1>
+      <h1>Device Detail: {id}</h1>
     </div>
   );
 };

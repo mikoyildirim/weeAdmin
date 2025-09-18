@@ -45,16 +45,6 @@ const getIconByDevice = (device) => { // backendden çekilen cihazların durumun
   return colorIcon("red");
 };
 
-const handleLastUser = async (qrlabel) => {
-  await axios.post(`/devices/detail/${qrlabel}`)
-    .then(function (response) {
-      console.log(response);
-    })
-    .catch(function (err){
-      console.log(err)
-    })
-}
-
 
 
 const LostMap = () => {
@@ -179,7 +169,7 @@ const LostMap = () => {
                       <Polygon
                         key={`allow-${loc._id}`}
                         positions={coords}
-                        pathOptions={{ color: "black", fillOpacity: 0, weight: 2 }}
+                        pathOptions={{ color: "grey", fillOpacity: 0, weight: 2 }}
                       />
                     );
                   }
