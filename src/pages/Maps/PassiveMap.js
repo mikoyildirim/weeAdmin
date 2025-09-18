@@ -109,24 +109,6 @@ const PassiveMap = () => {
     ]
     : [39.75, 37.02]; // Sivas fallback
 
-  const handleRing = async (imei) => {
-    try {
-      await axios.post("/devices/command", { imei, cmd: "beep" });
-      alert("Zil çalma komutu gönderildi.");
-    } catch {
-      alert("Zil gönderilemedi.");
-    }
-  };
-
-  const handleRequestLocation = async (imei) => {
-    try {
-      await axios.post("/devices/command", { imei });
-      alert("Konum isteği gönderildi.");
-    } catch {
-      alert("Konum isteği gönderilemedi.");
-    }
-  };
-
   // Dünya poligonu (gri arkaplan)
   const worldPolygon = [
     [-90, -180],
@@ -165,10 +147,6 @@ const PassiveMap = () => {
                         href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`}>
                         Konuma Git
                       </a>
-                    </div>
-                    <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                      <Button size="small" onClick={() => handleRing(device.imei)}>Zil Çal</Button>
-                      <Button size="small" onClick={() => handleRequestLocation(device.imei)}>Konum İste</Button>
                     </div>
                   </div>
                 </Popup>

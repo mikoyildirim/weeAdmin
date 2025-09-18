@@ -14,7 +14,7 @@ dayjs.locale("tr"); // dayjs'i Türkçe yap
 const { RangePicker } = DatePicker;
 
 const RentalsReport = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]); // ilk açılışta bugünün tarihi
   const [cities, setCities] = useState([]);
@@ -51,18 +51,20 @@ const RentalsReport = () => {
   // Cities'i backend'den veya mock ile çek
   useEffect(() => {
     fetchCities();
-    fetchData() // sayfayı açar açmaz kullanıcının erişim izni olan şehirlere ait kiralama raporunu ekrana basması için eklendi
+    //fetchData() // sayfayı açar açmaz kullanıcının erişim izni olan şehirlere ait kiralama raporunu ekrana basması için eklendi
   }, []);
 
   // cities geldiğinde ilk veriyi çek
   useEffect(() => {
-    if (cities.length > 0) {
-      fetchData();
-    }
+    console.log("fetch data çalıştı")
+    console.log(cities)
+    fetchData();
+
   }, [cities]);
 
-
+ 
   const fetchCities = async () => {
+ 
     try {
       let cityList = locations;
       setCities(cityList);
@@ -70,7 +72,7 @@ const RentalsReport = () => {
         const defaultCities = Array.isArray(locations) ? locations : [locations];
         // sadece backend veya mock'tan gelen şehirler içinde olanları seç
         const validCities = defaultCities.filter(city => cityList.includes(city));
-        console.log(validCities)
+        //console.log(validCities)
         setSelectedCities(validCities);
       }
 
@@ -95,9 +97,9 @@ const RentalsReport = () => {
         }
       );
       setData(response.data || []);
-      console.log(selectedCities)
+      //console.log(selectedCities)
       // console.log(`startDate: ${dates[0].format("YYYY-MM-DD")} \n endDate: ${dates[1].format("YYYY-MM-DD")} \n cities: ${typeof(selectedCities)}`)
-      console.log(response)
+      //console.log(response)
     } catch (error) {
       message.error("Veri alınırken hata oluştu!");
     } finally {
