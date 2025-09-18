@@ -20,8 +20,19 @@ const RentalsReport = () => {
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [paginationSize, setPaginationSize] = useState([]);
 
+  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
+  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`
+  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.pdf`
+  const totalRentals = data.reduce((acc, item) => acc + Number(item.total), 0);
+
+
+  //console.log(formatTL(totalRentals));
   useEffect(() => {
+
+
+
     const checkMobile = () => setIsMobile(window.innerWidth < 768); // 768px altı mobil
     checkMobile();
     window.addEventListener("resize", checkMobile);
@@ -40,47 +51,35 @@ const RentalsReport = () => {
   //const userName = user?.name || user?.username || "Admin";
   const locations = user?.permissions?.locations || [];
 
-  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
-  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.pdf`
-  const totalRentals = data.reduce((acc, item) => acc + Number(item.total), 0);
-  const [paginationSize, setPaginationSize] = useState([]);
 
-  //console.log(formatTL(totalRentals));
 
-  // Cities'i backend'den veya mock ile çek
-  useEffect(() => {
-    fetchCities();
-    //fetchData() // sayfayı açar açmaz kullanıcının erişim izni olan şehirlere ait kiralama raporunu ekrana basması için eklendi
-  }, []);
+
 
   // cities geldiğinde ilk veriyi çek
   useEffect(() => {
     console.log("fetch data çalıştı")
-    console.log(cities)
+    console.log(selectedCities)
     fetchData();
 
-  }, [cities]);
+  }, [selectedCities]);
 
- 
+  useEffect(() => {
+    fetchCities()
+  }, [])
+
   const fetchCities = async () => {
- 
-    try {
-      let cityList = locations;
-      setCities(cityList);
-      if (locations) {
-        const defaultCities = Array.isArray(locations) ? locations : [locations];
-        // sadece backend veya mock'tan gelen şehirler içinde olanları seç
-        const validCities = defaultCities.filter(city => cityList.includes(city));
-        //console.log(validCities)
-        setSelectedCities(validCities);
-      }
 
-      setSelectedCities(selectedCities => [...selectedCities])
+     try {
+    // Kullanıcının yetkili olduğu şehirleri state'e ata
+    setCities(locations);
 
-    } catch (err) {
-      message.error("Şehirler alınamadı!");
-    }
+    // Geçerli şehirleri seç
+    const validCities = locations.filter(city => locations.includes(city));
+    setSelectedCities(validCities);
+
+  } catch (err) {
+    message.error("Şehirler alınamadı!");
+  }
   };
 
 

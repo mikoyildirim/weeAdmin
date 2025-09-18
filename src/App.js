@@ -27,6 +27,7 @@ import ActiveDevices from "./pages/Devices/ActiveDevices";
 import PassiveDevices from "./pages/Devices/PassiveDevices";
 import UnusedDevices from "./pages/Devices/UnusedDevices";
 import DeviceManagement from "./pages/Devices/DeviceManagement";
+import DeviceDetail from "./pages/Devices/DeviceDetail";
 
 // Users
 import Users from "./pages/Users/Users";
@@ -78,6 +79,7 @@ function App() {
           <Route path="devices/passive" element={<PassiveDevices />} />
           <Route path="devices/unused" element={<UnusedDevices />} />
           <Route path="devices/all" element={<DeviceManagement />} />
+          <Route path="devices/detail/:id" element={<DeviceDetail />} />
 
           {/* Users */}
           <Route path="users" element={<Users />} />
