@@ -210,7 +210,7 @@ const PageName = () => {
         pagination={{
           position: ["bottomCenter"],
           pageSizeOptions: ["5", "10", "20", "50"],
-          size: { paginationSize },
+          size: paginationSize,
         }}
         rowKey={(record) => `${record.date}-${record.transaction_id}-${record.amount}-${record.status}`} // benzersiz key
       />

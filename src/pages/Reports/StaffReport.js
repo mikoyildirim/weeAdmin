@@ -219,7 +219,7 @@ const PageName = () => {
       pagination={{
         position: ["bottomCenter"],
         pageSizeOptions: ["5", "10", "20", "50"],
-        size: { paginationSize },
+        size: paginationSize,
       }}
       rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`} // benzersiz key
     />

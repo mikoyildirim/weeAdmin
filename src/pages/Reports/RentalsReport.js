@@ -20,7 +20,7 @@ const RentalsReport = () => {
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
-  const [paginationSize, setPaginationSize] = useState([]);
+  const [paginationSize, setPaginationSize] = useState();
 
   const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`
@@ -43,7 +43,7 @@ const RentalsReport = () => {
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium")
-    console.log(isMobile,)
+    console.log(isMobile, paginationSize)
   }, [isMobile])
 
 
@@ -69,17 +69,17 @@ const RentalsReport = () => {
 
   const fetchCities = async () => {
 
-     try {
-    // Kullanıcının yetkili olduğu şehirleri state'e ata
-    setCities(locations);
+    try {
+      // Kullanıcının yetkili olduğu şehirleri state'e ata
+      setCities(locations);
 
-    // Geçerli şehirleri seç
-    const validCities = locations.filter(city => locations.includes(city));
-    setSelectedCities(validCities);
+      // Geçerli şehirleri seç
+      const validCities = locations.filter(city => locations.includes(city));
+      setSelectedCities(validCities);
 
-  } catch (err) {
-    message.error("Şehirler alınamadı!");
-  }
+    } catch (err) {
+      message.error("Şehirler alınamadı!");
+    }
   };
 
 
@@ -241,8 +241,8 @@ const RentalsReport = () => {
         loading={loading}
         pagination={{
           position: ["bottomCenter"],
-          pageSizeOptions: ["5", "10", "20", "50"],
-          size: { paginationSize },
+          pageSizeOptions: ["3", "10", "20", "50"],
+          size: paginationSize,
         }}
         rowKey={(record) => `${record.date}-${record.city}`} // benzersiz key
       />

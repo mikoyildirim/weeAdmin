@@ -134,7 +134,7 @@ const PageName = () => {
         const formatted = new Intl.NumberFormat("tr-TR", {
           maximumFractionDigits: 2,
         }).format(value);
-        return formatted+" Wee Puan"; // Örn: "132,50" veya "1.234,50"
+        return formatted + " Wee Puan"; // Örn: "132,50" veya "1.234,50"
       }
 
     },
@@ -223,7 +223,7 @@ const PageName = () => {
         pagination={{
           position: ["bottomCenter"],
           pageSizeOptions: ["5", "10", "20", "50"],
-          size: { paginationSize },
+          size: paginationSize,
         }}
         rowKey={(record) => `${record.date}-${record.city}-${record.total}-${record.city}`} // benzersiz key
       />
