@@ -44,19 +44,19 @@ const PassiveMap = () => {
   const [polygons, setPolygons] = useState([]);
 
   const fetchPolygons = async () => { // polygonları backend den çekiyoruz 
-    setLoading(true);
+    //setLoading(true);
     try {
       const res = await axios.get("/geofences");
       setPolygons(res.data || []);
     } catch {
       console.log("Geofence alınamadı");
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
   const fetchConnectedDevices = async () => { // bağlı cihazları backend den çekiyoruz
-    setLoading(true);
+    //setLoading(true);
     try {
       const devRes = await axios.get("/devices/connected");
       setActiveDevices(Array.isArray(devRes.data) ? devRes.data : []); // response sonucu bir array ise o array i bizim değerimize yüklüyor. yok değilse boş array yüklüyor
@@ -64,7 +64,7 @@ const PassiveMap = () => {
       console.error("devices/connected alınırken hata:", err);
       setActiveDevices([]);
     } finally {
-      setLoading(false);
+      //setLoading(false);
     }
   };
 
