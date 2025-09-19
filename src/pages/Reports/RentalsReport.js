@@ -117,6 +117,12 @@ const RentalsReport = () => {
       sortDirections: ["ascend", "descend"], // cancel sorting yok
       defaultSortOrder: "ascend",
       align: "center",
+      onHeaderCell: () => ({
+        style: { minWidth: "120px" },
+      }),
+      onCell: () => ({
+        style: { minWidth: "120px" },
+      }),
     },
     {
       title: "Toplam",

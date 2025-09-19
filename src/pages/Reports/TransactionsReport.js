@@ -81,6 +81,12 @@ const PageName = () => {
       sortDirections: ["ascend", "descend"], // cancel sorting yok
       defaultSortOrder: "ascend",
       align: "center",
+      onHeaderCell: () => ({
+        style: { minWidth: "120px" },
+      }),
+      onCell: () => ({
+        style: { minWidth: "120px" },
+      }),
       render: (value) => {
         return dayjs(value).format('YYYY-MM-DD')
       },
@@ -115,14 +121,6 @@ const PageName = () => {
         // ₺ işareti baştaysa, sona taşı
         return formatted.replace("₺", "").trim() + " ₺"; // direkt yukarı yazılırsa ₺ işareti başta oluyor okunuş zor oluyor bu metod ile ₺ işareti miktarın sonuna alındı
       },
-      align: "center",
-    },
-    {
-      title: "Durum",
-      dataIndex: "status",
-      key: "status",
-      sorter: (a, b) => a.status.localeCompare(b.status), // alfabetik sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
       align: "center",
     },
   ];
@@ -204,7 +202,7 @@ const PageName = () => {
         <Button onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
       </Space>
       <Table
-        columns={columns}
+        columns={isMobile ? columns.slice(0, 2) : columns}
         dataSource={data}
         loading={loading}
         pagination={{
@@ -212,7 +210,34 @@ const PageName = () => {
           pageSizeOptions: ["5", "10", "20", "50"],
           size: paginationSize,
         }}
-        rowKey={(record) => `${record.date}-${record.transaction_id}-${record.amount}-${record.status}`} // benzersiz key
+        rowKey={(record) => `${record.date}-${record.transaction_id}-${record.amount}-${record.status}`}
+        expandable={
+          isMobile
+            ? {
+              expandedRowRender: (record) => (
+                <div style={{ fontSize: 14 }}>
+                  {/* <p><b>Tarih:</b> {" "}
+                    {dayjs(record.date).format('YYYY-MM-DD')}</p>
+                  <p><b>Ödeme Yöntemi:</b> {record.payment_gateway}</p> */}
+                  <p><b>İşlem No:</b> {record.transaction_id}</p>
+                  <p>
+                    <b>Yükleme Tutarı:</b>{" "}
+                    {new Intl.NumberFormat("tr-TR", {
+                      style: "currency",
+                      currency: "TRY",
+                      minimumFractionDigits: 2,
+                    })
+                      .format(record.amount)
+                      .replace("₺", "")
+                      .trim()}{" "}
+                    ₺
+                  </p>
+                </div>
+              ),
+              expandRowByClick: true, // satıra tıklayınca açılabilsin
+            }
+            : undefined
+        }
       />
     </Card>
   );

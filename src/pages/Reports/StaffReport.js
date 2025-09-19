@@ -113,6 +113,12 @@ const PageName = () => {
       render: (value) => {
         return dayjs(value).format('YYYY-MM-DD')
       },
+      onHeaderCell: () => ({
+        style: { minWidth: "120px" },
+      }),
+      onCell: () => ({
+        style: { minWidth: "120px" },
+      }),
     },
     {
       title: "Cihaz QR",
@@ -165,7 +171,7 @@ const PageName = () => {
           <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
             <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
             {isMobile ? (
-              // HTML5 mobil tarih inputları
+              
               <Space direction="vertical" size={12} xs={24} sm={24} md={24}>
                 <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, ...prev.slice(0)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Başlangıç tarihi'} />
                 <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [...prev.slice(0, 1), val, ...prev.slice(2)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Bitiş tarihi'} />
@@ -213,7 +219,7 @@ const PageName = () => {
       <Button style={{ width: "100%" }} onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
     </Space>
     <Table
-      columns={columns}
+      columns={isMobile ? columns.slice(0, 2) : columns} // mobilde sadece ilk 2 kolon
       dataSource={data}
       loading={loading}
       pagination={{
@@ -221,7 +227,22 @@ const PageName = () => {
         pageSizeOptions: ["5", "10", "20", "50"],
         size: paginationSize,
       }}
-      rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`} // benzersiz key
+      rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`}
+      expandable={
+        isMobile
+          ? {
+            expandedRowRender: (record) => (
+              <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
+                <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
+                <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
+                <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
+                <p><b>Şehir:</b> {record.city}</p>
+              </div>
+            ),
+            expandRowByClick: true, // satıra tıklayınca açılabilsin
+          }
+          : undefined
+      }
     />
   </Card>;
 };
