@@ -70,7 +70,12 @@ const PageName = () => {
     }
   };
 
-
+  const excelData = data.map(d => ({
+    "Tarih": dayjs(d.date).format('YYYY-MM-DD') ,
+    "Ödeme Yöntemi": d.payment_gateway,
+    "İşlem Numarası": d.transaction_id,
+    "Yükleme Tutarı": d.amount
+  }));
 
   const columns = [
     {
@@ -198,7 +203,7 @@ const PageName = () => {
 
 
       <Space style={{ marginBottom: 16 }}>
-        <Button onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
+        <Button onClick={() => exportToExcel(excelData, excelFileName)}>Excel İndir</Button>
         <Button onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
       </Space>
       <Table

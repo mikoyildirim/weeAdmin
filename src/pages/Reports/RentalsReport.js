@@ -118,10 +118,10 @@ const RentalsReport = () => {
       defaultSortOrder: "ascend",
       align: "center",
       onHeaderCell: () => ({
-        style: { minWidth: "120px" },
+        style: { minWidth: "100px" },
       }),
       onCell: () => ({
-        style: { minWidth: "120px" },
+        style: { minWidth: "100px" },
       }),
     },
     {
