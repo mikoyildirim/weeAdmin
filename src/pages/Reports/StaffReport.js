@@ -1,62 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, DatePicker, Button, Select, message, Card, ConfigProvider, Col, Row } from "antd";
-import axios from "../../api/axios"; // senin axios instance
+import { Space, Table, DatePicker, Button, Select, Input, message, Card, ConfigProvider, Col, Row } from "antd";
+import axios from "../../api/axios";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
-import trTR from "antd/es/locale/tr_TR"; // Türkçe locale
-import "dayjs/locale/tr"; // dayjs için Türkçe locale
-import exportToExcel from "../../utils/exportToExcel"
-import exportToPDF from "../../utils/exportToPDF"
+import trTR from "antd/es/locale/tr_TR";
+import "dayjs/locale/tr";
+import exportToExcel from "../../utils/exportToExcel";
+import exportToPDF from "../../utils/exportToPDF";
 
-
-dayjs.locale("tr"); // dayjs'i Türkçe yap
+dayjs.locale("tr");
 
 const { RangePicker } = DatePicker;
 
-const PageName = () => {
-
+const StaffReport = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
-  const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]); // ilk açılışta bugünün tarihi
+  const [filteredData, setFilteredData] = useState([]); // <-- search için
+  const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]);
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
-  const [paginationSize, setPaginationSize] = useState([]);
+  const [paginationSize, setPaginationSize] = useState("medium");
+  const [searchText, setSearchText] = useState(""); // <-- search state
 
   const user = useSelector((state) => state.user.user);
-  //const userName = user?.name || user?.username || "Admin";
   const locations = user?.permissions?.locations || [];
-  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
-  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.pdf`
-
+  const sortedData = [...filteredData].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Batarya Raporu.xlsx`;
+  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Batarya Raporu.pdf`;
 
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768); // 768px altı mobil
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-
   useEffect(() => {
-    isMobile ? setPaginationSize("small") : setPaginationSize("medium")
-    console.log(isMobile,)
-  }, [isMobile])
-
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium");
+  }, [isMobile]);
 
   useEffect(() => {
     fetchCities();
-    fetchData() // sayfayı açar açmaz kullanıcının erişim izni olan şehirlere ait kiralama raporunu ekrana basması için eklendi
   }, []);
 
-  // cities geldiğinde ilk veriyi çek
   useEffect(() => {
     if (cities.length > 0) {
       fetchData();
     }
-  }, [cities]);
+  }, [cities, dates, selectedCities]);
 
   const fetchCities = async () => {
     try {
@@ -64,14 +57,9 @@ const PageName = () => {
       setCities(cityList);
       if (locations) {
         const defaultCities = Array.isArray(locations) ? locations : [locations];
-        // sadece backend veya mock'tan gelen şehirler içinde olanları seç
         const validCities = defaultCities.filter(city => cityList.includes(city));
-        console.log(validCities)
         setSelectedCities(validCities);
       }
-
-      setSelectedCities(selectedCities => [...selectedCities])
-
     } catch (err) {
       message.error("Şehirler alınamadı!");
     }
@@ -79,7 +67,6 @@ const PageName = () => {
 
   const fetchData = async () => {
     setLoading(true);
-
     try {
       const response = await axios.post(
         "staffrecords/findStaffRecordByCityAndDate",
@@ -90,9 +77,7 @@ const PageName = () => {
         }
       );
       setData(response.data || []);
-      console.log(selectedCities)
-      // console.log(`startDate: ${dates[0].format("YYYY-MM-DD")} \n endDate: ${dates[1].format("YYYY-MM-DD")} \n cities: ${typeof(selectedCities)}`)
-      console.log(response)
+      setFilteredData(response.data || []);
     } catch (error) {
       message.error("Veri alınırken hata oluştu!");
     } finally {
@@ -100,6 +85,23 @@ const PageName = () => {
     }
   };
 
+  // Search işlemi
+  useEffect(() => {
+    if (!searchText) {
+      setFilteredData(data);
+      return;
+    }
+    const filtered = data.filter((item) => {
+      return (
+        item.device?.qrlabel?.toString().toLowerCase().includes(searchText.toLowerCase()) ||
+        item.city?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.oldBattery?.toString().includes(searchText) ||
+        item.newBattery?.toString().includes(searchText) ||
+        dayjs(item.created_date).format("YYYY-MM-DD").includes(searchText)
+      );
+    });
+    setFilteredData(filtered);
+  }, [searchText, data]);
 
   const columns = [
     {
@@ -107,144 +109,133 @@ const PageName = () => {
       dataIndex: "created_date",
       key: "created_date",
       sorter: (a, b) => new Date(a.created_date) - new Date(b.created_date),
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sortDirections: ["ascend", "descend"],
       defaultSortOrder: "ascend",
       align: "center",
-      render: (value) => {
-        return dayjs(value).format('YYYY-MM-DD')
-      },
-      onHeaderCell: () => ({
-        style: { minWidth: "120px" },
-      }),
-      onCell: () => ({
-        style: { minWidth: "120px" },
-      }),
+      render: (value) => dayjs(value).format("YYYY-MM-DD"),
+      onHeaderCell: () => ({ style: { minWidth: "120px" } }),
+      onCell: () => ({ style: { minWidth: "120px" } }),
     },
     {
       title: "Cihaz QR",
       dataIndex: ["device", "qrlabel"],
       key: "qrlabel",
-      sorter: (a, b) => a.device.qrlabel - b.device.qrlabel, // sayısal sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.device.qrlabel - b.device.qrlabel,
+      sortDirections: ["ascend", "descend"],
       align: "center",
-
     },
     {
       title: "Eski Batarya",
       dataIndex: "oldBattery",
       key: "oldBattery",
-      sorter: (a, b) => a.oldBattery - b.oldBattery, // sayısal sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.oldBattery - b.oldBattery,
+      sortDirections: ["ascend", "descend"],
       align: "center",
-      render: (value) => {
-        return `${value} %`
-      }
+      render: (value) => `${value} %`,
     },
     {
       title: "Yeni Batarya",
       dataIndex: "newBattery",
       key: "newBattery",
-      sorter: (a, b) => a.newBattery - b.newBattery, // sayısal sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.newBattery - b.newBattery,
+      sortDirections: ["ascend", "descend"],
       align: "center",
-      render: (value) => {
-        return `${value} %`
-      }
+      render: (value) => `${value} %`,
     },
-
     {
-      title: "Sehir",
+      title: "Şehir",
       dataIndex: "city",
       key: "city",
-      sorter: (a, b) => a.city.localeCompare(b.city), // alfabetik sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.city.localeCompare(b.city),
+      sortDirections: ["ascend", "descend"],
       align: "center",
     },
-
   ];
 
-  return <Card title="Batarya Değişim Raporları" variant="outlined">
-    <Row gutter={[16, 16]}>
-      {/* Tarih Aralığı */}
-      <Col xs={24} sm={24} md={24} lg={8}>
-        <ConfigProvider locale={trTR}>
+  return (
+    <Card title="Batarya Değişim Raporları" variant="outlined">
+      <Row gutter={[16, 16]}>
+        {/* Tarih Aralığı */}
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <ConfigProvider locale={trTR}>
+            <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
+              <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
+              {isMobile ? (
+                <Space direction="vertical" size={12}>
+                  <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, prev[1]])} style={{ width: "100%" }} />
+                  <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [prev[0], val])} style={{ width: "100%" }} />
+                </Space>
+              ) : (
+                <RangePicker value={dates} onChange={(val) => setDates(val)} format="YYYY-MM-DD" style={{ width: "100%" }} />
+              )}
+            </div>
+          </ConfigProvider>
+        </Col>
+
+        {/* Şehir Seçiniz */}
+        <Col xs={24} sm={24} md={24} lg={8}>
           <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
-            <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
-            {isMobile ? (
-              
-              <Space direction="vertical" size={12} xs={24} sm={24} md={24}>
-                <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, ...prev.slice(0)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Başlangıç tarihi'} />
-                <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [...prev.slice(0, 1), val, ...prev.slice(2)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Bitiş tarihi'} />
-              </Space>
-
-            ) : (
-              // Normal AntD RangePicker
-              <RangePicker
-                value={dates}
-                onChange={(val) => setDates(val)}
-                format="YYYY-MM-DD"
-                style={{ width: "100%" }}
-              />
-            )}
+            <label style={{ marginBottom: 4 }}>Şehir Seçiniz</label>
+            <Select
+              mode="multiple"
+              style={{ minWidth: 200 }}
+              placeholder="Şehir seçiniz"
+              value={selectedCities}
+              onChange={(val) => setSelectedCities(val)}
+              options={cities.map((c) => ({ label: c, value: c }))}
+            />
           </div>
-        </ConfigProvider>
-      </Col>
+        </Col>
 
-      {/* Şehir Seçiniz */}
-      <Col xs={24} sm={24} md={24} lg={8}>
-        <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
-          <label style={{ marginBottom: 4 }}>Şehir Seçiniz</label>
-          <Select
-            mode="multiple"
-            style={{ minWidth: 200 }}
-            placeholder="Şehir seçiniz"
-            value={selectedCities}
-            onChange={(val) => setSelectedCities(val)}
-            options={cities.map((c) => ({ label: c, value: c }))}
-          />
-        </div>
-      </Col>
+        {/* Filtrele Butonu */}
+        <Col xs={24} sm={24} md={24} lg={8} style={{ display: "flex", alignItems: "flex-end", marginBottom: 16 }}>
+          <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>
+            Filtrele
+          </Button>
+        </Col>
+      </Row>
 
-      {/* Filtrele Butonu */}
-      <Col xs={24} sm={24} md={24} lg={8} style={{ display: "flex", alignItems: "flex-end", marginBottom: 16 }}>
-        <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>
-          Filtrele
-        </Button>
-      </Col>
-    </Row>
+      {/* Search Input */}
+      <Input
+        placeholder="Ara..."
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        style={{ marginBottom: 16, maxWidth: 300 }}
+      />
 
+      <Space style={{ marginBottom: 16, margin: "0 8px"  }}>
+        <Button style={{ width: "100%" }} onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
+        <Button style={{ width: "100%" }} onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
+      </Space>
 
-    <Space style={{ marginBottom: 16, marginTop: 16 }} xs={24} sm={24} md={24} lg={8}>
-      <Button style={{ width: "100%" }} onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
-      <Button style={{ width: "100%" }} onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
-    </Space>
-    <Table
-      columns={isMobile ? columns.slice(0, 2) : columns} // mobilde sadece ilk 2 kolon
-      dataSource={data}
-      loading={loading}
-      pagination={{
-        position: ["bottomCenter"],
-        pageSizeOptions: ["5", "10", "20", "50"],
-        size: paginationSize,
-      }}
-      rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`}
-      expandable={
-        isMobile
-          ? {
-            expandedRowRender: (record) => (
-              <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
-                <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
-                <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
-                <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
-                <p><b>Şehir:</b> {record.city}</p>
-              </div>
-            ),
-            expandRowByClick: true, // satıra tıklayınca açılabilsin
-          }
-          : undefined
-      }
-    />
-  </Card>;
+      <Table
+        columns={isMobile ? columns.slice(0, 2) : columns}
+        dataSource={filteredData}
+        loading={loading}
+        pagination={{
+          position: ["bottomCenter"],
+          pageSizeOptions: ["5", "10", "20", "50"],
+          size: paginationSize,
+        }}
+        rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`}
+        expandable={
+          isMobile
+            ? {
+                expandedRowRender: (record) => (
+                  <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
+                    <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
+                    <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
+                    <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
+                    <p><b>Şehir:</b> {record.city}</p>
+                  </div>
+                ),
+                expandRowByClick: true,
+              }
+            : undefined
+        }
+      />
+    </Card>
+  );
 };
 
-export default PageName;
+export default StaffReport;

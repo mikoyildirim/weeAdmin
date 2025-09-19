@@ -1,68 +1,56 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, DatePicker, Button, message, Card, ConfigProvider, Col, Row } from "antd";
-import axios from "../../api/axios"; // senin axios instance
+import { Space, Table, DatePicker, Button, message, Card, ConfigProvider, Col, Row, Input } from "antd";
+import axios from "../../api/axios"; 
 import dayjs from "dayjs";
-import trTR from "antd/es/locale/tr_TR"; // Türkçe locale
-import "dayjs/locale/tr"; // dayjs için Türkçe locale
-import exportToExcel from "../../utils/exportToExcel"
-import exportToPDF from "../../utils/exportToPDF"
-import formatTL from "../../utils/formatTL"
+import trTR from "antd/es/locale/tr_TR"; 
+import "dayjs/locale/tr"; 
+import exportToExcel from "../../utils/exportToExcel";
+import exportToPDF from "../../utils/exportToPDF";
+import formatTL from "../../utils/formatTL";
 
-dayjs.locale("tr"); // dayjs'i Türkçe yap
-
+dayjs.locale("tr"); 
 const { RangePicker } = DatePicker;
 
-
-const PageName = () => {
+const TransactionsReport = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
-  const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]); // ilk açılışta bugünün tarihi
+  const [filteredData, setFilteredData] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]);
   const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState([]);
-  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
-  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.xlsx`
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.pdf`
-  const totalAmount = data.reduce((acc, item) => acc + Number(item.amount), 0);
-  //console.log(formatTL(totalAmount));
 
+  const sortedData = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.xlsx`;
+  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.pdf`;
+  const totalAmount = filteredData.reduce((acc, item) => acc + Number(item.amount), 0);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768); // 768px altı mobil
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium");
+  }, [isMobile]);
 
   useEffect(() => {
-    isMobile ? setPaginationSize("small") : setPaginationSize("medium")
-    console.log(isMobile,)
-  }, [isMobile])
-
-
-  // Cities'i backend'den veya mock ile çek
-  useEffect(() => {
-    fetchData() // sayfayı açar açmaz kullanıcının erişim izni olan şehirlere ait kiralama raporunu ekrana basması için eklendi
+    fetchData();
   }, []);
-
-
 
   const fetchData = async () => {
     setLoading(true);
-
     try {
-      const response = await axios.post(
-        "transactions/successTransactions",
-        {
-          startDate: dates[0].format("YYYY-MM-DD"),
-          endDate: dates[1].format("YYYY-MM-DD"),
-          type: 1,
-          payment_gateway: "iyzico"
-        }
-      );
+      const response = await axios.post("transactions/successTransactions", {
+        startDate: dates[0].format("YYYY-MM-DD"),
+        endDate: dates[1].format("YYYY-MM-DD"),
+        type: 1,
+        payment_gateway: "iyzico",
+      });
       setData(response.data || []);
-      // console.log(`startDate: ${dates[0].format("YYYY-MM-DD")} \n endDate: ${dates[1].format("YYYY-MM-DD")} \n cities: ${typeof(selectedCities)}`)
-      console.log(response)
+      setFilteredData(response.data || []); // başta filtrelenmiş data da eşitle
     } catch (error) {
       message.error("Veri alınırken hata oluştu!");
     } finally {
@@ -70,8 +58,22 @@ const PageName = () => {
     }
   };
 
-  const excelData = data.map(d => ({
-    "Tarih": dayjs(d.date).format('YYYY-MM-DD') ,
+  // Search işlemi
+  const handleSearch = (value) => {
+    setSearchText(value);
+    const filtered = data.filter((item) => {
+      return (
+        item.transaction_id.toString().includes(value) ||
+        item.payment_gateway.toLowerCase().includes(value.toLowerCase()) ||
+        dayjs(item.date).format("DD.MM.YYYY").includes(value) ||
+        item.amount.toString().includes(value)
+      );
+    });
+    setFilteredData(filtered);
+  };
+
+  const excelData = filteredData.map(d => ({
+    "Tarih": dayjs(d.date).format('DD.MM.YYYY'),
     "Ödeme Yöntemi": d.payment_gateway,
     "İşlem Numarası": d.transaction_id,
     "Yükleme Tutarı": d.amount
@@ -83,18 +85,10 @@ const PageName = () => {
       dataIndex: "date",
       key: "date",
       sorter: (a, b) => new Date(a.date) - new Date(b.date),
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sortDirections: ["ascend", "descend"],
       defaultSortOrder: "ascend",
       align: "center",
-      onHeaderCell: () => ({
-        style: { minWidth: "120px" },
-      }),
-      onCell: () => ({
-        style: { minWidth: "120px" },
-      }),
-      render: (value) => {
-        return dayjs(value).format('YYYY-MM-DD')
-      },
+      render: (value) => dayjs(value).format('DD.MM.YYYY')
     },
     {
       title: "Ödeme Yöntemi",
@@ -106,25 +100,20 @@ const PageName = () => {
       title: "İşlem Numarası",
       dataIndex: "transaction_id",
       key: "transaction_id",
-      sorter: (a, b) => a.transaction_id - b.transaction_id, // sayısal sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.transaction_id - b.transaction_id,
+      sortDirections: ["ascend", "descend"],
       align: "center",
     },
     {
       title: "Yükleme Tutarı",
       dataIndex: "amount",
       key: "amount",
-      sorter: (a, b) => a.amount - b.amount, // sayısal sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.amount - b.amount,
+      sortDirections: ["ascend", "descend"],
+      align: "center",
       render: (value) => {
-        const formatted = new Intl.NumberFormat("tr-TR", {
-          style: "currency",
-          currency: "TRY",
-          minimumFractionDigits: 2,
-        }).format(value);
-
-        // ₺ işareti baştaysa, sona taşı
-        return formatted.replace("₺", "").trim() + " ₺"; // direkt yukarı yazılırsa ₺ işareti başta oluyor okunuş zor oluyor bu metod ile ₺ işareti miktarın sonuna alındı
+        return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", minimumFractionDigits: 2 })
+          .format(value).replace("₺", "").trim() + " ₺";
       },
       align: "center",
     },
@@ -133,37 +122,23 @@ const PageName = () => {
   return (
     <Card title="Yükleme Raporları" variant="outlined">
       <Row gutter={[16, 16]}>
-        {/* Filtreleme alanı */}
         <Col xs={24} sm={24} md={24} lg={16}>
           <Row gutter={[12, 12]}>
-            {/* Tarih filtresi */}
             <Col xs={24} sm={24} md={24} lg={8}>
               <ConfigProvider locale={trTR}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
                   {isMobile ? (
-                    // HTML5 mobil tarih inputları
-                    <Space direction="vertical" size={12} xs={24} sm={24} md={24}>
-                      <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, ...prev.slice(0)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Başlangıç tarihi'} />
-                      <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [...prev.slice(0, 1), val, ...prev.slice(2)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Bitiş tarihi'} />
+                    <Space direction="vertical" size={12}>
+                      <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, prev[1]])} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Başlangıç tarihi'} />
+                      <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [prev[0], val])} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Bitiş tarihi'} />
                     </Space>
-
                   ) : (
-                    // Normal AntD RangePicker
-                    <RangePicker
-                      value={dates}
-                      onChange={(val) => setDates(val)}
-                      format="YYYY-MM-DD"
-                      style={{ width: "100%" }}
-                    />
+                    <RangePicker value={dates} onChange={(val) => setDates(val)} format="YYYY-MM-DD" style={{ width: "100%" }} />
                   )}
                 </div>
               </ConfigProvider>
             </Col>
-
-
-
-            {/* Filtreleme butonu */}
             <Col xs={24} sm={24} md={24} lg={8}>
               <Button type="primary" onClick={fetchData} style={{ width: "100%", marginTop: 24 }}>
                 Filtrele
@@ -172,43 +147,32 @@ const PageName = () => {
           </Row>
         </Col>
 
-        {/* Toplam Kiralama Kartı */}
         <Col xs={24} sm={24} md={24} lg={8}>
           <Card>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100%",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: 24,
-                  margin: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {formatTL(totalAmount)}
-              </p>
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%" }}>
+              <p style={{ fontSize: 24, margin: 0 }}>{formatTL(totalAmount)}</p>
               <span style={{ fontSize: 20 }}>Toplam Yükleme</span>
             </div>
           </Card>
         </Col>
       </Row>
 
+      {/* Search input */}
+      <Input
+        placeholder="Ara..."
+        value={searchText}
+        onChange={(e) => handleSearch(e.target.value)}
+        style={{ maxWidth: 300, margin: "16px 0" }}
+      />
 
-      <Space style={{ marginBottom: 16 }}>
+      <Space style={{ marginBottom: 16, margin:"0 8px" }}>
         <Button onClick={() => exportToExcel(excelData, excelFileName)}>Excel İndir</Button>
         <Button onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
       </Space>
+
       <Table
         columns={isMobile ? columns.slice(0, 2) : columns}
-        dataSource={data}
+        dataSource={sortedData}
         loading={loading}
         pagination={{
           position: ["bottomCenter"],
@@ -216,36 +180,18 @@ const PageName = () => {
           size: paginationSize,
         }}
         rowKey={(record) => `${record.date}-${record.transaction_id}-${record.amount}-${record.status}`}
-        expandable={
-          isMobile
-            ? {
-              expandedRowRender: (record) => (
-                <div style={{ fontSize: 14 }}>
-                  {/* <p><b>Tarih:</b> {" "}
-                    {dayjs(record.date).format('YYYY-MM-DD')}</p>
-                  <p><b>Ödeme Yöntemi:</b> {record.payment_gateway}</p> */}
-                  <p><b>İşlem No:</b> {record.transaction_id}</p>
-                  <p>
-                    <b>Yükleme Tutarı:</b>{" "}
-                    {new Intl.NumberFormat("tr-TR", {
-                      style: "currency",
-                      currency: "TRY",
-                      minimumFractionDigits: 2,
-                    })
-                      .format(record.amount)
-                      .replace("₺", "")
-                      .trim()}{" "}
-                    ₺
-                  </p>
-                </div>
-              ),
-              expandRowByClick: true, // satıra tıklayınca açılabilsin
-            }
-            : undefined
-        }
+        expandable={isMobile ? {
+          expandedRowRender: (record) => (
+            <div style={{ fontSize: 14 }}>
+              <p><b>İşlem No:</b> {record.transaction_id}</p>
+              <p><b>Yükleme Tutarı:</b> {new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", minimumFractionDigits: 2 }).format(record.amount).replace("₺","").trim()} ₺</p>
+            </div>
+          ),
+          expandRowByClick: true
+        } : undefined}
       />
     </Card>
   );
 };
 
-export default PageName;
+export default TransactionsReport;

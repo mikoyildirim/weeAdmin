@@ -1,65 +1,57 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, DatePicker, Button, Select, message, Card, ConfigProvider, Col, Row, Pagination } from "antd";
-import axios from "../../api/axios"; // senin axios instance
+import { Space, Table, DatePicker, Button, Select, Input, message, Card, ConfigProvider, Col, Row } from "antd";
+import axios from "../../api/axios";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
-import trTR from "antd/es/locale/tr_TR"; // Türkçe locale
-import "dayjs/locale/tr"; // dayjs için Türkçe locale
-import exportToExcel from "../../utils/exportToExcel"
-import exportToPDF from "../../utils/exportToPDF"
-import formatTL from "../../utils/formatTL"
+import trTR from "antd/es/locale/tr_TR";
+import "dayjs/locale/tr";
+import exportToExcel from "../../utils/exportToExcel";
+import exportToPDF from "../../utils/exportToPDF";
+import formatTL from "../../utils/formatTL";
 
-dayjs.locale("tr"); // dayjs'i Türkçe yap
+dayjs.locale("tr");
 
 const { RangePicker } = DatePicker;
 
-
-const PageName = () => {
+const WeePuanReport = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
-  const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]); // ilk açılışta bugünün tarihi
+  const [filteredData, setFilteredData] = useState([]);
+  const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]);
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [paginationSize, setPaginationSize] = useState([]);
-
-
+  const [searchText, setSearchText] = useState(""); // <-- search için
 
   const user = useSelector((state) => state.user.user);
-  //const userName = user?.name || user?.username || "Admin";
   const locations = user?.permissions?.locations || [];
-  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
-  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.xlsx`
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.pdf`
 
+  const sortedData = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.xlsx`;
+  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.pdf`;
 
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768); // 768px altı mobil
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-
   useEffect(() => {
-    isMobile ? setPaginationSize("small") : setPaginationSize("medium")
-    console.log(isMobile,)
-  }, [isMobile])
-
-
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium");
+  }, [isMobile]);
 
   useEffect(() => {
     fetchCities();
-    fetchData() // sayfayı açar açmaz kullanıcının erişim izni olan şehirlere ait kiralama raporunu ekrana basması için eklendi
+    fetchData();
   }, []);
 
-  // cities geldiğinde ilk veriyi çek
+
   useEffect(() => {
-    if (cities.length > 0) {
-      fetchData();
-    }
-  }, [cities]);
+    fetchData();
+  }, [selectedCities, dates]);
 
   const fetchCities = async () => {
     try {
@@ -67,14 +59,9 @@ const PageName = () => {
       setCities(cityList);
       if (locations) {
         const defaultCities = Array.isArray(locations) ? locations : [locations];
-        // sadece backend veya mock'tan gelen şehirler içinde olanları seç
         const validCities = defaultCities.filter(city => cityList.includes(city));
-        console.log(validCities)
         setSelectedCities(validCities);
       }
-
-      setSelectedCities(selectedCities => [...selectedCities])
-
     } catch (err) {
       message.error("Şehirler alınamadı!");
     }
@@ -82,20 +69,14 @@ const PageName = () => {
 
   const fetchData = async () => {
     setLoading(true);
-
     try {
-      const response = await axios.post(
-        "transactions/find/totalTransactions",
-        {
-          startDate: dates[0].format("YYYY-MM-DD"),
-          endDate: dates[1].format("YYYY-MM-DD"),
-          cities: selectedCities,
-        }
-      );
+      const response = await axios.post("transactions/find/totalTransactions", {
+        startDate: dates[0].format("YYYY-MM-DD"),
+        endDate: dates[1].format("YYYY-MM-DD"),
+        cities: selectedCities,
+      });
       setData(response.data || []);
-      console.log(selectedCities)
-      // console.log(`startDate: ${dates[0].format("YYYY-MM-DD")} \n endDate: ${dates[1].format("YYYY-MM-DD")} \n cities: ${typeof(selectedCities)}`)
-      console.log(response)
+      setFilteredData(response.data || []); // <-- initial filteredData
     } catch (error) {
       message.error("Veri alınırken hata oluştu!");
     } finally {
@@ -103,7 +84,21 @@ const PageName = () => {
     }
   };
 
-
+  // Search işlemi
+  useEffect(() => {
+    if (!searchText) {
+      setFilteredData(data);
+      return;
+    }
+    const filtered = data.filter((item) => {
+      return (
+        item.city?.toLowerCase().includes(searchText.toLowerCase()) ||
+        item.date?.toLowerCase().includes(searchText.toLowerCase()) ||
+        String(item.total).includes(searchText)
+      );
+    });
+    setFilteredData(filtered);
+  }, [searchText, data]);
 
   const columns = [
     {
@@ -111,59 +106,42 @@ const PageName = () => {
       dataIndex: "date",
       key: "date",
       sorter: (a, b) => new Date(a.date) - new Date(b.date),
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sortDirections: ["ascend", "descend"],
       defaultSortOrder: "ascend",
       align: "center",
-      onHeaderCell: () => ({
-        style: { minWidth: "120px" },
-      }),
-      onCell: () => ({
-        style: { minWidth: "120px" },
-      }),
+      onHeaderCell: () => ({ style: { minWidth: "120px" } }),
+      onCell: () => ({ style: { minWidth: "120px" } }),
     },
     {
       title: "Sehir",
       dataIndex: "city",
       key: "city",
-      sorter: (a, b) => a.city.localeCompare(b.city), // alfabetik sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.city.localeCompare(b.city),
+      sortDirections: ["ascend", "descend"],
       align: "center",
     },
     {
       title: "Toplam WeePuan",
       dataIndex: "total",
       key: "totalTL",
-      sorter: (a, b) => a.total - b.total, // sayısal sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.total - b.total,
+      sortDirections: ["ascend", "descend"],
       align: "center",
-      render: (value) => {
-        const formatted = new Intl.NumberFormat("tr-TR", {
-          maximumFractionDigits: 2,
-        }).format(value);
-        return formatted + " Wee Puan"; // Örn: "132,50" veya "1.234,50"
-      }
-
+      render: (value) => new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 }).format(value) + " Wee Puan",
     },
     {
       title: "TL Karşılığı",
       dataIndex: "total",
       key: "total",
-      sorter: (a, b) => a.total - b.total, // sayısal sıralama
-      sortDirections: ["ascend", "descend"], // cancel sorting yok
+      sorter: (a, b) => a.total - b.total,
+      sortDirections: ["ascend", "descend"],
       align: "center",
       render: (value) => {
-        const tlValue = value / 10
-        const formatted = new Intl.NumberFormat("tr-TR", {
-          style: "currency",
-          currency: "TRY",
-          minimumFractionDigits: 2,
-        }).format(tlValue);
-        // ₺ işareti baştaysa, sona taşı
-        return formatted.replace("₺", "").trim() + " ₺"; // direkt yukarı yazılırsa ₺ işareti başta oluyor okunuş zor oluyor bu metod ile ₺ işareti miktarın sonuna alındı
+        const tlValue = value / 10;
+        const formatted = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", minimumFractionDigits: 2 }).format(tlValue);
+        return formatted.replace("₺", "").trim() + " ₺";
       },
-
     },
-
   ];
 
   return (
@@ -175,20 +153,12 @@ const PageName = () => {
             <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
               <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
               {isMobile ? (
-                // HTML5 mobil tarih inputları
-                <Space direction="vertical" size={12} xs={24} sm={24} md={24}>
-                  <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, ...prev.slice(0)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Başlangıç tarihi'} />
-                  <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [...prev.slice(0, 1), val, ...prev.slice(2)])} xs={24} sm={24} md={24} style={{ width: "100%", margin: "8px 0" }} renderExtraFooter={() => 'Bitiş tarihi'} />
+                <Space direction="vertical" size={12}>
+                  <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, ...prev.slice(0)])} style={{ width: "100%" }} />
+                  <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [...prev.slice(0, 1), val, ...prev.slice(2)])} style={{ width: "100%" }} />
                 </Space>
-
               ) : (
-                // Normal AntD RangePicker
-                <RangePicker
-                  value={dates}
-                  onChange={(val) => setDates(val)}
-                  format="YYYY-MM-DD"
-                  style={{ width: "100%" }}
-                />
+                <RangePicker value={dates} onChange={(val) => setDates(val)} format="YYYY-MM-DD" style={{ width: "100%" }} />
               )}
             </div>
           </ConfigProvider>
@@ -211,31 +181,36 @@ const PageName = () => {
 
         {/* Filtrele Butonu */}
         <Col xs={24} sm={24} md={24} lg={8} style={{ display: "flex", alignItems: "flex-end", marginBottom: 16 }}>
-          <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>
-            Filtrele
-          </Button>
+          <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
         </Col>
       </Row>
 
+      {/* Search Input */}
+      <Input
+        placeholder="Ara..."
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        style={{ marginBottom: 16, maxWidth: 300 }}
+      />
 
-      <Space style={{ marginBottom: 16, marginTop: 16 }} xs={24} sm={24} md={24} lg={8}>
-        <Button style={{ width: "100%" }} onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
-        <Button style={{ width: "100%" }} onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
+      <Space style={{ marginBottom: 16, margin: "0 8px" }}>
+        <Button onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
+        <Button onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
       </Space>
+
       <Table
         columns={columns}
-        dataSource={data}
+        dataSource={filteredData}
         loading={loading}
         pagination={{
           position: ["bottomCenter"],
           pageSizeOptions: ["5", "10", "20", "50"],
           size: paginationSize,
         }}
-        rowKey={(record) => `${record.date}-${record.city}-${record.total}-${record.city}`} // benzersiz key
+        rowKey={(record) => `${record.date}-${record.city}-${record.total}-${record.city}`}
       />
-      {/* <Pagination size="small" total={50} /> */}
     </Card>
   );
 };
 
-export default PageName;
+export default WeePuanReport;
