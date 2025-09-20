@@ -4,7 +4,9 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import exportToExcel from "../../utils/exportToExcel";
+import utc from 'dayjs/plugin/utc';
 
+dayjs.extend(utc);
 dayjs.locale("tr");
 
 const ActiveDevices = () => {
@@ -39,13 +41,13 @@ const ActiveDevices = () => {
     }
     const filtered = devices.filter((item) => {
       return (
-        item.qrlabel?.toString().includes(searchText.toLowerCase()) ||
+        item.qrlabel?.toString().toLowerCase().includes(searchText) ||
         item.imei?.includes(searchText.toLowerCase()) ||
         item.key_secret?.toString().includes(searchText) ||
         item.battery?.toString().includes(searchText) ||
         item.city?.toString().toLowerCase().includes(searchText) ||
         item.status?.toString().toLowerCase().includes(searchText) ||
-        dayjs(item.last_seen).format("YYYY-MM-DD").includes(searchText)
+        dayjs.utc(item.last_seen).format("YYYY-MM-DD").includes(searchText)
       );
     });
     setFilteredDevices(filtered);
@@ -96,7 +98,7 @@ const ActiveDevices = () => {
       dataIndex: "last_seen",
       key: "last_seen",
       sorter: (a, b) => new Date(a.last_seen) - new Date(b.last_seen),
-      render: (val) => (val ? new Date(val).toLocaleString() : ""),
+      render: (val) => (val ? dayjs.utc(val).format("DD.MM.YYYY HH.mm.ss") : ""),
     },
 
     {
@@ -170,7 +172,7 @@ const ActiveDevices = () => {
                     <Tag style={{ marginLeft: "8px" }} color="blue">{record?.priceObject?.name || "Yok"}</Tag>
                   </>} </p>
                   <p><b>Durum:</b> {record.status}</p>
-                  <p><b>Son Görülme:</b> {record.last_seen ? new Date(record.last_seen).toLocaleString() : ""}</p>
+                  <p><b>Son Görülme:</b> {record.last_seen ? dayjs.utc(record.last_seen).format("DD.MM.YYYY HH.mm.ss") : ""}</p>
                 </div>
               ),
               expandRowByClick: true,
