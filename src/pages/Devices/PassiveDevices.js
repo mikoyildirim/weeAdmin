@@ -100,7 +100,19 @@ const PassiveDevices = () => {
 
 
   const columns = [
-    { title: "QR Label", dataIndex: "qrlabel", key: "qrlabel", sorter: (a, b) => a.qrlabel - b.qrlabel, },
+    {
+      title: "QR Label", dataIndex: "qrlabel", key: "qrlabel", sorter: (a, b) => a.qrlabel - b.qrlabel,
+      render: (_, record) => (
+        <>
+          <Button
+            type="link"
+            href={`/panel/devices/detail/${record.qrlabel}`}
+          >
+            {record.qrlabel}
+          </Button>
+        </>
+      ),
+    },
     { title: "IMEI", dataIndex: "imei", key: "imei", sorter: (a, b) => a.imei - b.imei, },
     { title: "Key Secret", dataIndex: "key_secret", key: "key_secret", sorter: (a, b) => a.key_secret - b.key_secret, },
     { title: "Batarya (%)", dataIndex: "battery", key: "battery", sorter: (a, b) => a.battery - b.battery, },
@@ -146,7 +158,7 @@ const PassiveDevices = () => {
   return (
 
     <Card title={"Pasif Cihazlar"}>
-     <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]}>
         {/* Search Input */}
         <Col xs={24} sm={24} md={24} lg={8}>
           <Input

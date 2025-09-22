@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from "react";
 import { Tabs, Form, Input, Row, Col, Table, Typography, Spin } from "antd";
-import axios from "../../api/axios";
+import axios from "../../../api/axios";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 

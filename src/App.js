@@ -27,7 +27,7 @@ import ActiveDevices from "./pages/Devices/ActiveDevices";
 import PassiveDevices from "./pages/Devices/PassiveDevices";
 import UnusedDevices from "./pages/Devices/UnusedDevices";
 import DeviceManagement from "./pages/Devices/DeviceManagement";
-import DeviceDetail from "./pages/Devices/DeviceDetail";
+import DeviceDetail from "./pages/Devices/Detail/DeviceDetail";
 
 // Users
 import Users from "./pages/Users/Users";

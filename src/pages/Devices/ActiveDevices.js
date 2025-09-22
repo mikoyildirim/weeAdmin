@@ -76,16 +76,19 @@ const ActiveDevices = () => {
   }));
 
   const columns = [
-    { title: "QR Label", dataIndex: "qrlabel", key: "qrlabel", sorter: (a, b) => a.qrlabel - b.qrlabel,
-      render:(val)=>{
+    {
+      title: "QR Label", dataIndex: "qrlabel", key: "qrlabel", sorter: (a, b) => a.qrlabel - b.qrlabel,
+      render: (_, record) => (
         <>
-        <a rel="noreferrer"
-                        href={`/panel/devices/detail/${val.qrlabel}`}>
-                        {val.qrlabel}
-                      </a>
+          <Button
+            type="link"
+            href={`/panel/devices/detail/${record.qrlabel}`}
+          >
+            {record.qrlabel}
+          </Button>
         </>
-      }
-     },
+      ),
+    },
     { title: "IMEI", dataIndex: "imei", key: "imei", sorter: (a, b) => a.imei - b.imei, },
     { title: "Key Secret", dataIndex: "key_secret", key: "key_secret", sorter: (a, b) => a.key_secret - b.key_secret, },
     { title: "Batarya (%)", dataIndex: "battery", key: "battery", sorter: (a, b) => a.battery - b.battery, },
@@ -171,7 +174,7 @@ const ActiveDevices = () => {
         expandable={
           isMobile
             ? {
-              expandedRowRender: (record, ff) => (
+              expandedRowRender: (record) => (
                 <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
                   <p><b>IMEI:</b> {record.imei}</p>
                   <p><b>Key Secret:</b> {record.key_secret}</p>
