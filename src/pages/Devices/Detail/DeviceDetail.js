@@ -172,7 +172,6 @@ const DeviceDetail = () => {
     {
       title: "Sürüş Süresi", dataIndex: "timeDrive", key: "timeDrive",
       sorter: (a, b) => a.timeDrive - b.timeDrive,
-      render: (value) => `${value} dk` // tableData'daki diffMinutes kullanılıyor
     },
   ];
 
