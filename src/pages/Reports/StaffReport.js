@@ -6,7 +6,6 @@ import { useSelector } from "react-redux";
 import trTR from "antd/es/locale/tr_TR";
 import "dayjs/locale/tr";
 import exportToExcel from "../../utils/exportToExcel";
-import exportToPDF from "../../utils/exportToPDF";
 
 dayjs.locale("tr");
 
@@ -26,12 +25,11 @@ const StaffReport = () => {
   const locations = user?.permissions?.locations || [];
   const sortedData = [...filteredData].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Batarya Raporu.xlsx`;
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Batarya Raporu.pdf`;
 
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -195,18 +193,33 @@ const StaffReport = () => {
         </Col>
       </Row>
 
-      {/* Search Input */}
-      <Input
-        placeholder="Ara..."
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        style={{ marginBottom: 16, maxWidth: 300 }}
-      />
 
-      <Space style={{ marginBottom: 16, margin: "0 8px"  }}>
-        <Button style={{ width: "100%" }} onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
-        <Button style={{ width: "100%" }} onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
-      </Space>
+      <Row gutter={[16, 16]}>
+        {/* Search Input */}
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Input
+            placeholder="Ara..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ margin: "16px 0", width: "100%", ...(isMobile ? { marginBottom: "8px" } : { maxWidth: "300px" }), }}
+          />
+        </Col>
+
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Button
+            type="primary"
+            style={{
+              margin: isMobile ? " 0px 0px 16px 0px " : "16px 8px",
+              width: isMobile ? "100%" : "auto",   // mobilde tam genişlik, desktopta otomatik
+              maxWidth: isMobile ? "none" : "200px", // desktopta max 200px
+            }}
+            onClick={() => exportToExcel(sortedData, excelFileName)}
+          >
+            Excel İndir
+          </Button>
+        </Col>
+      </Row>
+
 
       <Table
         columns={isMobile ? columns.slice(0, 2) : columns}
@@ -221,16 +234,16 @@ const StaffReport = () => {
         expandable={
           isMobile
             ? {
-                expandedRowRender: (record) => (
-                  <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
-                    <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
-                    <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
-                    <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
-                    <p><b>Şehir:</b> {record.city}</p>
-                  </div>
-                ),
-                expandRowByClick: true,
-              }
+              expandedRowRender: (record) => (
+                <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
+                  <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
+                  <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
+                  <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
+                  <p><b>Şehir:</b> {record.city}</p>
+                </div>
+              ),
+              expandRowByClick: true,
+            }
             : undefined
         }
       />

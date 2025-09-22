@@ -6,8 +6,7 @@ import { useSelector } from "react-redux";
 import trTR from "antd/es/locale/tr_TR";
 import "dayjs/locale/tr";
 import exportToExcel from "../../utils/exportToExcel";
-import exportToPDF from "../../utils/exportToPDF";
-import formatTL from "../../utils/formatTL";
+
 
 dayjs.locale("tr");
 
@@ -25,15 +24,13 @@ const WeePuanReport = () => {
 
   const user = useSelector((state) => state.user.user);
   const locations = user?.permissions?.locations || [];
-
   const sortedData = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.xlsx`;
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.pdf`;
 
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -184,20 +181,31 @@ const WeePuanReport = () => {
           <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
         </Col>
       </Row>
+      <Row gutter={[16, 16]}>
+        {/* Search Input */}
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Input
+            placeholder="Ara..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ margin: "16px 0", width: "100%", ...(isMobile ? { marginBottom: "8px" } : { maxWidth: "300px" }), }}
+          />
+        </Col>
 
-      {/* Search Input */}
-      <Input
-        placeholder="Ara..."
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        style={{ marginBottom: 16, maxWidth: 300 }}
-      />
-
-      <Space style={{ marginBottom: 16, margin: "0 8px" }}>
-        <Button onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
-        <Button onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
-      </Space>
-
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Button
+            type="primary"
+            style={{
+              margin: isMobile ? " 0px 0px 16px 0px " : "16px 8px",
+              width: isMobile ? "100%" : "auto",   // mobilde tam genişlik, desktopta otomatik
+              maxWidth: isMobile ? "none" : "200px", // desktopta max 200px
+            }}
+            onClick={() => exportToExcel(sortedData, excelFileName)}
+          >
+            Excel İndir
+          </Button>
+        </Col>
+      </Row>
       <Table
         columns={columns}
         dataSource={filteredData}

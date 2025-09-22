@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Space, Table, DatePicker, Button, message, Card, ConfigProvider, Col, Row, Input } from "antd";
-import axios from "../../api/axios"; 
+import axios from "../../api/axios";
 import dayjs from "dayjs";
-import trTR from "antd/es/locale/tr_TR"; 
-import "dayjs/locale/tr"; 
+import trTR from "antd/es/locale/tr_TR";
+import "dayjs/locale/tr";
 import exportToExcel from "../../utils/exportToExcel";
 import exportToPDF from "../../utils/exportToPDF";
 import formatTL from "../../utils/formatTL";
 
-dayjs.locale("tr"); 
+dayjs.locale("tr");
 const { RangePicker } = DatePicker;
 
 const TransactionsReport = () => {
@@ -22,11 +22,10 @@ const TransactionsReport = () => {
 
   const sortedData = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.xlsx`;
-  const pdfFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.pdf`;
   const totalAmount = filteredData.reduce((acc, item) => acc + Number(item.amount), 0);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -65,7 +64,7 @@ const TransactionsReport = () => {
       return (
         item.transaction_id.toString().includes(value) ||
         item.payment_gateway.toLowerCase().includes(value.toLowerCase()) ||
-        dayjs(item.date).format("DD.MM.YYYY").includes(value) ||
+        dayjs(item.date).format("YYYY-MM-DD").includes(value) ||
         item.amount.toString().includes(value)
       );
     });
@@ -73,7 +72,7 @@ const TransactionsReport = () => {
   };
 
   const excelData = filteredData.map(d => ({
-    "Tarih": dayjs(d.date).format('DD.MM.YYYY'),
+    "Tarih": dayjs(d.date).format('YYYY-MM-DD'),
     "Ödeme Yöntemi": d.payment_gateway,
     "İşlem Numarası": d.transaction_id,
     "Yükleme Tutarı": d.amount
@@ -88,7 +87,7 @@ const TransactionsReport = () => {
       sortDirections: ["ascend", "descend"],
       defaultSortOrder: "ascend",
       align: "center",
-      render: (value) => dayjs(value).format('DD.MM.YYYY')
+      render: (value) => dayjs(value).format("YYYY-MM-DD"),
     },
     {
       title: "Ödeme Yöntemi",
@@ -157,18 +156,31 @@ const TransactionsReport = () => {
         </Col>
       </Row>
 
-      {/* Search input */}
-      <Input
-        placeholder="Ara..."
-        value={searchText}
-        onChange={(e) => handleSearch(e.target.value)}
-        style={{ maxWidth: 300, margin: "16px 0" }}
-      />
+      <Row gutter={[16, 16]}>
+        {/* Search Input */}
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Input
+            placeholder="Ara..."
+            value={searchText}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ margin: "16px 0", width: "100%", ...(isMobile ? { marginBottom: "8px" } : { maxWidth: "300px" }), }}
+          />
+        </Col>
 
-      <Space style={{ marginBottom: 16, margin:"0 8px" }}>
-        <Button onClick={() => exportToExcel(excelData, excelFileName)}>Excel İndir</Button>
-        <Button onClick={() => exportToPDF(columns, sortedData, pdfFileName)}>PDF İndir</Button>
-      </Space>
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Button
+            type="primary"
+            style={{
+              margin: isMobile ? " 0px 0px 16px 0px " : "16px 8px",
+              width: isMobile ? "100%" : "auto",   // mobilde tam genişlik, desktopta otomatik
+              maxWidth: isMobile ? "none" : "200px", // desktopta max 200px
+            }}
+            onClick={() => exportToExcel(excelData, excelFileName)}
+          >
+            Excel İndir
+          </Button>
+        </Col>
+      </Row>
 
       <Table
         columns={isMobile ? columns.slice(0, 2) : columns}
@@ -184,7 +196,7 @@ const TransactionsReport = () => {
           expandedRowRender: (record) => (
             <div style={{ fontSize: 14 }}>
               <p><b>İşlem No:</b> {record.transaction_id}</p>
-              <p><b>Yükleme Tutarı:</b> {new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", minimumFractionDigits: 2 }).format(record.amount).replace("₺","").trim()} ₺</p>
+              <p><b>Yükleme Tutarı:</b> {new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", minimumFractionDigits: 2 }).format(record.amount).replace("₺", "").trim()} ₺</p>
             </div>
           ),
           expandRowByClick: true

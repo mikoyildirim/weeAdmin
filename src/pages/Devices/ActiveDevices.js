@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, Card, Input, Space } from "antd";
+import { Table, Tag, Button, Card, Input, Row, Col } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
@@ -20,7 +20,7 @@ const ActiveDevices = () => {
   const excelFileName = `${dayjs().format("DD.MM.YYYY_HH.mm")} Aktif Cihazlar.xlsx`;
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -76,7 +76,16 @@ const ActiveDevices = () => {
   }));
 
   const columns = [
-    { title: "QR Label", dataIndex: "qrlabel", key: "qrlabel", sorter: (a, b) => a.qrlabel - b.qrlabel, },
+    { title: "QR Label", dataIndex: "qrlabel", key: "qrlabel", sorter: (a, b) => a.qrlabel - b.qrlabel,
+      render:(val)=>{
+        <>
+        <a rel="noreferrer"
+                        href={`/panel/devices/detail/${val.qrlabel}`}>
+                        {val.qrlabel}
+                      </a>
+        </>
+      }
+     },
     { title: "IMEI", dataIndex: "imei", key: "imei", sorter: (a, b) => a.imei - b.imei, },
     { title: "Key Secret", dataIndex: "key_secret", key: "key_secret", sorter: (a, b) => a.key_secret - b.key_secret, },
     { title: "Batarya (%)", dataIndex: "battery", key: "battery", sorter: (a, b) => a.battery - b.battery, },
@@ -122,31 +131,31 @@ const ActiveDevices = () => {
   return (
 
     <Card title={"Aktif Cihazlar"}>
-      <Input
-        placeholder="Ara..."
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        style={{ marginBottom: "16px", maxWidth: 300 }}
-      />
+      <Row gutter={[16, 16]}>
+        {/* Search Input */}
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Input
+            placeholder="Ara..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ margin: "16px 0", width: "100%", ...(isMobile ? { marginBottom: "8px" } : { maxWidth: "300px" }), }}
+          />
+        </Col>
 
-      {/* Excel ve PDF indirme butonları */}
-      <Space
-        style={{
-          margin: "0 0 16px 0",
-          width: "100%",
-          justifyContent: isMobile ? "center" : "start", // mobilde ortala
-          display: "flex",
-        }}>
-        <Button
-          style={{
-            backgroundColor: "#1677ff", // mobilde mavi (AntD default primary zaten mavi)
-            borderColor: "#1677ff",
-            color: "white"
-          }}
-          onClick={() => exportToExcel(excelData, excelFileName)}>
-          Excel İndir
-        </Button>
-      </Space>
+        <Col xs={24} sm={24} md={24} lg={8}>
+          <Button
+            type="primary"
+            style={{
+              margin: isMobile ? " 0px 0px 16px 0px " : "16px 8px",
+              width: isMobile ? "100%" : "auto",   // mobilde tam genişlik, desktopta otomatik
+              maxWidth: isMobile ? "none" : "200px", // desktopta max 200px
+            }}
+            onClick={() => exportToExcel(excelData, excelFileName)}
+          >
+            Excel İndir
+          </Button>
+        </Col>
+      </Row>
 
       <Table
         columns={isMobile ? [columns[0], columns[columns.length - 1]] : columns}
