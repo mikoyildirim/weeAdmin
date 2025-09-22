@@ -15,9 +15,12 @@ const DeviceDetail = () => {
   const [lastUser, setLastUser] = useState({})
   const [loading, setLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [tableData, setTableData] = useState([]);
+
   const navigate = useNavigate();
   const { id: qrlabel } = useParams();
-
 
 
   const fetchLastTenUser = async () => {
@@ -67,20 +70,52 @@ const DeviceDetail = () => {
       setLoading(false);
     }
   }
+  useEffect(() => { // search işlemi
+    if (!searchText) {
+      setFilteredUsers(tableData);
+      return;
+    }
+    const filtered = tableData.filter((item) => {
+      return (
+        dayjs.utc(item.startDate).format("DD.MM.YYYY HH.mm.ss").includes(searchText) ||
+        dayjs.utc(item.endDate).format("DD.MM.YYYY HH.mm.ss").includes(searchText) ||
+        item.memberName?.toString().toLowerCase().includes(searchText) ||
+        item.memberGsm?.toString().toLowerCase().includes(searchText) ||
+        item.timeDrive?.toString().toLowerCase().includes(searchText)
+      );
+    });
+    setFilteredUsers(filtered);
+  }, [searchText, tableData]);
 
-  useEffect(() => {
+  useEffect(() => { // ekranın genişlik pixeline göre mobil olup olmadığına karar veriyor
     const checkMobile = () => setIsMobile(window.innerWidth < 991);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  console.log(isMobile)
   useEffect(() => {
     fetchLastUser()
     fetchLastTenUser()
   }, [qrlabel])
 
+  useEffect(() => { // son 10 kullanıcı bilgilerini düzenleyip lastTenUser' a yükler
+    const temp = lastTenUser.map((item, index) => {
+      const start = dayjs.utc(item.start);
+      const end = dayjs.utc(item.updated_date);
+      const diffMinutes = `${end.diff(start, "minute")} dk`;
+      return {
+        key: index + 1,
+        startDate: item.start,
+        endDate: item.updated_date,
+        memberName: `${item.member.first_name} ${item.member.last_name}`,
+        memberGsm: item.member.gsm,
+        timeDrive: diffMinutes 
+      }
+    })
+
+    setTableData(temp)
+  }, [lastTenUser])
 
   if (loading) {
     return (
@@ -106,23 +141,6 @@ const DeviceDetail = () => {
     battery: `${lastUser.deviceBattery}`,
     cihazQrKodu: qrlabel,
   };
-
-  console.log(lastUserInfo)
-
-
-  const tableData = lastTenUser.map((item, index) => {
-    const start = dayjs.utc(item.start);
-    const end = dayjs.utc(item.updated_date);
-    const diffMinutes = end.diff(start, "minute");
-    return {
-      key: index + 1,
-      startDate: item.start,
-      endDate: item.updated_date,
-      memberName: `${item.member.first_name} ${item.member.last_name}`,
-      memberGsm: item.member.gsm,
-      timeDrive: diffMinutes // burada istediğini doldurabilirsin
-    }
-  });
 
   const columns = [
     {
@@ -191,9 +209,20 @@ const DeviceDetail = () => {
         </TabPane>
 
         <TabPane tab="Geçmiş Sürüşler" key="2">
+          <Row gutter={[16, 16]}>
+            {/* Search Input */}
+            <Col xs={24} sm={24} md={24} lg={8}>
+              <Input
+                placeholder="Ara..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ margin: "16px 0", width: "100%", ...(isMobile ? { marginBottom: "16px" } : { maxWidth: "300px" }), }}
+              />
+            </Col>
+          </Row>
           <Table
             columns={isMobile ? columns.slice(0, 3) : columns}
-            dataSource={tableData}
+            dataSource={filteredUsers}
             loading={loading}
             rowKey={(record) => record.startDate}
             scroll={{ x: true }}
@@ -204,7 +233,7 @@ const DeviceDetail = () => {
                   expandedRowRender: (record) => (
                     <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
                       <p><b>GSM:</b> {record.memberGsm}</p>
-                      <p><b>Sürüş Süresi:</b> {record.timeDrive} dk</p>
+                      <p><b>Sürüş Süresi:</b> {record.timeDrive} </p>
                     </div>
                   ),
                   expandRowByClick: true,
