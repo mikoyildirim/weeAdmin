@@ -164,21 +164,43 @@ const Dashboard = () => {
       </Col>
 
       {/* Rentals Kartı */}
-      <Col xs={24} sm={12} md={12} lg={6}>
-        <Card hoverable style={cardStyle} >
-          <Tabs defaultActiveKey="daily" onChange={(key) => fetchRentals(key)} style={{ justifyContent: 'center' }}>
-            <TabPane tab="Günlük" key="daily">
-              {loadingRentals ? <Spin /> : <Title level={3}>{dailyTotal}</Title>}
-            </TabPane>
-            <TabPane tab="Haftalık" key="weekly">
-              {loadingRentals ? <Spin /> : <Title level={3}>{weeklyTotal}</Title>}
-            </TabPane>
-            <TabPane tab="Aylık" key="monthly">
-              {loadingRentals ? <Spin /> : <Title level={3}>{monthlyTotal}</Title>}
-            </TabPane>
-          </Tabs>
-        </Card>
-      </Col>
+<Col xs={24} sm={12} md={12} lg={6}>
+  <Card hoverable style={cardStyle}>
+    <Tabs
+      defaultActiveKey="daily"
+      onChange={(key) => fetchRentals(key)}
+      style={{ justifyContent: "center" }}
+    >
+      <TabPane tab="Günlük" key="daily">
+        {loadingRentals ? (
+          <Spin />
+        ) : (
+          <Title level={3}>
+            {dailyTotal.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}
+          </Title>
+        )}
+      </TabPane>
+      <TabPane tab="Haftalık" key="weekly">
+        {loadingRentals ? (
+          <Spin />
+        ) : (
+          <Title level={3}>
+            {weeklyTotal.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}
+          </Title>
+        )}
+      </TabPane>
+      <TabPane tab="Aylık" key="monthly">
+        {loadingRentals ? (
+          <Spin />
+        ) : (
+          <Title level={3}>
+            {monthlyTotal.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}
+          </Title>
+        )}
+      </TabPane>
+    </Tabs>
+  </Card>
+</Col>
 
       {/* Ekip Kartı */}
       <Col xs={24} sm={12} md={12} lg={6}>

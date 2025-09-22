@@ -18,7 +18,7 @@ import StaffReport from "./pages/Reports/StaffReport";
 import ActiveMap from "./pages/Maps/ActiveMap";
 import PassiveMap from "./pages/Maps/PassiveMap";
 import LostMap from "./pages/Maps/LostMap";
-import Polygons from "./pages/Maps/Polygons";
+import Polygons from "./pages/Maps/Polygons/Polygons";
 import Heatmap from "./pages/Maps/Heatmap";
 import Distribution from "./pages/Maps/Distribution";
 
@@ -69,7 +69,7 @@ function App() {
           <Route path="maps/active" element={<ActiveMap />} />
           <Route path="maps/passive" element={<PassiveMap />} />
           <Route path="maps/lost" element={<LostMap />} />
-          <Route path="maps/polygons" element={<Polygons />} />
+          <Route path="maps/polygons/polygons" element={<Polygons />} />
           <Route path="maps/heatmap" element={<Heatmap />} />
           <Route path="maps/distribution" element={<Distribution />} />
 
