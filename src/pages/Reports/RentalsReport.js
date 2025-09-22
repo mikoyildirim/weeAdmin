@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, DatePicker, Button, Select, Input, message, Card, ConfigProvider, Col, Row } from "antd";
+import {
+  Space,
+  Table,
+  DatePicker,
+  Button,
+  Select,
+  Input,
+  message,
+  Card,
+  ConfigProvider,
+  Col,
+  Row,
+} from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
@@ -15,17 +27,24 @@ const { RangePicker } = DatePicker;
 const RentalsReport = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]); // <-- search için
+  const [filteredData, setFilteredData] = useState([]);
   const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]);
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState();
-  const [searchText, setSearchText] = useState(""); // <-- search state
+  const [searchText, setSearchText] = useState("");
 
-  const sortedData = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
-  const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`;
-  const totalRentals = filteredData.reduce((acc, item) => acc + Number(item.total), 0);
+  const sortedData = [...filteredData].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+  const excelFileName = `${dates[0].format(
+    "YYYY-MM-DD"
+  )}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`;
+  const totalRentals = filteredData.reduce(
+    (acc, item) => acc + Number(item.total),
+    0
+  );
 
   const user = useSelector((state) => state.user.user);
   const locations = user?.permissions?.locations || [];
@@ -52,8 +71,7 @@ const RentalsReport = () => {
   const fetchCities = async () => {
     try {
       setCities(locations);
-      const validCities = locations.filter(city => locations.includes(city));
-      setSelectedCities(validCities);
+      setSelectedCities(locations); // ✅ başlangıçta tüm şehirleri seç
     } catch (err) {
       message.error("Şehirler alınamadı!");
     }
@@ -65,13 +83,17 @@ const RentalsReport = () => {
       const response = await axios.post(
         "rentals/find/dayDayByCityAndDate/withCityFilter",
         {
-          startDate: dates[0].format("YYYY-MM-DD"),
-          endDate: dates[1].format("YYYY-MM-DD"),
-          cities: selectedCities,
+          startDate: dates?.[0]
+            ? dates[0].format("YYYY-MM-DD")
+            : dayjs().format("YYYY-MM-DD"),
+          endDate: dates?.[1]
+            ? dates[1].format("YYYY-MM-DD")
+            : dayjs().format("YYYY-MM-DD"),
+          cities: selectedCities.length > 0 ? selectedCities : locations, // ✅ boşsa fallback
         }
       );
       setData(response.data || []);
-      setFilteredData(response.data || []); // <-- initial filtered data
+      setFilteredData(response.data || []);
     } catch (error) {
       message.error("Veri alınırken hata oluştu!");
     } finally {
@@ -124,7 +146,7 @@ const RentalsReport = () => {
       align: "center",
     },
     {
-      title: "Sehir",
+      title: "Şehir",
       dataIndex: "city",
       key: "city",
       sorter: (a, b) => a.city.localeCompare(b.city),
@@ -146,11 +168,36 @@ const RentalsReport = () => {
                   <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
                   {isMobile ? (
                     <Space direction="vertical" size={12}>
-                      <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, ...prev.slice(0)])} style={{ width: "100%" }} />
-                      <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [...prev.slice(0, 1), val, ...prev.slice(2)])} style={{ width: "100%" }} />
+                      <DatePicker
+                        value={dates[0]}
+                        onChange={(val) =>
+                          val
+                            ? setDates([val, dates[1]])
+                            : setDates([dayjs().subtract(1, "day"), dates[1]])
+                        }
+                        style={{ width: "100%" }}
+                      />
+                      <DatePicker
+                        value={dates[1]}
+                        onChange={(val) =>
+                          val
+                            ? setDates([dates[0], val])
+                            : setDates([dates[0], dayjs()])
+                        }
+                        style={{ width: "100%" }}
+                      />
                     </Space>
                   ) : (
-                    <RangePicker value={dates} onChange={(val) => setDates(val)} format="YYYY-MM-DD" style={{ width: "100%" }} />
+                    <RangePicker
+                      value={dates}
+                      onChange={(val) =>
+                        val
+                          ? setDates(val)
+                          : setDates([dayjs().subtract(1, "day"), dayjs()])
+                      }
+                      format="YYYY-MM-DD"
+                      style={{ width: "100%" }}
+                    />
                   )}
                 </div>
               </ConfigProvider>
@@ -173,7 +220,11 @@ const RentalsReport = () => {
 
             {/* Filtreleme butonu */}
             <Col xs={24} sm={24} md={24} lg={8}>
-              <Button type="primary" onClick={fetchData} style={{ width: "100%", marginTop: 24 }}>
+              <Button
+                type="primary"
+                onClick={fetchData}
+                style={{ width: "100%", marginTop: 24 }}
+              >
                 Filtrele
               </Button>
             </Col>
@@ -199,7 +250,6 @@ const RentalsReport = () => {
         </Col>
       </Row>
 
-
       <Row gutter={[16, 16]}>
         {/* Search Input */}
         <Col xs={24} sm={24} md={24} lg={8}>
@@ -207,7 +257,13 @@ const RentalsReport = () => {
             placeholder="Ara..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ margin: "16px 0", width: "100%", ...(isMobile ? { marginBottom: "8px" } : { maxWidth: "300px" }), }}
+            style={{
+              margin: "16px 0",
+              width: "100%",
+              ...(isMobile
+                ? { marginBottom: "8px" }
+                : { maxWidth: "300px" }),
+            }}
           />
         </Col>
 
@@ -216,8 +272,8 @@ const RentalsReport = () => {
             type="primary"
             style={{
               margin: isMobile ? " 0px 0px 16px 0px " : "16px 8px",
-              width: isMobile ? "100%" : "auto",   // mobilde tam genişlik, desktopta otomatik
-              maxWidth: isMobile ? "none" : "200px", // desktopta max 200px
+              width: isMobile ? "100%" : "auto",
+              maxWidth: isMobile ? "none" : "200px",
             }}
             onClick={() => exportToExcel(sortedData, excelFileName)}
           >
@@ -225,7 +281,6 @@ const RentalsReport = () => {
           </Button>
         </Col>
       </Row>
-
 
       <Table
         columns={columns}
@@ -238,7 +293,7 @@ const RentalsReport = () => {
         }}
         rowKey={(record) => `${record.date}-${record.city}`}
       />
-    </Card >
+    </Card>
   );
 };
 
