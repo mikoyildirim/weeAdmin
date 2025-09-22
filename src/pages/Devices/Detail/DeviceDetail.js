@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from "react";
-import { Card, Tabs, Form, Input, Row, Col, Table, Typography, Spin } from "antd";
+import { Card, Tabs, Form, Input, Row, Col, Table, Typography, Spin, Button, Modal } from "antd";
 import axios from "../../../api/axios";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -18,12 +18,19 @@ const DeviceDetail = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [tableData, setTableData] = useState([]);
+  const [img, setImg] = useState("");
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => setIsModalOpen(true);
+  const handleClose = () => setIsModalOpen(false);
 
   const navigate = useNavigate();
   const { id: qrlabel } = useParams();
 
 
   const fetchLastTenUser = async () => {
+    
     try {
       const res = await axios.post(
         "/devices/findLastTenUser",
@@ -38,16 +45,47 @@ const DeviceDetail = () => {
         }
       )
       setLastTenUser(Array.isArray(res.data) ? res.data : []);
-      console.log(lastTenUser)
+      //console.log(lastTenUser)
     } catch (err) {
       console.error("/devices/findLastTenUser alınırken hata oluştu", err)
       setLastTenUser([])
     } finally {
-      setLoading(false);
     }
   }
 
+
+  const fetchImgShow = async () => {
+    
+    try {
+      const res = await axios.post(
+        "/rentals/showImage",
+        {
+          "url": lastTenUser[0].imageObj.url,
+          "key": lastTenUser[0].imageObj.key
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer TOKEN_HERE",
+            "language": "tr",
+            "version": "panel"
+          }
+        }
+      )
+      console.log(res.data)
+      setImg(res.data)
+      //console.log(img)
+    } catch (err) {
+      console.error("/rentals/showImage alınırken hata oluştu", err)
+      setImg([])
+    } finally {
+    }
+  }
+
+  //console.log(lastTenUser)
+
   const fetchLastUser = async () => {
+    setLoading(true);
     try {
       const res = await axios.post(
         "/devices/findLastUser",
@@ -62,7 +100,7 @@ const DeviceDetail = () => {
         }
       )
       setLastUser(res.data);
-      console.log(lastUser)
+      //console.log(lastUser)
     } catch (err) {
       console.error("/devices/findLastUser alınırken hata oluştu", err)
       setLastUser()
@@ -99,6 +137,15 @@ const DeviceDetail = () => {
     fetchLastTenUser()
   }, [qrlabel])
 
+
+  useEffect(() => {
+    fetchImgShow()
+    console.log(img)
+  }, [lastUser])
+
+
+  console.log(lastUser)
+
   useEffect(() => { // son 10 kullanıcı bilgilerini düzenleyip lastTenUser' a yükler
     const temp = lastTenUser.map((item, index) => {
       const start = dayjs.utc(item.start);
@@ -110,7 +157,7 @@ const DeviceDetail = () => {
         endDate: item.updated_date,
         memberName: `${item.member.first_name} ${item.member.last_name}`,
         memberGsm: item.member.gsm,
-        timeDrive: diffMinutes 
+        timeDrive: diffMinutes
       }
     })
 
@@ -128,11 +175,11 @@ const DeviceDetail = () => {
         <Spin size="large" />
       </div>
     );
-  }
-
-  if (!lastTenUser.length) {
+  } else if (!lastTenUser.length) {
     return <h2>Veri bulunamadı</h2>;
   }
+
+
 
   const lastUserInfo = {
     name: lastUser.memberName,
@@ -201,6 +248,26 @@ const DeviceDetail = () => {
                 </Form.Item>
                 <Form.Item label="Cihaz QR Kodu">
                   <Input value={lastUserInfo.cihazQrKodu} disabled style={{ color: "black" }} />
+                </Form.Item>
+                <Form.Item label="Sürüş Fotoğrafı">
+                  {/* Buton */}
+                  <Button type="primary" onClick={showModal}>
+                    Fotoğrafı Görüntüle
+                  </Button>
+                  {/* Modal */}
+                  <Modal
+                    title="Sürüş Fotoğrafı"
+                    open={isModalOpen}
+                    onCancel={handleClose}
+                    footer={null}
+                    width={"60%"}
+                  >
+                    <img
+                      src={`data:image/png;base64,${img.image}`}
+                      alt="Base64 Görsel"
+                      style={{ width: "100%", borderRadius: "8px" }}
+                    />
+                  </Modal>
                 </Form.Item>
               </Col>
             </Row>
