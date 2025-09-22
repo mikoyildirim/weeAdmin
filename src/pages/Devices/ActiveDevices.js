@@ -39,15 +39,17 @@ const ActiveDevices = () => {
       setFilteredDevices(devices);
       return;
     }
+    const lowerSearch = searchText.toLowerCase();
+
     const filtered = devices.filter((item) => {
       return (
-        item.qrlabel?.toString().toLowerCase().includes(searchText) ||
-        item.imei?.includes(searchText.toLowerCase()) ||
-        item.key_secret?.toString().includes(searchText) ||
-        item.battery?.toString().includes(searchText) ||
-        item.city?.toString().toLowerCase().includes(searchText) ||
-        item.status?.toString().toLowerCase().includes(searchText) ||
-        dayjs.utc(item.last_seen).format("YYYY-MM-DD").includes(searchText)
+        item.qrlabel?.toString().toLowerCase().includes(lowerSearch) ||
+        item.imei?.includes(lowerSearch.toLowerCase()) ||
+        item.key_secret?.toString().includes(lowerSearch) ||
+        item.battery?.toString().includes(lowerSearch) ||
+        item.city?.toString().toLowerCase().includes(lowerSearch) ||
+        item.status?.toString().toLowerCase().includes(lowerSearch) ||
+        dayjs.utc(item.last_seen).format("YYYY-MM-DD").includes(lowerSearch)
       );
     });
     setFilteredDevices(filtered);
@@ -78,6 +80,7 @@ const ActiveDevices = () => {
   const columns = [
     {
       title: "QR Label", dataIndex: "qrlabel", key: "qrlabel", sorter: (a, b) => a.qrlabel - b.qrlabel,
+      align: "center",
       render: (_, record) => (
         <>
           <Button
@@ -89,33 +92,42 @@ const ActiveDevices = () => {
         </>
       ),
     },
-    { title: "IMEI", dataIndex: "imei", key: "imei", sorter: (a, b) => a.imei - b.imei, },
-    { title: "Key Secret", dataIndex: "key_secret", key: "key_secret", sorter: (a, b) => a.key_secret - b.key_secret, },
-    { title: "Batarya (%)", dataIndex: "battery", key: "battery", sorter: (a, b) => a.battery - b.battery, },
+    { title: "IMEI", dataIndex: "imei", key: "imei", sorter: (a, b) => a.imei - b.imei, align: "center", },
+    { title: "Kilit Kodu", dataIndex: "key_secret", key: "key_secret", sorter: (a, b) => a.key_secret - b.key_secret, align: "center", },
+    { title: "Batarya (%)", dataIndex: "battery", key: "battery", sorter: (a, b) => a.battery - b.battery, align: "center", },
     {
       title: "Şehir/İlçe",
       key: "location",
       sorter: (a, b) => a.city.localeCompare(b.city),
-      render: (_, record) => (
-        <>
-          {record.city}/{record.town}
-          <br />
-          <Tag color="blue">{record?.priceObject?.name || "Yok"}</Tag>
-        </>
-      ),
+      render: (_, record) => (<>{record.city}/{record.town}</>),
+      align: "center",
     },
-    { title: "Durum", dataIndex: "status", key: "status" },
+    {
+      title: "Durum", dataIndex: "status", key: "status", align: "center",
+      sorter: (a, b) => a.status.localeCompare(b.status),
+      render: (_, record) => {
+        const statusColors = {
+          ONLINE: "green",
+          OFFLINE: "red",
+          BUSY: "gray",
+          MAINTENANCE: "orange"
+        };
+        return <Tag color={statusColors[record.status] || "default"}>{record.status}</Tag>;
+      },
+    },
     {
       title: "Son Görülme",
       dataIndex: "last_seen",
       key: "last_seen",
       sorter: (a, b) => new Date(a.last_seen) - new Date(b.last_seen),
       render: (val) => (val ? dayjs.utc(val).format("DD.MM.YYYY HH.mm.ss") : ""),
+      align: "center",
     },
 
     {
       title: "İşlemler",
       key: "actions",
+      align: "center",
       render: (_, record) => (
         <>
           <Button
@@ -177,13 +189,23 @@ const ActiveDevices = () => {
               expandedRowRender: (record) => (
                 <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
                   <p><b>IMEI:</b> {record.imei}</p>
-                  <p><b>Key Secret:</b> {record.key_secret}</p>
+                  <p><b>Kilit Kodu:</b> {record.key_secret}</p>
                   <p><b>Batarya:</b> {record.battery} %</p>
-                  <p><b>Şehir/İlçe:</b> {<>
-                    {record.city}/{record.town}
-                    <Tag style={{ marginLeft: "8px" }} color="blue">{record?.priceObject?.name || "Yok"}</Tag>
-                  </>} </p>
-                  <p><b>Durum:</b> {record.status}</p>
+                  <p><b>Şehir/İlçe:</b> {<>{record.city}/{record.town}</>} </p>
+                  <p>
+                    <b>Durum:</b>{" "}
+                    {record.status === "ONLINE" ? (
+                      <Tag color="green">{record.status}</Tag>
+                    ) : record.status === "OFFLINE" ? (
+                      <Tag color="red">{record.status}</Tag>
+                    ) : record.status === "BUSY" ? (
+                      <Tag color="gray">{record.status}</Tag>
+                    ) : record.status === "MAINTENANCE" ? (
+                      <Tag color="gray">{record.status}</Tag>
+                    ) : (
+                      record.status
+                    )}
+                  </p>
                   <p><b>Son Görülme:</b> {record.last_seen ? dayjs.utc(record.last_seen).format("DD.MM.YYYY HH.mm.ss") : ""}</p>
                 </div>
               ),
