@@ -44,16 +44,19 @@ const PassiveMap = () => {
   const [polygons, setPolygons] = useState([]);
 
   const fetchPolygons = async () => { // polygonları backend den çekiyoruz 
+    //setLoading(true);
     try {
       const res = await axios.get("/geofences");
       setPolygons(res.data || []);
     } catch {
       console.log("Geofence alınamadı");
+    } finally {
+      // setLoading(false);
     }
   };
 
   const fetchConnectedDevices = async () => { // bağlı cihazları backend den çekiyoruz
-    setLoading(true);
+    //setLoading(true);
     try {
       const devRes = await axios.get("/devices/connected");
       setActiveDevices(Array.isArray(devRes.data) ? devRes.data : []); // response sonucu bir array ise o array i bizim değerimize yüklüyor. yok değilse boş array yüklüyor
@@ -61,7 +64,7 @@ const PassiveMap = () => {
       console.error("devices/connected alınırken hata:", err);
       setActiveDevices([]);
     } finally {
-      setLoading(false);
+      //setLoading(false);
     }
   };
 
@@ -88,7 +91,7 @@ const PassiveMap = () => {
     const activeDevicesQrlabels = new Set(activeDevices.map(item => item.qrlabel));
     const filtered = allDevices.filter(item => !activeDevicesQrlabels.has(item.qrlabel))
     setPassiveDevices(filtered)
-  }, [loading])
+  }, [loading, activeDevices, allDevices])
 
   const devicesWithLocation = passiveDevices.filter(
     (d) =>
@@ -106,24 +109,6 @@ const PassiveMap = () => {
     ]
     : [39.75, 37.02]; // Sivas fallback
 
-  const handleRing = async (imei) => {
-    try {
-      await axios.post("/devices/command", { imei, cmd: "beep" });
-      alert("Zil çalma komutu gönderildi.");
-    } catch {
-      alert("Zil gönderilemedi.");
-    }
-  };
-
-  const handleRequestLocation = async (imei) => {
-    try {
-      await axios.post("/devices/command", { imei });
-      alert("Konum isteği gönderildi.");
-    } catch {
-      alert("Konum isteği gönderilemedi.");
-    }
-  };
-
   // Dünya poligonu (gri arkaplan)
   const worldPolygon = [
     [-90, -180],
@@ -139,7 +124,7 @@ const PassiveMap = () => {
           <Spin size="large" tip="Harita yükleniyor..." />
         </div>
       ) : (
-        <MapContainer center={center} zoom={devicesWithLocation.length ? 13 : 6} style={{ height: "100%", width: "100%" }}>
+        <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
@@ -163,9 +148,11 @@ const PassiveMap = () => {
                         Konuma Git
                       </a>
                     </div>
-                    <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                      <Button size="small" onClick={() => handleRing(device.imei)}>Zil Çal</Button>
-                      <Button size="small" onClick={() => handleRequestLocation(device.imei)}>Konum İste</Button>
+                    <div style={{ marginTop: 6 }}>
+                      <a rel="noreferrer"
+                        href={`/panel/devices/detail/${device.qrlabel}`}>
+                        Son Kullanıcı
+                      </a>
                     </div>
                   </div>
                 </Popup>
@@ -194,7 +181,7 @@ const PassiveMap = () => {
                       <Polygon
                         key={`allow-${loc._id}`}
                         positions={coords}
-                        pathOptions={{ color: "black", fillOpacity: 0, weight: 2 }}
+                        pathOptions={{ color: "grey", fillOpacity: 0, weight: 2 }}
                       />
                     );
                   }
