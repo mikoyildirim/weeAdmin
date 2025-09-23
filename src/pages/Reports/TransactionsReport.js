@@ -157,28 +157,34 @@ const TransactionsReport = () => {
       </Row>
 
       <Row gutter={[16, 16]}>
-        {/* Search Input */}
-        <Col xs={24} sm={24} md={24} lg={8}>
-          <Input
-            placeholder="Ara..."
-            value={searchText}
-            onChange={(e) => handleSearch(e.target.value)}
-            style={{ margin: "16px 0", width: "100%", ...(isMobile ? { marginBottom: "8px" } : { maxWidth: "300px" }), }}
-          />
-        </Col>
-
-        <Col xs={24} sm={24} md={24} lg={8}>
-          <Button
-            type="primary"
+        <Col xs={24} sm={24} md={24} lg={16}>
+          <div
             style={{
-              margin: isMobile ? " 0px 0px 16px 0px " : "16px 8px",
-              width: isMobile ? "100%" : "auto",   // mobilde tam genişlik, desktopta otomatik
-              maxWidth: isMobile ? "none" : "200px", // desktopta max 200px
+              display: "flex",
+              gap: "8px",
+              flexWrap: isMobile ? "wrap" : "nowrap",
+              alignItems: "center",
             }}
-            onClick={() => exportToExcel(excelData, excelFileName)}
           >
-            Excel İndir
-          </Button>
+            <Input
+              placeholder="Ara..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{
+                margin: isMobile ? "0 0 8px 0" : "16px 0",
+                width: isMobile ? "100%" : "300px",
+              }}
+            />
+            <Button
+              type="primary"
+              style={{
+                width: isMobile ? "100%" : "auto",
+              }}
+              onClick={() => exportToExcel(sortedData, excelFileName)}
+            >
+              Excel İndir
+            </Button>
+          </div>
         </Col>
       </Row>
 

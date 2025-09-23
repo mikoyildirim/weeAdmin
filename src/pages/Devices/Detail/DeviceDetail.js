@@ -11,26 +11,24 @@ const { TabPane } = Tabs;
 const { Link } = Typography;
 
 const DeviceDetail = () => {
-  const [lastTenUser, setLastTenUser] = useState([])
-  const [lastUser, setLastUser] = useState({})
-  const [loading, setLoading] = useState(true)
+  const [lastTenUser, setLastTenUser] = useState([]);
+  const [lastUser, setLastUser] = useState({});
+  const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [tableData, setTableData] = useState([]);
-  const [img, setImg] = useState("");
 
+  // modal için seçili resim
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const showModal = () => setIsModalOpen(true);
-  const handleClose = () => setIsModalOpen(false);
+  const [selectedImg, setSelectedImg] = useState(null);
 
   const navigate = useNavigate();
   const { id: qrlabel } = useParams();
 
-
+  // son 10 kullanıcıyı getir
   const fetchLastTenUser = async () => {
-    
+    setLoading(true);
     try {
       const res = await axios.post(
         "/devices/findLastTenUser",
@@ -43,49 +41,47 @@ const DeviceDetail = () => {
             "version": "panel"
           }
         }
-      )
-      setLastTenUser(Array.isArray(res.data) ? res.data : []);
-      //console.log(lastTenUser)
-    } catch (err) {
-      console.error("/devices/findLastTenUser alınırken hata oluştu", err)
-      setLastTenUser([])
-    } finally {
-    }
-  }
+      );
 
+      const users = Array.isArray(res.data) ? res.data : [];
 
-  const fetchImgShow = async () => {
-    
-    try {
-      const res = await axios.post(
-        "/rentals/showImage",
-        {
-          "url": lastTenUser[0].imageObj.url,
-          "key": lastTenUser[0].imageObj.key
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer TOKEN_HERE",
-            "language": "tr",
-            "version": "panel"
+      // her kullanıcı için fotoğrafı getir
+      const usersWithImages = await Promise.all(
+        users.map(async (item) => {
+          try {
+            const imgRes = await axios.post(
+              "/rentals/showImage",
+              { url: item.imageObj.url, key: item.imageObj.key },
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: "Bearer TOKEN_HERE",
+                  "language": "tr",
+                  "version": "panel"
+                }
+              }
+            );
+
+            return { ...item, base64Img: imgRes.data.image };
+          } catch (err) {
+            console.error("Görsel alınırken hata oluştu", err);
+            return { ...item, base64Img: null };
           }
-        }
-      )
-      console.log(res.data)
-      setImg(res.data)
-      //console.log(img)
+        })
+      );
+
+      setLastTenUser(usersWithImages);
     } catch (err) {
-      console.error("/rentals/showImage alınırken hata oluştu", err)
-      setImg([])
+      console.error("/devices/findLastTenUser alınırken hata oluştu", err);
+      setLastTenUser([]);
     } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  //console.log(lastTenUser)
-
+  // son kullanıcıyı getir
   const fetchLastUser = async () => {
-    setLoading(true);
+
     try {
       const res = await axios.post(
         "/devices/findLastUser",
@@ -98,17 +94,16 @@ const DeviceDetail = () => {
             "version": "panel"
           }
         }
-      )
+      );
       setLastUser(res.data);
-      //console.log(lastUser)
     } catch (err) {
-      console.error("/devices/findLastUser alınırken hata oluştu", err)
-      setLastUser()
-    } finally {
-      setLoading(false);
+      console.error("/devices/findLastUser alınırken hata oluştu", err);
+      setLastUser({});
     }
-  }
-  useEffect(() => { // search işlemi
+  };
+
+  // search işlemi
+  useEffect(() => {
     if (!searchText) {
       setFilteredUsers(tableData);
       return;
@@ -125,44 +120,40 @@ const DeviceDetail = () => {
     setFilteredUsers(filtered);
   }, [searchText, tableData]);
 
-  useEffect(() => { // ekranın genişlik pixeline göre mobil olup olmadığına karar veriyor
+  // ekranın genişliğine göre mobil olup olmadığını belirle
+  useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 991);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // sayfa yüklenince dataları getir
   useEffect(() => {
-    fetchLastUser()
-    fetchLastTenUser()
-  }, [qrlabel])
+    fetchLastUser();
+    fetchLastTenUser();
+  }, [qrlabel]);
 
-
+  // lastTenUser güncellenince tabloya doldur
   useEffect(() => {
-    fetchImgShow()
-    console.log(img)
-  }, [lastUser])
-
-
-  console.log(lastUser)
-
-  useEffect(() => { // son 10 kullanıcı bilgilerini düzenleyip lastTenUser' a yükler
     const temp = lastTenUser.map((item, index) => {
       const start = dayjs.utc(item.start);
-      const end = dayjs.utc(item.updated_date);
+      const end = dayjs.utc(item.end);
       const diffMinutes = `${end.diff(start, "minute")} dk`;
       return {
         key: index + 1,
         startDate: item.start,
-        endDate: item.updated_date,
+        endDate: item.end,
         memberName: `${item.member.first_name} ${item.member.last_name}`,
         memberGsm: item.member.gsm,
-        timeDrive: diffMinutes
-      }
-    })
+        timeDrive: diffMinutes,
+        photo: item.base64Img, // 👈 görsel tabloya eklendi
+      };
+    });
+    setTableData(temp);
+  }, [lastTenUser]);
 
-    setTableData(temp)
-  }, [lastTenUser])
+
 
   if (loading) {
     return (
@@ -179,8 +170,6 @@ const DeviceDetail = () => {
     return <h2>Veri bulunamadı</h2>;
   }
 
-
-
   const lastUserInfo = {
     name: lastUser.memberName,
     birthDate: dayjs(lastUser.memberBirthDate).format("DD.MM.YYYY"),
@@ -194,6 +183,7 @@ const DeviceDetail = () => {
       title: "Sürüş Başlangıç",
       dataIndex: "startDate",
       key: "startDate",
+      align: "center",
       sorter: (a, b) => a.startDate.localeCompare(b.startDate),
       render: (value) => dayjs.utc(value).format("DD.MM.YYYY HH.mm.ss")
     },
@@ -201,6 +191,7 @@ const DeviceDetail = () => {
       title: "Sürüş Bitiş",
       dataIndex: "endDate",
       key: "endDate",
+      align: "center",
       sorter: (a, b) => a.endDate.localeCompare(b.endDate),
       render: (value) => dayjs.utc(value).format("DD.MM.YYYY HH.mm.ss")
     },
@@ -208,22 +199,44 @@ const DeviceDetail = () => {
       title: "Ad Soyad",
       dataIndex: "memberName",
       key: "memberName",
+      align: "center",
       sorter: (a, b) => a.memberName.localeCompare(b.memberName)
     },
     {
       title: "GSM",
       dataIndex: "memberGsm",
       key: "memberGsm",
+      align: "center",
       sorter: (a, b) => a.memberGsm.localeCompare(b.memberGsm)
     },
     {
-      title: "Sürüş Süresi", dataIndex: "timeDrive", key: "timeDrive",
+      title: "Sürüş Süresi",
+      dataIndex: "timeDrive",
+      key: "timeDrive",
+      align: "center",
       sorter: (a, b) => a.timeDrive - b.timeDrive,
+    },
+    {
+      title: "Sürüş Fotoğrafı",
+      dataIndex: "photo",
+      key: "photo",
+      align: "center",
+      render: (_, record) => (
+        <Button
+          type="primary"
+          disabled={!record.photo}
+          onClick={() => {
+            setSelectedImg(record.photo);
+            setIsModalOpen(true);
+          }}
+        >
+          Fotoğrafı Görüntüle
+        </Button>
+      ),
     },
   ];
 
   return (
-
     <Card title={`Sürüş Bilgileri: ${qrlabel}`}>
       <Tabs defaultActiveKey="1">
         <TabPane tab="Bilgiler" key="1">
@@ -251,23 +264,15 @@ const DeviceDetail = () => {
                 </Form.Item>
                 <Form.Item label="Sürüş Fotoğrafı">
                   {/* Buton */}
-                  <Button type="primary" onClick={showModal}>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setSelectedImg(tableData[0].photo);
+                      setIsModalOpen(true);
+                    }}
+                  >
                     Fotoğrafı Görüntüle
                   </Button>
-                  {/* Modal */}
-                  <Modal
-                    title="Sürüş Fotoğrafı"
-                    open={isModalOpen}
-                    onCancel={handleClose}
-                    footer={null}
-                    width={"60%"}
-                  >
-                    <img
-                      src={`data:image/png;base64,${img.image}`}
-                      alt="Base64 Görsel"
-                      style={{ width: "100%", borderRadius: "8px" }}
-                    />
-                  </Modal>
                 </Form.Item>
               </Col>
             </Row>
@@ -276,13 +281,16 @@ const DeviceDetail = () => {
 
         <TabPane tab="Geçmiş Sürüşler" key="2">
           <Row gutter={[16, 16]}>
-            {/* Search Input */}
             <Col xs={24} sm={24} md={24} lg={8}>
               <Input
                 placeholder="Ara..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                style={{ margin: "16px 0", width: "100%", ...(isMobile ? { marginBottom: "16px" } : { maxWidth: "300px" }), }}
+                style={{
+                  margin: "16px 0",
+                  width: "100%",
+                  ...(isMobile ? { marginBottom: "16px" } : { maxWidth: "300px", marginBottom: "16px" }),
+                }}
               />
             </Col>
           </Row>
@@ -300,6 +308,16 @@ const DeviceDetail = () => {
                     <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
                       <p><b>GSM:</b> {record.memberGsm}</p>
                       <p><b>Sürüş Süresi:</b> {record.timeDrive} </p>
+                      <Button
+                        type="primary"
+                        disabled={!record.photo}
+                        onClick={() => {
+                          setSelectedImg(record.photo);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        Fotoğrafı Görüntüle
+                      </Button>
                     </div>
                   ),
                   expandRowByClick: true,
@@ -307,9 +325,28 @@ const DeviceDetail = () => {
                 : undefined
             }
           />
-
         </TabPane>
       </Tabs>
+
+      {/* Modal tek yerde duruyor */}
+      <Modal
+        title="Sürüş Fotoğrafı"
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        height="800px"
+        width="fit-content"
+      >
+        {selectedImg ? (
+          <img
+            src={`data:image/png;base64,${selectedImg}`}
+            alt="Base64 Görsel"
+            style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+          />
+        ) : (
+          <p>Görsel bulunamadı</p>
+        )}
+      </Modal>
     </Card>
   );
 };
