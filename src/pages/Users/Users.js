@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table } from "antd";
 import axios from "../../api/axios";
+import dayjs from "dayjs";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -12,11 +13,19 @@ const Users = () => {
   const [searched, setSearched] = useState(false);
   const [userStatus, setUserStatus] = useState("");
   const [cardStatus, setCardStatus] = useState("");
-  //const [cardStatus, setCardStatus] = useState("");
 
   const handlePhoneChange = (e) => {
     const value = e.target.value.replace(/\D/g, ""); // sadece rakam
     setPhone(value);
+  };
+
+  // Formatlar
+  const formatDateTime = (date) => {
+    return date ? dayjs(date).format("YYYY-MM-DD HH.mm.ss") : "-";
+  };
+
+  const formatDateOnly = (date) => {
+    return date ? dayjs(date).format("YYYY-MM-DD") : "-";
   };
 
   const searchUser = async () => {
@@ -50,29 +59,59 @@ const Users = () => {
     else if (type === "card") setCardStatus(value);
   };
 
-  // transactions filtresi
+  // transactions filtresi + sıralama
+  const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1) || [])
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const uploads = userData?.wallet?.transactions?.filter(t => t.type === 1) || [];
-  const rentals = userData?.wallet?.transactions?.filter(t => t.type === -3) || [];
-  const campaigns = userData?.wallet?.transactions?.filter(t => t.type === 3) || [];
-  console.log(userData?.wallet)
-  // Columns tanımları
+  const rentals = (userData?.wallet?.transactions?.filter(t => t.type === -3 || t.type === -1) || [])
+    .sort((a, b) => new Date(b.rental?.start) - new Date(a.rental?.start))
+    .reverse();
+
+  const campaigns = (userData?.wallet?.transactions?.filter(t => t.type === 3) || [])
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Columns
   const uploadColumns = [
-    { title: "Tarih", dataIndex: "date", key: "date" },
+    {
+      title: "Tarih",
+      dataIndex: "date",
+      key: "date",
+      render: (date) => formatDateTime(date),
+    },
     { title: "Yükleme Noktası", dataIndex: "payment_gateway", key: "payment_gateway" },
     { title: "Yükleme ID", dataIndex: "transaction_id", key: "transaction_id" },
     { title: "Ceza Türü", dataIndex: "penalty_type", key: "penalty_type" },
     { title: "QR", dataIndex: "qr", key: "qr" },
-    { title: "Tutar", dataIndex: "amount", key: "amount" },
+    { 
+      title: "Tutar", 
+      dataIndex: "amount", 
+      key: "amount",
+      render: (val) => val != null ? `${val} ₺` : "-"
+    },
     { title: "İşlem Versiyon", dataIndex: "version", key: "version" },
     { title: "Durum", dataIndex: "status", key: "status" },
   ];
 
   const rentalColumns = [
     { title: "QR", dataIndex: ["rental", "device", "qrlabel"], key: "qr" },
-    { title: "Başlangıç", dataIndex: ["rental", "start"], key: "start" },
-    { title: "Bitiş", dataIndex: ["rental", "end"], key: "end" },
-    { title: "Sonlandıran", dataIndex: ["rental", "finishedUser", "name"], key: "finishedUser" },
+    {
+      title: "Başlangıç",
+      dataIndex: ["rental", "start"],
+      key: "start",
+      render: (date) => formatDateTime(date),
+    },
+    {
+      title: "Bitiş",
+      dataIndex: ["rental", "end"],
+      key: "end",
+      render: (date) => formatDateTime(date),
+    },
+    {
+      title: "Sonlandıran",
+      key: "finishedUser",
+      render: (_, record) =>
+        record.rental?.finishedUser?.name ? record.rental.finishedUser.name : "Kullanıcı",
+    },
     {
       title: "Süre",
       key: "duration",
@@ -83,22 +122,50 @@ const Users = () => {
           const diff = Math.floor((end - start) / 1000);
           const hours = Math.floor(diff / 3600);
           const minutes = Math.floor((diff % 3600) / 60);
-          return `${hours}h ${minutes}m`;
+          const seconds = diff % 60;
+          return `${hours}h ${minutes}m ${seconds}s`;
         }
         return "-";
       },
     },
-    { title: "Tutar", dataIndex: ["rental", "total"], key: "total" },
-    { title: "İşlem Versiyon", dataIndex: "version", key: "version" },
-    //{ title: "Harita", dataIndex: ["rental", "avldatas"], key: "map" },
+    {
+      title: "Tutar",
+      key: "total",
+      render: (_, record) => {
+        if (record?.amount != null) {
+          let formatted = Number(record.amount).toFixed(2);
+          if (record.type === -3) {
+            return `${formatted} WeePuan`;
+          } else if (record.type === -1) {
+            return `${formatted} ₺`;
+          }
+        }
+        return "-";
+      },
+    },
+    {
+      title: "İşlem Versiyon",
+      key: "version",
+      render: (_, record) => record.version || record.rental?.version || "-",
+    },
     { title: "Görsel", dataIndex: "image", key: "image" },
     { title: "Sürüşü Düzenle", dataIndex: "editDriving", key: "editDriving" },
   ];
 
   const campaignColumns = [
-    { title: "Tarih", dataIndex: "date", key: "date" },
+    {
+      title: "Tarih",
+      dataIndex: "date",
+      key: "date",
+      render: (date) => formatDateTime(date),
+    },
     { title: "Yükleme ID", dataIndex: "transaction_id", key: "transaction_id" },
-    { title: "Tutar", dataIndex: "amount", key: "amount" },
+    { 
+      title: "Tutar", 
+      dataIndex: "amount", 
+      key: "amount",
+      render: (val) => val != null ? `${val} Wee Puan` : "-"
+    },
     { title: "İşlem Versiyon", dataIndex: "version", key: "version" },
   ];
 
@@ -152,7 +219,7 @@ const Users = () => {
 
                   <Col span={12}>
                     <Form.Item label="Kullanıcı Doğum Tarihi">
-                      <Input value={userData.birth_date} disabled style={{ color: "black" }} />
+                      <Input value={formatDateOnly(userData.birth_date)} disabled style={{ color: "black" }} />
                     </Form.Item>
                   </Col>
                   <Col span={12}>
@@ -161,7 +228,7 @@ const Users = () => {
                     </Form.Item>
                   </Col>
 
-                  {/* Uyruk - Şehir - Cinsiyet yan yana, ekranın yarısı */}
+                  {/* Uyruk - Şehir - Cinsiyet yan yana */}
                   <Col span={12}>
                     <Row gutter={[16, 16]}>
                       <Col span={8}>
