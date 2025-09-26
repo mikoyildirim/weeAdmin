@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
+import exportToExcel from "../../utils/exportToExcel";
+import { ColumnHeightOutlined } from "@ant-design/icons";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -13,6 +15,25 @@ const Users = () => {
   const [searched, setSearched] = useState(false);
   const [userStatus, setUserStatus] = useState("");
   const [cardStatus, setCardStatus] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+  const [paginationSize, setPaginationSize] = useState("medium");
+
+  const excelFileNameCharges = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Yükleme Raporu.xlsx`;
+  const excelFileNameRentals = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kiralama Raporu.xlsx`;
+  const excelFileNameCampaigns = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kampanya Raporu.xlsx`;
+
+
+
+  useEffect(() => {
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium");
+  }, [isMobile]);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handlePhoneChange = (e) => {
     const value = e.target.value.replace(/\D/g, ""); // sadece rakam
@@ -60,15 +81,66 @@ const Users = () => {
   };
 
   // transactions filtresi + sıralama
-  const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1) || [])
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1 || (t.type === -1 && !t.rental)) || [])
+    .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
 
-  const rentals = (userData?.wallet?.transactions?.filter(t => t.type === -3 || t.type === -1) || [])
-    .sort((a, b) => new Date(b.rental?.start) - new Date(a.rental?.start))
+  let rentals = (userData?.wallet?.transactions?.filter(t => t.rental) || []) // transaction içerisinde rental değeri dolu ise rentals tablosuna ekle
+    .sort((a, b) => new Date(a.rental?.start) - new Date(b.rental?.start))
     .reverse();
 
+
   const campaigns = (userData?.wallet?.transactions?.filter(t => t.type === 3) || [])
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
+
+  //console.log(campaigns)
+
+  // Excel datası 
+  const excelDataUploads = uploads.map((d) => ({
+    Tarih: formatDateTime(d.date),
+    "Yükleme Noktası": d.payment_gateway,
+    "Yükleme ID": d.transaction_id,
+    "Ceza Türü": d.fineType || "-",
+    "QR": d.qrlabel || "-",
+    "Tutar": d.amount != null ? `${d.amount} ₺` : "-",
+    "İşlem Versiyon": d.version,
+    "Durum": d.status,
+  }));
+
+  const excelDataRentals = rentals.map((d) => {
+    let duration = "-";
+    if (d.rental?.start && d.rental?.end) {
+      const start = new Date(d.rental.start);
+      const end = new Date(d.rental.end);
+      const diff = Math.floor((end - start) / 1000);
+      const hours = Math.floor(diff / 3600);
+      const minutes = Math.floor((diff % 3600) / 60);
+      const seconds = diff % 60;
+      duration = `${hours}h ${minutes}m ${seconds}s`;
+    }
+    return {
+      QR: d.rental?.device?.qrlabel,
+      Başlangıç: formatDateTime(d.rental?.start),
+      Bitiş: formatDateTime(d.rental?.end),
+      Sonlandıran: d.rental?.finishedUser?.name || "Kullanıcı",
+      Süre: duration,
+      Tutar:
+        d?.amount != null
+          ? d.type === -3
+            ? `${Number(d.amount).toFixed(2)} WeePuan`
+            : `${Number(d.amount).toFixed(2)} ₺`
+          : "-",
+      "İşlem Versiyon": d.version || d.rental?.version || "-",
+    };
+  });
+  const excelDataCampaigns = campaigns.map(d => ({ // excel ve pdf indirirken filtrelenmiş halini indirir. yani ekranda ne görünüyorsa o
+    "Date": dayjs(d.date).format("DD.MM.YYYY HH.mm"),
+    "Yükleme ID": `${d.transaction_id} Wee Puan`,
+    "Tutar": d.amount,
+    "İşlem Versiyon": d.version,
+  }));
+
+  console.log(userData)
+  //console.log(userData?.wallet?.transactions?.filter(t => t.transaction_id === "ceza/fine"))
 
   // Columns
   const uploadColumns = [
@@ -80,11 +152,11 @@ const Users = () => {
     },
     { title: "Yükleme Noktası", dataIndex: "payment_gateway", key: "payment_gateway" },
     { title: "Yükleme ID", dataIndex: "transaction_id", key: "transaction_id" },
-    { title: "Ceza Türü", dataIndex: "penalty_type", key: "penalty_type" },
-    { title: "QR", dataIndex: "qr", key: "qr" },
-    { 
-      title: "Tutar", 
-      dataIndex: "amount", 
+    { title: "Ceza Türü", dataIndex: "fineType", key: "fineType" },
+    { title: "QR", dataIndex: "qrlabel", key: "qrlabel" },
+    {
+      title: "Tutar",
+      dataIndex: "amount",
       key: "amount",
       render: (val) => val != null ? `${val} ₺` : "-"
     },
@@ -146,7 +218,7 @@ const Users = () => {
     {
       title: "İşlem Versiyon",
       key: "version",
-      render: (_, record) => record.version || record.rental?.version || "-",
+      render: (_, record) => record.version || record.rental.version || record.ip || "-",
     },
     { title: "Görsel", dataIndex: "image", key: "image" },
     { title: "Sürüşü Düzenle", dataIndex: "editDriving", key: "editDriving" },
@@ -160,9 +232,9 @@ const Users = () => {
       render: (date) => formatDateTime(date),
     },
     { title: "Yükleme ID", dataIndex: "transaction_id", key: "transaction_id" },
-    { 
-      title: "Tutar", 
-      dataIndex: "amount", 
+    {
+      title: "Tutar",
+      dataIndex: "amount",
       key: "amount",
       render: (val) => val != null ? `${val} Wee Puan` : "-"
     },
@@ -316,32 +388,71 @@ const Users = () => {
             </TabPane>
 
             {/* Yüklemeler Tab */}
-            <TabPane tab="Yüklemeler" key="2">
+            <TabPane tab={`Yüklemeler (${uploads.length})`} key="2">
+              <Button
+                type="primary"
+                style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
+                onClick={() => exportToExcel(excelDataUploads, excelFileNameCharges)}
+              >
+                Excel İndir
+              </Button>
               <Table
                 columns={uploadColumns}
                 dataSource={uploads}
-                rowKey={(record) => record.transaction_id || record.id}
-                pagination={false}
+                rowKey={(record, index) => record.id || `row-${index}`}
+                scroll={{ x: true }}
+                pagination={{
+                  position: ["bottomCenter"],
+                  pageSizeOptions: ["5", "10", "20", "50"],
+                  size: paginationSize,
+                }}
+
               />
             </TabPane>
 
             {/* Kiralamalar Tab */}
-            <TabPane tab="Kiralama" key="3">
+            <TabPane tab={`Kiralamlar (${rentals.length})`} key="3">
+              <Button
+                type="primary"
+                style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
+                onClick={() => exportToExcel(excelDataRentals, excelFileNameRentals)}
+              >
+                Excel İndir
+              </Button>
               <Table
                 columns={rentalColumns}
                 dataSource={rentals}
-                rowKey={(record) => record.transaction_id || record.id}
-                pagination={false}
+                rowKey={(record, index) => record.id || `row-${index}`}
+                scroll={{ x: true }}
+                pagination={{
+                  position: ["bottomCenter"],
+                  pageSizeOptions: ["5", "10", "20", "50"],
+                  size: paginationSize,
+                }}
               />
             </TabPane>
 
             {/* Kampanyalar Tab */}
-            <TabPane tab="Kampanyalar" key="4">
+            <TabPane tab={`Kampanyalar (${campaigns.length})`} key="4">
+              <Button
+                type="primary"
+                style={{
+                  width: isMobile ? "100%" : "auto",
+                }}
+                onClick={() => exportToExcel(excelDataCampaigns, excelFileNameCampaigns)}
+              >
+                Excel İndir
+              </Button>
               <Table
                 columns={campaignColumns}
                 dataSource={campaigns}
-                rowKey={(record) => record.transaction_id || record.id}
-                pagination={false}
+                rowKey={(record, index) => record.id || `row-${index}`}
+                scroll={{ x: true }}
+                pagination={{
+                  position: ["bottomCenter"],
+                  pageSizeOptions: ["5", "10", "20", "50"],
+                  size: paginationSize,
+                }}
               />
             </TabPane>
           </Tabs>
