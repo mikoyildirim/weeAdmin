@@ -3,7 +3,10 @@ import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/exportToExcel";
-import { ColumnHeightOutlined } from "@ant-design/icons";
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
+dayjs.locale("tr");
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -42,11 +45,11 @@ const Users = () => {
 
   // Formatlar
   const formatDateTime = (date) => {
-    return date ? dayjs(date).format("YYYY-MM-DD HH.mm.ss") : "-";
+    return date ? dayjs.utc(date).format("YYYY-MM-DD HH.mm.ss") : "-";
   };
 
   const formatDateOnly = (date) => {
-    return date ? dayjs(date).format("YYYY-MM-DD") : "-";
+    return date ? dayjs.utc(date).format("YYYY-MM-DD") : "-";
   };
 
   const searchUser = async () => {
@@ -133,7 +136,7 @@ const Users = () => {
     };
   });
   const excelDataCampaigns = campaigns.map(d => ({ // excel ve pdf indirirken filtrelenmiş halini indirir. yani ekranda ne görünüyorsa o
-    "Date": dayjs(d.date).format("DD.MM.YYYY HH.mm"),
+    "Date": dayjs.utc(d.date).format("DD.MM.YYYY HH.mm"),
     "Yükleme ID": `${d.transaction_id} Wee Puan`,
     "Tutar": d.amount,
     "İşlem Versiyon": d.version,
@@ -149,44 +152,111 @@ const Users = () => {
       dataIndex: "date",
       key: "date",
       render: (date) => formatDateTime(date),
+      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+      align: "center",
     },
-    { title: "Yükleme Noktası", dataIndex: "payment_gateway", key: "payment_gateway" },
-    { title: "Yükleme ID", dataIndex: "transaction_id", key: "transaction_id" },
-    { title: "Ceza Türü", dataIndex: "fineType", key: "fineType" },
-    { title: "QR", dataIndex: "qrlabel", key: "qrlabel" },
+    {
+      title: "Yükleme Noktası",
+      dataIndex: "payment_gateway",
+      key: "payment_gateway",
+      render: (_, record) => (record.payment_gateway || "-"),
+      sorter: (a, b) =>
+        (a.payment_gateway || "").localeCompare(b.payment_gateway || ""),
+      align: "center",
+    },
+    {
+      title: "Yükleme ID",
+      dataIndex: "transaction_id",
+      key: "transaction_id",
+      render: (_, record) => (record.transaction_id || "-"),
+      sorter: (a, b) =>
+        (a.transaction_id || "").toString().localeCompare((b.transaction_id || "").toString()),
+      align: "center",
+    },
+    {
+      title: "Ceza Türü",
+      dataIndex: "fineType",
+      key: "fineType",
+      render: (_, record) => (record.fineType || "-"),
+      sorter: (a, b) => (a.fineType || "").localeCompare(b.fineType || ""),
+      align: "center",
+    },
+    {
+      title: "QR",
+      dataIndex: "qrlabel",
+      key: "qrlabel",
+      render: (_, record) => (record.qrlabel || "-"),
+      sorter: (a, b) => (a.qrlabel || "").localeCompare(b.qrlabel || ""),
+      align: "center",
+    },
     {
       title: "Tutar",
       dataIndex: "amount",
       key: "amount",
-      render: (val) => val != null ? `${val} ₺` : "-"
+      render: (val) => (val != null ? `${val} ₺` : "-"),
+      sorter: (a, b) => (a.amount || 0) - (b.amount || 0),
+      align: "center",
     },
-    { title: "İşlem Versiyon", dataIndex: "version", key: "version" },
-    { title: "Durum", dataIndex: "status", key: "status" },
+    {
+      title: "İşlem Versiyon",
+      dataIndex: "version",
+      key: "version",
+      sorter: (a, b) => (a.version || "").localeCompare(b.version || ""),
+      render: (_, record) =>
+        record.version || record.ip || "-",
+      align: "center",
+    },
+    {
+      title: "Durum",
+      dataIndex: "status",
+      key: "status",
+      sorter: (a, b) => (a.status || "").localeCompare(b.status || ""),
+      align: "center",
+    },
   ];
 
+
   const rentalColumns = [
-    { title: "QR", dataIndex: ["rental", "device", "qrlabel"], key: "qr" },
+    {
+      title: "QR",
+      dataIndex: ["rental", "device", "qrlabel"],
+      key: "qr",
+      align: "center",
+      render: (_, record) => (record.rental.device.qrlabel || "-"),
+      sorter: (a, b) =>
+        (a.rental?.device?.qrlabel || "").localeCompare(b.rental?.device?.qrlabel || ""),
+    },
     {
       title: "Başlangıç",
       dataIndex: ["rental", "start"],
       key: "start",
+      align: "center",
       render: (date) => formatDateTime(date),
+      sorter: (a, b) => new Date(a.rental?.start) - new Date(b.rental?.start),
     },
     {
       title: "Bitiş",
       dataIndex: ["rental", "end"],
       key: "end",
+      align: "center",
       render: (date) => formatDateTime(date),
+      sorter: (a, b) => new Date(a.rental?.end) - new Date(b.rental?.end),
     },
     {
       title: "Sonlandıran",
       key: "finishedUser",
+      align: "center",
       render: (_, record) =>
         record.rental?.finishedUser?.name ? record.rental.finishedUser.name : "Kullanıcı",
+      sorter: (a, b) =>
+        (a.rental?.finishedUser?.name || "").localeCompare(
+          b.rental?.finishedUser?.name || ""
+        ),
     },
     {
       title: "Süre",
       key: "duration",
+      align: "center",
       render: (_, record) => {
         if (record.rental?.start && record.rental?.end) {
           const start = new Date(record.rental.start);
@@ -199,10 +269,20 @@ const Users = () => {
         }
         return "-";
       },
+      sorter: (a, b) => {
+        const getDuration = (rec) => {
+          if (rec.rental?.start && rec.rental?.end) {
+            return new Date(rec.rental.end) - new Date(rec.rental.start);
+          }
+          return 0;
+        };
+        return getDuration(a) - getDuration(b);
+      },
     },
     {
       title: "Tutar",
       key: "total",
+      align: "center",
       render: (_, record) => {
         if (record?.amount != null) {
           let formatted = Number(record.amount).toFixed(2);
@@ -214,14 +294,34 @@ const Users = () => {
         }
         return "-";
       },
+      sorter: (a, b) => (a.amount || 0) - (b.amount || 0),
     },
     {
       title: "İşlem Versiyon",
       key: "version",
-      render: (_, record) => record.version || record.rental.version || record.ip || "-",
+      align: "center",
+      render: (_, record) =>
+        record.version || record.rental?.version || record.ip || "-",
+      sorter: (a, b) =>
+        (a.version ||
+          a.rental?.version ||
+          a.ip ||
+          "").toString().localeCompare(
+            (b.version || b.rental?.version || b.ip || "").toString()
+          ),
     },
-    { title: "Görsel", dataIndex: "image", key: "image" },
-    { title: "Sürüşü Düzenle", dataIndex: "editDriving", key: "editDriving" },
+    {
+      title: "Görsel",
+      dataIndex: "image",
+      key: "image",
+      align: "center",
+    },
+    {
+      title: "Sürüşü Düzenle",
+      dataIndex: "editDriving",
+      key: "editDriving",
+      align: "center",
+    },
   ];
 
   const campaignColumns = [
@@ -230,15 +330,36 @@ const Users = () => {
       dataIndex: "date",
       key: "date",
       render: (date) => formatDateTime(date),
+      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+      align: "center",
     },
-    { title: "Yükleme ID", dataIndex: "transaction_id", key: "transaction_id" },
+    {
+      title: "Yükleme ID",
+      dataIndex: "transaction_id",
+      key: "transaction_id",
+      render: (_, record) => (record.transaction_id || "-"),
+      sorter: (a, b) =>
+        a.transaction_id?.toString().localeCompare(b.transaction_id?.toString()),
+      align: "center",
+    },
     {
       title: "Tutar",
       dataIndex: "amount",
       key: "amount",
-      render: (val) => val != null ? `${val} Wee Puan` : "-"
+      render: (val) => (val != null ? `${val} Wee Puan` : "-"),
+      sorter: (a, b) => (a.amount || 0) - (b.amount || 0),
+      align: "center",
     },
-    { title: "İşlem Versiyon", dataIndex: "version", key: "version" },
+    {
+      title: "İşlem Versiyon",
+      dataIndex: "version",
+      key: "version",
+      render: (_, record) =>
+        record.version || record.ip || "-",
+      sorter: (a, b) =>
+        a.version?.toString().localeCompare(b.version?.toString()),
+      align: "center",
+    },
   ];
 
   return (
@@ -389,13 +510,51 @@ const Users = () => {
 
             {/* Yüklemeler Tab */}
             <TabPane tab={`Yüklemeler (${uploads.length})`} key="2">
-              <Button
-                type="primary"
-                style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
-                onClick={() => exportToExcel(excelDataUploads, excelFileNameCharges)}
-              >
-                Excel İndir
-              </Button>
+              <Row gutter={[24]} justify="space-between" align="middle">
+                <Col span={12}>
+                  <Button
+                    type="primary"
+                    style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
+                    onClick={() => exportToExcel(excelDataUploads, excelFileNameCharges)}
+                  >
+                    Excel İndir
+                  </Button>
+                </Col>
+
+                <Col span={12}>
+                  <Form layout="vertical" justify="end" >
+                    <Row gutter={[24]} justify="end">
+                      <Col span={4}>
+                        <Form.Item label="Yükleme">
+                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item label="Hediye">
+                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item label="Ceza">
+                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item label="İyzico İade">
+                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Form.Item label="İade">
+                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </Form>
+                </Col>
+              </Row>
+
+
               <Table
                 columns={uploadColumns}
                 dataSource={uploads}
