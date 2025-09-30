@@ -12,6 +12,12 @@ import {
   Col,
   Row,
 } from "antd";
+import {
+  BarChartOutlined,
+  EnvironmentOutlined,
+  FileExcelOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
@@ -21,61 +27,40 @@ import exportToExcel from "../../utils/exportToExcel";
 import formatTL from "../../utils/formatTL";
 
 dayjs.locale("tr");
-
 const { RangePicker } = DatePicker;
 
 const RentalsReport = () => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]);
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
-  const [isMobile, setIsMobile] = useState(false);
-  const [paginationSize, setPaginationSize] = useState();
   const [searchText, setSearchText] = useState("");
+
+  const user = useSelector((state) => state.user.user);
+  const locations = user?.permissions?.locations || [];
 
   const sortedData = [...filteredData].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
-  const excelFileName = `${dates[0].format(
+  const excelFileName = `${dates[0].format("YYYY-MM-DD")} - ${dates[1].format(
     "YYYY-MM-DD"
-  )}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`;
+  )} Kiralama Raporu.xlsx`;
+
   const totalRentals = filteredData.reduce(
     (acc, item) => acc + Number(item.total),
     0
   );
 
-  const user = useSelector((state) => state.user.user);
-  const locations = user?.permissions?.locations || [];
-
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  useEffect(() => {
-    isMobile ? setPaginationSize("small") : setPaginationSize("medium");
-  }, [isMobile]);
-
-  useEffect(() => {
-    fetchCities();
-  }, []);
+    setCities(locations);
+    setSelectedCities(locations);
+  }, [locations]);
 
   useEffect(() => {
     fetchData();
   }, [selectedCities, dates]);
-
-  const fetchCities = async () => {
-    try {
-      setCities(locations);
-      setSelectedCities(locations); // ✅ başlangıçta tüm şehirleri seç
-    } catch (err) {
-      message.error("Şehirler alınamadı!");
-    }
-  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -83,217 +68,159 @@ const RentalsReport = () => {
       const response = await axios.post(
         "rentals/find/dayDayByCityAndDate/withCityFilter",
         {
-          startDate: dates?.[0]
-            ? dates[0].format("YYYY-MM-DD")
-            : dayjs().format("YYYY-MM-DD"),
-          endDate: dates?.[1]
-            ? dates[1].format("YYYY-MM-DD")
-            : dayjs().format("YYYY-MM-DD"),
-          cities: selectedCities.length > 0 ? selectedCities : locations, // ✅ boşsa fallback
+          startDate: dates?.[0]?.format("YYYY-MM-DD"),
+          endDate: dates?.[1]?.format("YYYY-MM-DD"),
+          cities: selectedCities.length ? selectedCities : locations,
         }
       );
       setData(response.data || []);
       setFilteredData(response.data || []);
-    } catch (error) {
+    } catch {
       message.error("Veri alınırken hata oluştu!");
     } finally {
       setLoading(false);
     }
   };
 
-  // Search işlemi
+  // 🔍 Arama
   useEffect(() => {
     if (!searchText) {
       setFilteredData(data);
       return;
     }
-    const filtered = data.filter((item) => {
-      return (
+    const filtered = data.filter(
+      (item) =>
         item.city?.toLowerCase().includes(searchText.toLowerCase()) ||
         item.date?.toLowerCase().includes(searchText.toLowerCase()) ||
         String(item.total).includes(searchText)
-      );
-    });
+    );
     setFilteredData(filtered);
   }, [searchText, data]);
 
   const columns = [
     {
-      title: "Tarih",
+      title: "📅 Tarih",
       dataIndex: "date",
-      key: "date",
       sorter: (a, b) => new Date(a.date) - new Date(b.date),
-      sortDirections: ["ascend", "descend"],
       defaultSortOrder: "ascend",
       align: "center",
-      onHeaderCell: () => ({ style: { minWidth: "100px" } }),
-      onCell: () => ({ style: { minWidth: "100px" } }),
     },
     {
-      title: "Toplam",
+      title: "💰 Toplam",
       dataIndex: "total",
-      key: "total",
       sorter: (a, b) => a.total - b.total,
-      sortDirections: ["ascend", "descend"],
-      render: (value) => {
-        const formatted = new Intl.NumberFormat("tr-TR", {
-          style: "currency",
-          currency: "TRY",
-          minimumFractionDigits: 2,
-        }).format(value);
-        return formatted.replace("₺", "").trim() + " ₺";
-      },
       align: "center",
+      render: (val) => `${formatTL(val)}`,
     },
     {
-      title: "Şehir",
+      title: "🏙️ Şehir",
       dataIndex: "city",
-      key: "city",
       sorter: (a, b) => a.city.localeCompare(b.city),
-      sortDirections: ["ascend", "descend"],
       align: "center",
     },
   ];
 
   return (
-    <Card title="Kiralama Raporları" variant="outlined">
-      <Row gutter={[16, 16]}>
-        {/* Filtreleme alanı */}
-        <Col xs={24} sm={24} md={24} lg={16}>
-          <Row gutter={[8, 8]}>
-            {/* Tarih filtresi */}
-            <Col xs={24} sm={24} md={24} lg={8}>
-              <ConfigProvider locale={trTR}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
-                  {isMobile ? (
-                    <Space direction="vertical" size={12}>
-                      <DatePicker
-                        value={dates[0]}
-                        onChange={(val) =>
-                          val
-                            ? setDates([val, dates[1]])
-                            : setDates([dayjs().subtract(1, "day"), dates[1]])
-                        }
-                        style={{ width: "100%" }}
-                      />
-                      <DatePicker
-                        value={dates[1]}
-                        onChange={(val) =>
-                          val
-                            ? setDates([dates[0], val])
-                            : setDates([dates[0], dayjs()])
-                        }
-                        style={{ width: "100%" }}
-                      />
-                    </Space>
-                  ) : (
-                    <RangePicker
-                      value={dates}
-                      onChange={(val) =>
-                        val
-                          ? setDates(val)
-                          : setDates([dayjs().subtract(1, "day"), dayjs()])
-                      }
-                      format="YYYY-MM-DD"
-                      style={{ width: "100%" }}
-                    />
-                  )}
-                </div>
-              </ConfigProvider>
-            </Col>
-
-            {/* Şehir filtresi */}
-            <Col xs={24} sm={24} md={24} lg={8}>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <label style={{ marginBottom: 4 }}>Şehir Seçiniz</label>
+    <div>
+      {/* Başlık ve üst kart */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={8}>
+          <Card
+            style={{
+              background: "linear-gradient(135deg, #2f54eb, #597ef7)",
+              color: "#fff",
+              textAlign: "center",
+            }}
+          >
+            <BarChartOutlined style={{ fontSize: 36, marginBottom: 8 }} />
+            <p style={{ fontSize: 28, margin: 0, fontWeight: "bold" }}>
+              {formatTL(totalRentals)}
+            </p>
+            <span style={{ fontSize: 16 }}>Toplam Kiralama</span>
+          </Card>
+        </Col>
+        <Col xs={24} md={16}>
+          <Card>
+            <Row gutter={[12, 12]}>
+              <Col xs={24} md={12}>
+                <label>Tarih Aralığı</label>
+                <ConfigProvider locale={trTR}>
+                  <RangePicker
+                    value={dates}
+                    onChange={(val) =>
+                      val
+                        ? setDates(val)
+                        : setDates([dayjs().subtract(1, "day"), dayjs()])
+                    }
+                    format="YYYY-MM-DD"
+                    style={{ width: "100%" }}
+                  />
+                </ConfigProvider>
+              </Col>
+              <Col xs={24} md={12}>
+                <label>Şehir</label>
                 <Select
                   mode="multiple"
+                  allowClear
                   style={{ width: "100%" }}
                   placeholder="Şehir seçiniz"
                   value={selectedCities}
-                  onChange={(val) => setSelectedCities(val)}
+                  onChange={setSelectedCities}
                   options={cities.map((c) => ({ label: c, value: c }))}
                 />
-              </div>
-            </Col>
-
-            {/* Filtreleme butonu */}
-            <Col xs={24} sm={24} md={24} lg={8}>
-              <Button
-                type="primary"
-                onClick={fetchData}
-                style={{ width: "100%", marginTop: 24 }}
-              >
-                Filtrele
-              </Button>
-            </Col>
-          </Row>
-        </Col>
-
-        {/* Toplam Kiralama Kartı */}
-        <Col xs={24} sm={24} md={24} lg={8}>
-          <Card>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100%",
-              }}
-            >
-              <p style={{ fontSize: 24, margin: 0 }}>{formatTL(totalRentals)}</p>
-              <span style={{ fontSize: 20 }}>Toplam Kiralama</span>
-            </div>
+              </Col>
+            </Row>
+            <Row style={{ marginTop: 12 }}>
+              <Col span={24} style={{ textAlign: "right" }}>
+                <Button type="primary" onClick={fetchData}>
+                  Filtrele
+                </Button>
+              </Col>
+            </Row>
           </Card>
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={24} md={24} lg={16}>
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              flexWrap: isMobile ? "wrap" : "nowrap",
-              alignItems: "center",
-            }}
+      {/* Arama & Excel */}
+      <Row
+        gutter={[16, 16]}
+        style={{ marginBottom: 12 }}
+        align="middle"
+        justify="space-between"
+      >
+        <Col xs={24} md={12}>
+          <Input
+            prefix={<SearchOutlined />}
+            placeholder="Ara..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </Col>
+        <Col xs={24} md={12} style={{ textAlign: "right" }}>
+          <Button
+            type="primary"
+            icon={<FileExcelOutlined />}
+            onClick={() => exportToExcel(sortedData, excelFileName)}
           >
-            <Input
-              placeholder="Ara..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{
-                margin: isMobile ? "0 0 8px 0" : "16px 0",
-                width: isMobile ? "100%" : "300px",
-              }}
-            />
-            <Button
-              type="primary"
-              style={{
-                width: isMobile ? "100%" : "auto",
-              }}
-              onClick={() => exportToExcel(sortedData, excelFileName)}
-            >
-              Excel İndir
-            </Button>
-          </div>
+            Excel İndir
+          </Button>
         </Col>
       </Row>
 
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        loading={loading}
-        pagination={{
-          position: ["bottomCenter"],
-          pageSizeOptions: ["3", "10", "20", "50"],
-          size: paginationSize,
-        }}
-        rowKey={(record) => `${record.date}-${record.city}`}
-      />
-    </Card>
+      {/* Tablo */}
+      <Card>
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          loading={loading}
+          pagination={{
+            position: ["bottomCenter"],
+            pageSizeOptions: ["10", "20", "50"],
+          }}
+          rowKey={(record) => `${record.date}-${record.city}`}
+        />
+      </Card>
+    </div>
   );
 };
 
