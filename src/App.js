@@ -19,6 +19,8 @@ import ActiveMap from "./pages/Maps/ActiveMap";
 import PassiveMap from "./pages/Maps/PassiveMap";
 import LostMap from "./pages/Maps/LostMap";
 import Polygons from "./pages/Maps/Polygons/Polygons";
+import PolygonCreate from "./pages/Maps/Polygons/PolygonCreate";
+import PolygonUpdate from "./pages/Maps/Polygons/PolygonUpdate";
 import Heatmap from "./pages/Maps/Heatmap";
 import Distribution from "./pages/Maps/Distribution";
 
@@ -42,6 +44,7 @@ import Notifications from "./pages/Management/Notifications";
 import Staff from "./pages/Management/Staff";
 import Fraud from "./pages/Management/Fraud";
 import Rentals from "./pages/Rentals";
+
 
 function App() {
   const token = useSelector((state) => state.user.token);
@@ -70,7 +73,9 @@ function App() {
           <Route path="maps/active" element={<ActiveMap />} />
           <Route path="maps/passive" element={<PassiveMap />} />
           <Route path="maps/lost" element={<LostMap />} />
-          <Route path="maps/polygons/polygons" element={<Polygons />} />
+          <Route path="maps/polygons" element={<Polygons />} />
+          <Route path="maps/polygons/createpolygon" element={<PolygonCreate />} />
+          <Route path="maps/polygons/updatepolygon/:id" element={<PolygonUpdate />} />
           <Route path="maps/heatmap" element={<Heatmap />} />
           <Route path="maps/distribution" element={<Distribution />} />
 

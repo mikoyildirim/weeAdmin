@@ -14,6 +14,8 @@ const PolygonCreate = () => {
   const drawnItemsRef = useRef(null);
   const [polygonData, setPolygonData] = useState(null);
 
+
+
   useEffect(() => {
     // Map oluştur
     const map = L.map(mapRef.current).setView([39.9042, 32.8594], 6);
