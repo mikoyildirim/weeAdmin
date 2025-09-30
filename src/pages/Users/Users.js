@@ -17,7 +17,7 @@ const Users = () => {
   const [userData, setUserData] = useState(null);
   const [searched, setSearched] = useState(false);
   const [userStatus, setUserStatus] = useState("");
-  const [cardStatus, setCardStatus] = useState("");
+  const [cardIsActive, setCardIsActive] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState("medium");
 
@@ -67,7 +67,7 @@ const Users = () => {
       setUserData(res.data || null);
       if (res.data) {
         setUserStatus(res.data.userStatus || "");
-        setCardStatus(res.data.cardStatus || "");
+        setCardIsActive(res.data.wallet.cards[0].isActive || "");
       }
     } catch (err) {
       console.error(err);
@@ -78,9 +78,8 @@ const Users = () => {
     }
   };
 
-  const handleStatusChange = (value, type) => {
-    if (type === "user") setUserStatus(value);
-    else if (type === "card") setCardStatus(value);
+  const handleCardIsActiveChange = (value, isActive) => {
+    if (isActive === "card") setCardIsActive(value);
   };
 
   // transactions filtresi + sıralama
@@ -95,7 +94,24 @@ const Users = () => {
   const campaigns = (userData?.wallet?.transactions?.filter(t => t.type === 3) || [])
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
 
-  //console.log(campaigns)
+
+  const values = ["iyzico", "hediye", "ceza/fine", "iyzico/iade", "iade/return"];
+
+  const counts = values.reduce((acc, val) => {
+    if (val === "hediye") {
+      // sadece "hediye" için substring kontrolü
+      acc[val] = uploads.filter(item =>
+        item.payment_gateway && item.payment_gateway.includes("hediye")
+      ).length;
+    } else {
+      // diğerleri için tam eşleşme
+      acc[val] = uploads.filter(item => item.payment_gateway === val).length;
+    }
+    return acc;
+  }, {});
+
+
+  console.log("cardIsActive",cardIsActive,"data",userData.wallet.cards[0].isActive)
 
   // Excel datası 
   const excelDataUploads = uploads.map((d) => ({
@@ -399,23 +415,30 @@ const Users = () => {
             <TabPane tab="Bilgiler" key="1">
               <Form layout="vertical">
                 <Row gutter={[16, 16]}>
-                  <Col span={12}>
+
+                  <Col span={6}>
                     <Form.Item label="Kullanıcı Adı Soyadı">
                       <Input value={userData.user?.name} disabled style={{ color: "black" }} />
                     </Form.Item>
                   </Col>
-                  <Col span={12}>
+                  <Col span={6}>
                     <Form.Item label="TC Kimlik Numarası">
                       <Input value={userData.tckno} disabled style={{ color: "black" }} />
                     </Form.Item>
                   </Col>
 
                   <Col span={12}>
+                    <Form.Item label="Toplam Hareket Adeti">
+                      <Input value={`${userData.wallet?.transactions.length || 0} adet`} disabled style={{ color: "black" }} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={6}>
                     <Form.Item label="Kullanıcı Doğum Tarihi">
                       <Input value={formatDateOnly(userData.birth_date)} disabled style={{ color: "black" }} />
                     </Form.Item>
                   </Col>
-                  <Col span={12}>
+                  <Col span={6}>
                     <Form.Item label="Email Adresi">
                       <Input value={userData.user?.email} disabled style={{ color: "black" }} />
                     </Form.Item>
@@ -442,67 +465,73 @@ const Users = () => {
                     </Row>
                   </Col>
 
-                  <Col span={12}>
-                    <Form.Item label="Toplam Hareket Adeti">
-                      <Input value={userData.wallet?.length || 0} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
+
 
                   <Col span={12}>
                     <Row gutter={[16, 16]}>
                       <Col span={12}>
                         <Form.Item label="Cüzdan Miktarı">
-                          <Input value={userData.wallet?.balance} disabled style={{ color: "black" }} />
+                          <Input value={`${userData.wallet?.balance} ₺`} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
 
                       <Col span={12}>
                         <Form.Item label="WeePuan Miktarı">
-                          <Input value={userData.score} disabled style={{ color: "black" }} />
+                          <Input value={`${userData?.wallet?.score || 0} Wee Puan`} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                     </Row>
                   </Col>
 
-                  <Col span={8}>
+                  <Col span={12}>
                     <Form.Item label="Kullanıcı Telefon Adı">
                       <Input value={userData.OSBuildNumber} disabled style={{ color: "black" }} />
                     </Form.Item>
                   </Col>
-                  <Col span={8}>
+                  <Col span={6}>
                     <Form.Item label="Kullanıcı Referans Kodu">
                       <Input value={userData.referenceCode} disabled style={{ color: "black" }} />
                     </Form.Item>
                   </Col>
-                  <Col span={8}>
+                  <Col span={6}>
                     <Form.Item label="Takip Et Kazan Kampanyası">
                       <Input value={userData.followSocial} disabled style={{ color: "black" }} />
                     </Form.Item>
                   </Col>
 
-                  <Col span={12}>
+                  <Col span={6}>
                     <Form.Item label="Kullanıcı Durumu">
                       <Select
                         value={userStatus}
-                        onChange={(value) => handleStatusChange(value, "user")}
-                        style={{ width: "150px" }}
+                        onChange={(value) => handleCardIsActiveChange(value, "user")}
+                        style={{ minWidth: "150px" }}
+                        options={[
+                          { value: true, label: 'Aktif' },
+                          { value: false, label: 'Pasif' },
+                        ]}
                       >
-                        <Option value="active">Aktif</Option>
-                        <Option value="passive">Pasif</Option>
+
                       </Select>
                     </Form.Item>
                   </Col>
-                  <Col span={12}>
-                    <Form.Item label="Kart Durumu">
+                  <Col span={6}>
+                    <Form.Item label="Kart Durumu" >
                       <Select
-                        value={cardStatus}
-                        onChange={(value) => handleStatusChange(value, "card")}
-                        style={{ width: "150px" }}
+                        //defaultValue={value}
+                        value={cardIsActive}
+                        onChange={(value) => handleCardIsActiveChange(value, "card")}
+                        style={{ minWidth: "150px" }}
+                        options={[
+                          { value: true, label: 'Güvenli' },
+                          { value: false, label: 'Şüpheli' },
+                        ]}
                       >
-                        <Option value="active">Aktif</Option>
-                        <Option value="passive">Pasif</Option>
+
                       </Select>
                     </Form.Item>
+                    <Button type="primary">
+                      Kaydet
+                    </Button>
                   </Col>
                 </Row>
               </Form>
@@ -526,27 +555,27 @@ const Users = () => {
                     <Row gutter={[24]} justify="end">
                       <Col span={4}>
                         <Form.Item label="Yükleme">
-                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                          <Input value={counts["iyzico"]} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                       <Col span={4}>
                         <Form.Item label="Hediye">
-                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                          <Input value={counts["hediye"]} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                       <Col span={4}>
                         <Form.Item label="Ceza">
-                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                          <Input value={counts["ceza/fine"]} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                       <Col span={4}>
                         <Form.Item label="İyzico İade">
-                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                          <Input value={counts["iyzico/iade"]} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                       <Col span={4}>
                         <Form.Item label="İade">
-                          <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                          <Input value={counts["iade/return"]} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -570,7 +599,7 @@ const Users = () => {
             </TabPane>
 
             {/* Kiralamalar Tab */}
-            <TabPane tab={`Kiralamlar (${rentals.length})`} key="3">
+            <TabPane tab={`Kiralamalar (${rentals.length})`} key="3">
               <Button
                 type="primary"
                 style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
