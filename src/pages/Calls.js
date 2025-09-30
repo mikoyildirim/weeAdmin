@@ -1,6 +1,5 @@
-// src/pages/CallList.js
 import React, { useEffect, useState } from "react";
-import { Table, Typography, Spin } from "antd";
+import { Table, Typography, Spin, message } from "antd";
 import axios from "../api/axios";
 
 const { Title } = Typography;
@@ -9,44 +8,50 @@ const CallList = () => {
   const [calls, setCalls] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Tarihi dmYHi formatına çevirme fonksiyonu
   const formatDateDMYHi = (date) => {
     const d = String(date.getDate()).padStart(2, "0");
-    const m = String(date.getMonth() + 1).padStart(2, "0"); // Ay 0'dan başlar
+    const m = String(date.getMonth() + 1).padStart(2, "0");
     const Y = date.getFullYear();
     const H = String(date.getHours()).padStart(2, "0");
     const i = String(date.getMinutes()).padStart(2, "0");
     return `${d}${m}${Y}${H}${i}`;
   };
 
-  // API çağrısı
   useEffect(() => {
     const fetchCalls = async () => {
       setLoading(true);
       try {
-        const today = new Date();
-        const startDate = formatDateDMYHi(today);
-        const endDate = formatDateDMYHi(today);
+       const today = new Date();
+const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0);
+const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0);
 
-        const payload = {
-          startdate: startDate,
-          stopdate: endDate,
-          querytype: 2,
-          output: "json",
-        };
+const startDate = formatDateDMYHi(startOfDay);
+const stopDate = formatDateDMYHi(endOfDay);
 
-        console.log("📤 Gönderilen payload:", payload);
+const payload = new URLSearchParams();
+payload.append("startdate", startDate);
+payload.append("stopdate", stopDate);
+payload.append("querytype", 2);
+payload.append("output", "json");
 
-        const response = await axios.post("/calls/list", payload);
+const response = await axios.post("/calls/list", payload, {
+  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+});
+
         console.log("📥 Response:", response.data);
 
-        const callData = response.data.values || [];
-        setCalls(callData);
+        const callData = response.data || [];
+        const callArray = Array.isArray(callData)
+          ? callData
+          : Object.values(callData);
+
+        // Her call için values[0] kullan
+        const formattedCalls = callArray.map((call) => call.values?.[0] || {});
+
+        setCalls(formattedCalls);
       } catch (error) {
         console.error("❌ Çağrılar alınamadı:", error.response || error);
-        if (!error.response) {
-          console.error("Network veya CORS hatası olabilir");
-        }
+        message.error("Çağrı listesi alınamadı!");
       } finally {
         setLoading(false);
       }
@@ -55,23 +60,10 @@ const CallList = () => {
     fetchCalls();
   }, []);
 
-  // Tablo kolonları
   const columns = [
-    {
-      title: "Arayan Numara",
-      dataIndex: "source",
-      key: "source",
-    },
-    {
-      title: "Arama Tarihi",
-      dataIndex: "date",
-      key: "date",
-    },
-    {
-      title: "Süre (sn)",
-      dataIndex: "duration",
-      key: "duration",
-    },
+    { title: "Arayan Numara", dataIndex: "source", key: "source" },
+    { title: "Arama Tarihi", dataIndex: "date", key: "date" },
+    { title: "Süre (sn)", dataIndex: "duration", key: "duration" },
     {
       title: "Ses Kaydı",
       key: "recording",
