@@ -111,7 +111,7 @@ const Users = () => {
   }, {});
 
 
-  console.log("cardIsActive",cardIsActive,"data",userData.wallet.cards[0].isActive)
+  //console.log("cardIsActive",cardIsActive,"data",userData.wallet.cards[0].isActive)
 
   // Excel datası 
   const excelDataUploads = uploads.map((d) => ({
