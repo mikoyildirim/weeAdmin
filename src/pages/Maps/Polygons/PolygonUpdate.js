@@ -80,6 +80,7 @@ const PolygonUpdate = () => {
                     .map((latlng) => [latlng.lng, latlng.lat]);
                 coords.push(coords[0]);
                 setPolygonData({ type: "Polygon", coordinates: [coords] });
+                console.log(polygonData)
             });
         });
 
