@@ -13,15 +13,12 @@ const PolygonUpdate = () => {
     const mapRef = useRef(null);
     const drawnItemsRef = useRef(null);
     const [polygonData, setPolygonData] = useState(null);
-    const { id } = useParams()
-
+    const { id } = useParams();
 
     const [polygon, setPolygon] = useState(null);
     const [loading, setLoading] = useState(true);
     const [geofences, setGeofences] = useState([]);
-
-
-
+    const [selectedCity,setSelectedCity] = useState()
 
     // API'den poligonları çek
     const fetchPolygons = async () => {
@@ -29,14 +26,11 @@ const PolygonUpdate = () => {
         try {
             const res = await axios.get("/geofences");
             setGeofences(res.data[0]?.locations || []);
-            console.log(geofences)
         } catch (err) {
             message.error("Poligonlar yüklenemedi!");
         }
         setLoading(false);
     };
-
-
 
     useEffect(() => {
         // Map oluştur
@@ -71,7 +65,9 @@ const PolygonUpdate = () => {
         map.on("draw:created", (e) => {
             const layer = e.layer;
             drawnItems.addLayer(layer);
-            const coords = layer.getLatLngs()[0].map((latlng) => [latlng.lng, latlng.lat]);
+            const coords = layer
+                .getLatLngs()[0]
+                .map((latlng) => [latlng.lng, latlng.lat]);
             coords.push(coords[0]); // polygonu kapat
             setPolygonData({ type: "Polygon", coordinates: [coords] });
         });
@@ -79,30 +75,51 @@ const PolygonUpdate = () => {
         map.on("draw:edited", (e) => {
             const layers = e.layers;
             layers.eachLayer((layer) => {
-                const coords = layer.getLatLngs()[0].map((latlng) => [latlng.lng, latlng.lat]);
+                const coords = layer
+                    .getLatLngs()[0]
+                    .map((latlng) => [latlng.lng, latlng.lat]);
                 coords.push(coords[0]);
                 setPolygonData({ type: "Polygon", coordinates: [coords] });
             });
         });
-    }, []);
 
+        setPolygon(map);
+    }, []);
 
     useEffect(() => {
         fetchPolygons();
+
     }, [id]);
 
-    // if (loading) return <p>Yükleniyor...</p>;
-    // if (!geofences) return <p>Geofence bulunamadı</p>;
-    // console.log(geofences.find(item => item._id === id))
+    // Poligonları ekrana çiz
+    useEffect(() => {
+        if (!polygon || geofences.length === 0) return;
 
+        const selected = geofences.find((item) => item._id === id);
+        if (!selected) return;
 
-    console.log(geofences.find(item => item._id === id))
+        // GeoJSON [lng, lat] → Leaflet [lat, lng]
+        const coords = selected.polygon.coordinates[0].map((c) => [c[1], c[0]]);
 
+        // Önce eskiyi temizle
+        //drawnItemsRef.current.clearLayers();
+
+        const poly = L.polygon(coords, { color: "blue" }).addTo(drawnItemsRef.current);
+        polygon.fitBounds(poly.getBounds());
+
+        // state'e yaz
+        setSelectedCity(selected)
+        setPolygonData(selected.polygon);
+    }, [geofences, id, polygon]);
 
 
     const onFinish = async (values) => {
-
+        console.log("Kaydedilecek veriler:", values, polygonData);
+        // burada PUT/POST atabilirsin
     };
+
+    console.log(geofences)
+    console.log(selectedCity?.name)
 
     return (
         <div style={{ display: "flex", gap: "20px" }}>
@@ -113,10 +130,14 @@ const PolygonUpdate = () => {
             <div style={{ flex: 1 }}>
                 <Form layout="vertical" onFinish={onFinish}>
                     <Form.Item label="Poligon Adı" name="name" rules={[{ required: true }]}>
-                        <Input />
+                        <Input value={selectedCity?.name}/>
                     </Form.Item>
 
-                    <Form.Item label="İlçe Mernis Kodu" name="ilceMernisKodu" rules={[{ required: true }]}>
+                    <Form.Item
+                        label="İlçe Mernis Kodu"
+                        name="ilceMernisKodu"
+                        rules={[{ required: true }]}
+                    >
                         <Input />
                     </Form.Item>
 
