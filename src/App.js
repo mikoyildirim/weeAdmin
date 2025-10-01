@@ -48,7 +48,8 @@ import Rentals from "./pages/Rentals";
 
 function App() {
   const token = useSelector((state) => state.user.token);
-
+  const user = useSelector((state) => state.user.user);
+  console.log(user?.permissions.management)
   return (
     <Router>
       <Routes>
@@ -58,7 +59,8 @@ function App() {
         {/* Panel ve nested routes */}
         <Route path="/panel/*" element={token ? <MainLayout /> : <Navigate to="/login" />}>
           {/* /panel → /panel/dashboard yönlendirme */}
-          <Route index element={<Navigate to="dashboard" replace />} />
+
+          <Route index element={<Navigate to={user?.permissions.management ? "dashboard" : "devices/active"} replace />} />
 
           {/* Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
