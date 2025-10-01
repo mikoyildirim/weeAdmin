@@ -1,3 +1,13 @@
-# weeAdmin
-
-13.09.2025 - Kiralamalar Raporu sayfasında artık backend e istek atılabiliyor. Başlangıçta giriş yapan kullanıcının permissions.locations alanındaki şehirlere göre sayfa ilk yüklendiğinde direkt istek atılıyor ve ekranda listeleniyor.
+dashboard sayfası
+aktif haritası hasarlı cihaz gösterme
+kullanım sıklığı haritası
+scooter dağıtım önerisi
+cihaz yönetimi cihaz update
+az kullanılan cihazlar haritası ()
+destek kaydı update
+kampanya create update
+yönetim işlemleri test
+bildirimler
+personel yönetimi
+şüpheli işlemler
+aktif kiralamalar tutar hesaplaması
