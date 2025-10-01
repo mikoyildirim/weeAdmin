@@ -54,13 +54,13 @@ function App() {
     <Router>
       <Routes>
         {/* Login */}
-        <Route path="/login" element={!token ? <Login /> : <Navigate to="/panel/dashboard" />} />
+        <Route path="/login" element={!token ? <Login /> : <Navigate to={user?.permissions.management ? "/panel/dashboard" : "/panel/maps/active"} />} />
 
         {/* Panel ve nested routes */}
         <Route path="/panel/*" element={token ? <MainLayout /> : <Navigate to="/login" />}>
           {/* /panel → /panel/dashboard yönlendirme */}
 
-          <Route index element={<Navigate to={user?.permissions.management ? "dashboard" : "devices/active"} replace />} />
+          <Route index element={<Navigate to={user?.permissions.management ? "dashboard" : "maps/active"} replace />} />
 
           {/* Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
@@ -104,7 +104,7 @@ function App() {
         </Route>
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to={token ? "/panel/dashboard" : "/login"} />} />
+        <Route path="*" element={<Navigate to={token ? user?.permissions.management ? "/panel/dashboard" : "/panel/maps/active" : "/login"} />} />
       </Routes>
     </Router>
   );
