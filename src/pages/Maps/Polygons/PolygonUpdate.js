@@ -12,13 +12,14 @@ const { Option } = Select;
 const PolygonUpdate = () => {
     const mapRef = useRef(null);
     const drawnItemsRef = useRef(null);
-    const [polygonData, setPolygonData] = useState(null);
+    const [polygonData, setPolygonData] = useState();
     const { id } = useParams();
+    const { TextArea } = Input;
 
     const [polygon, setPolygon] = useState(null);
     const [loading, setLoading] = useState(true);
     const [geofences, setGeofences] = useState([]);
-    const [selectedCity,setSelectedCity] = useState()
+    const [selectedCity, setSelectedCity] = useState()
 
     // API'den poligonları çek
     const fetchPolygons = async () => {
@@ -32,6 +33,20 @@ const PolygonUpdate = () => {
         setLoading(false);
     };
 
+
+
+    const [form] = Form.useForm();
+
+    useEffect(() => {
+        if (selectedCity) {
+            form.setFieldsValue({
+                name: selectedCity.name,
+                ilceMernisKodu: selectedCity.ilceMernisKodu,
+                type: selectedCity.type,
+                status: selectedCity.status
+            });
+        }
+    }, [selectedCity, form]);
     useEffect(() => {
         // Map oluştur
         const map = L.map(mapRef.current).setView([39.9042, 32.8594], 6);
@@ -80,17 +95,20 @@ const PolygonUpdate = () => {
                     .map((latlng) => [latlng.lng, latlng.lat]);
                 coords.push(coords[0]);
                 setPolygonData({ type: "Polygon", coordinates: [coords] });
-                console.log(polygonData)
-            });
-        });
 
+            });
+
+        });
         setPolygon(map);
     }, []);
 
     useEffect(() => {
         fetchPolygons();
-
     }, [id]);
+
+    useEffect(() => {
+        console.log(polygonData)
+    }, [polygonData]);
 
     // Poligonları ekrana çiz
     useEffect(() => {
@@ -110,7 +128,7 @@ const PolygonUpdate = () => {
 
         // state'e yaz
         setSelectedCity(selected)
-        setPolygonData(selected.polygon);
+        //setPolygonData(selected.polygon);
     }, [geofences, id, polygon]);
 
 
@@ -120,7 +138,12 @@ const PolygonUpdate = () => {
     };
 
     console.log(geofences)
-    console.log(selectedCity?.name)
+    console.log(selectedCity)
+
+
+    // "longitude   latitude" formatında string hazırlıyoruz
+    const formattedCoords = polygonData?.coordinates[0].map(([lat, lng]) => `Longitude: ${lng}-Latitude: ${lat}, `).join("\n") || selectedCity?.polygon.coordinates[0].map(([lat, lng]) => `Longitude: ${lng}-Latitude: ${lat}, `).join("\n")
+
 
     return (
         <div style={{ display: "flex", gap: "20px" }}>
@@ -129,9 +152,9 @@ const PolygonUpdate = () => {
             </div>
 
             <div style={{ flex: 1 }}>
-                <Form layout="vertical" onFinish={onFinish}>
+                <Form form={form} layout="vertical" onFinish={onFinish}>
                     <Form.Item label="Poligon Adı" name="name" rules={[{ required: true }]}>
-                        <Input value={selectedCity?.name}/>
+                        <Input />
                     </Form.Item>
 
                     <Form.Item
@@ -162,6 +185,13 @@ const PolygonUpdate = () => {
                         <Button type="primary" htmlType="submit">
                             Kaydet
                         </Button>
+                    </Form.Item>
+                    <Form.Item>
+                        <TextArea
+                            value={formattedCoords}
+                            readOnly
+                            autoSize
+                        />
                     </Form.Item>
                 </Form>
             </div>

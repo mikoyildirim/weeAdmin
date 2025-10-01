@@ -79,7 +79,7 @@ const Polygons = () => {
       key: "actions",
       render: (_, record) => (
         <>
-          <Button type="link" href={`updatepolygon/${record._id}`}>Düzenle</Button>
+          <Button type="link" href={`/panel/maps/polygons/updatepolygon/${record._id}`}>Düzenle</Button>
           <>
             <Button type="link" danger onClick={() => showModal(record._id)}>
               Sil

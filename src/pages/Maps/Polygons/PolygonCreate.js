@@ -66,10 +66,11 @@ const PolygonCreate = () => {
 
   const onFinish = async (values) => {
     if (!polygonData) {
-      message.error("Önce poligon çizmelisiniz!");
+      alert("Önce poligon çizmelisiniz!");
       return;
     }
     try {
+      console.log(polygonData)
       await axios.post("/geofences/createlocation/62b2d0760ece1d36e58a20dd", {
         ...values,
         polygon: polygonData,
@@ -80,13 +81,14 @@ const PolygonCreate = () => {
         price: 1.99,
         start: new Date().toISOString(),
         end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
-      });
-      message.success("Poligon başarıyla oluşturuldu!");
+      }).then((res) => console.log(res.data))
+      alert("Poligon başarıyla oluşturuldu!");
     } catch (err) {
       console.error(err);
-      message.error("Poligon oluşturulamadı!");
+      alert("Poligon oluşturulamadı!");
     }
   };
+
 
   return (
     <div style={{ display: "flex", gap: "20px" }}>
