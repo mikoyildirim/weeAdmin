@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Form, Input, Select, message } from "antd";
+import { Button, Form, Input, Select, message, Spin } from "antd";
 import { useParams } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -132,13 +132,42 @@ const PolygonUpdate = () => {
     }, [geofences, id, polygon]);
 
 
+
     const onFinish = async (values) => {
         console.log("Kaydedilecek veriler:", values, polygonData);
-        // burada PUT/POST atabilirsin
+        setLoading(true);
+
+        if (!polygonData) {
+            setLoading(false);
+            alert("Önce poligon çizmelisiniz!");
+            return;
+        }
+        try {
+            console.log(polygonData)
+            await axios.patch(`/geofences/updatelocation/${id}`, {
+                ...values,
+                location_id: id,
+                polygon: polygonData,
+                brand: "WeeScooter",
+                white_label: true,
+                percentage: 50,
+                start_price: 0,
+                price: 1.99,
+                start: new Date().toISOString(),
+                end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+            })
+            .then((res) => console.log(res.data))
+            setLoading(false);
+            alert("Poligon başarıyla oluşturuldu!");
+        } catch (err) {
+            console.error(err);
+            setLoading(false);
+            alert("Poligon oluşturulamadı!");
+        }
     };
 
-    console.log(geofences)
-    console.log(selectedCity)
+    // console.log(geofences)
+    // console.log(selectedCity)
 
 
     // "longitude   latitude" formatında string hazırlıyoruz
@@ -146,56 +175,60 @@ const PolygonUpdate = () => {
 
 
     return (
-        <div style={{ display: "flex", gap: "20px" }}>
-            <div style={{ flex: 2 }}>
-                <div ref={mapRef} style={{ height: "80vh" }}></div>
+        <Spin spinning={loading} tip="Poligonlar yükleniyor...">
+
+
+            <div style={{ display: "flex", gap: "20px" }}>
+                <div style={{ flex: 2 }}>
+                    <div ref={mapRef} style={{ height: "80vh" }}></div>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                    <Form form={form} layout="vertical" onFinish={onFinish}>
+                        <Form.Item label="Poligon Adı" name="name" rules={[{ required: true }]}>
+                            <Input />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="İlçe Mernis Kodu"
+                            name="ilceMernisKodu"
+                            rules={[{ required: true }]}
+                        >
+                            <Input />
+                        </Form.Item>
+
+                        <Form.Item label="Poligon Tipi" name="type" rules={[{ required: true }]}>
+                            <Select>
+                                <Option value="DENY">DENY</Option>
+                                <Option value="ALLOW">ALLOW</Option>
+                                <Option value="SCORE">SCORE</Option>
+                                <Option value="STATION">STATION</Option>
+                            </Select>
+                        </Form.Item>
+
+                        <Form.Item label="Poligon Durumu" name="status" rules={[{ required: true }]}>
+                            <Select>
+                                <Option value="ACTIVE">Aktif</Option>
+                                <Option value="PASSIVE">Pasif</Option>
+                            </Select>
+                        </Form.Item>
+
+                        <Form.Item>
+                            <Button type="primary" htmlType="submit">
+                                Kaydet
+                            </Button>
+                        </Form.Item>
+                        <Form.Item>
+                            <TextArea
+                                value={formattedCoords}
+                                readOnly
+                                autoSize
+                            />
+                        </Form.Item>
+                    </Form>
+                </div>
             </div>
-
-            <div style={{ flex: 1 }}>
-                <Form form={form} layout="vertical" onFinish={onFinish}>
-                    <Form.Item label="Poligon Adı" name="name" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-
-                    <Form.Item
-                        label="İlçe Mernis Kodu"
-                        name="ilceMernisKodu"
-                        rules={[{ required: true }]}
-                    >
-                        <Input />
-                    </Form.Item>
-
-                    <Form.Item label="Poligon Tipi" name="type" rules={[{ required: true }]}>
-                        <Select>
-                            <Option value="DENY">DENY</Option>
-                            <Option value="ALLOW">ALLOW</Option>
-                            <Option value="SCORE">SCORE</Option>
-                            <Option value="STATION">STATION</Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item label="Poligon Durumu" name="status" rules={[{ required: true }]}>
-                        <Select>
-                            <Option value="ACTIVE">Aktif</Option>
-                            <Option value="PASSIVE">Pasif</Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item>
-                        <Button type="primary" htmlType="submit">
-                            Kaydet
-                        </Button>
-                    </Form.Item>
-                    <Form.Item>
-                        <TextArea
-                            value={formattedCoords}
-                            readOnly
-                            autoSize
-                        />
-                    </Form.Item>
-                </Form>
-            </div>
-        </div>
+        </Spin>
     );
 };
 

@@ -1,6 +1,6 @@
 // src/pages/Maps/Polygons/PolygonCreate.js
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Form, Input, Select, message } from "antd";
+import { Button, Form, Input, Select, Spin } from "antd";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
@@ -13,6 +13,7 @@ const PolygonCreate = () => {
   const mapRef = useRef(null);
   const drawnItemsRef = useRef(null);
   const [polygonData, setPolygonData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
 
 
@@ -65,13 +66,16 @@ const PolygonCreate = () => {
   }, []);
 
   const onFinish = async (values) => {
+    setLoading(true);
+
     if (!polygonData) {
+      setLoading(false);
       alert("Önce poligon çizmelisiniz!");
       return;
     }
     try {
       console.log(polygonData)
-      await axios.post("/geofences/createlocation/62b2d0760ece1d36e58a20dd", {
+      await axios.post("/geofences/updatelocation/62b2d0760ece1d36e58a20dd", {
         ...values,
         polygon: polygonData,
         brand: "WeeScooter",
@@ -81,10 +85,13 @@ const PolygonCreate = () => {
         price: 1.99,
         start: new Date().toISOString(),
         end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
-      }).then((res) => console.log(res.data))
+      })
+      // .then((res) => console.log(res.data))
+      setLoading(false);
       alert("Poligon başarıyla oluşturuldu!");
     } catch (err) {
       console.error(err);
+      setLoading(false);
       alert("Poligon oluşturulamadı!");
     }
   };
@@ -97,37 +104,39 @@ const PolygonCreate = () => {
       </div>
 
       <div style={{ flex: 1 }}>
-        <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item label="Poligon Adı" name="name" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
+        <Spin spinning={loading}>
+          <Form layout="vertical" onFinish={onFinish}>
+            <Form.Item label="Poligon Adı" name="name" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
 
-          <Form.Item label="İlçe Mernis Kodu" name="ilceMernisKodu" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
+            <Form.Item label="İlçe Mernis Kodu" name="ilceMernisKodu" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
 
-          <Form.Item label="Poligon Tipi" name="type" rules={[{ required: true }]}>
-            <Select>
-              <Option value="DENY">DENY</Option>
-              <Option value="ALLOW">ALLOW</Option>
-              <Option value="SCORE">SCORE</Option>
-              <Option value="STATION">STATION</Option>
-            </Select>
-          </Form.Item>
+            <Form.Item label="Poligon Tipi" name="type" rules={[{ required: true }]}>
+              <Select>
+                <Option value="DENY">DENY</Option>
+                <Option value="ALLOW">ALLOW</Option>
+                <Option value="SCORE">SCORE</Option>
+                <Option value="STATION">STATION</Option>
+              </Select>
+            </Form.Item>
 
-          <Form.Item label="Poligon Durumu" name="status" rules={[{ required: true }]}>
-            <Select>
-              <Option value="ACTIVE">Aktif</Option>
-              <Option value="PASSIVE">Pasif</Option>
-            </Select>
-          </Form.Item>
+            <Form.Item label="Poligon Durumu" name="status" rules={[{ required: true }]}>
+              <Select>
+                <Option value="ACTIVE">Aktif</Option>
+                <Option value="PASSIVE">Pasif</Option>
+              </Select>
+            </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Kaydet
-            </Button>
-          </Form.Item>
-        </Form>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                Kaydet
+              </Button>
+            </Form.Item>
+          </Form>
+        </Spin>
       </div>
     </div>
   );

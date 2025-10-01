@@ -75,7 +75,7 @@ function App() {
           <Route path="maps/lost" element={<LostMap />} />
           <Route path="maps/polygons" element={<Polygons />} />
           <Route path="maps/polygons/createpolygon" element={<PolygonCreate />} />
-          <Route path="maps/updatepolygon/:id" element={<PolygonUpdate />} />
+          <Route path="maps/polygons/updatepolygon/:id" element={<PolygonUpdate />} />
           <Route path="maps/heatmap" element={<Heatmap />} />
           <Route path="maps/distribution" element={<Distribution />} />
 

@@ -1,20 +1,15 @@
 // src/pages/Maps/Polygons.js
-import React, { useEffect, useState, useRef } from "react";
-import { Table, Button, Modal, Form, Input, Select, message, Card } from "antd";
+import React, { useEffect, useState } from "react";
+import { Table, Button, Modal, message, Card } from "antd";
 import axios from "../../../api/axios";
-import L from "leaflet";
+
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet-draw";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
-
-const { confirm } = Modal;
-
-const { Option } = Select;
 
 const Polygons = () => {
   const [geofences, setGeofences] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);;
 
