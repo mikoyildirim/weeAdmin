@@ -54,7 +54,7 @@ const MainLayout = () => {
         { key: "/panel/maps/active", label: "Aktif Haritası" },
         { key: "/panel/maps/passive", label: "Pasif Haritası" },
         { key: "/panel/maps/lost", label: "Kayıp Haritası" },
-        { key: "/panel/maps/polygons/polygons", label: "Haritalar" },
+        { key: "/panel/maps/polygons", label: "Haritalar" },
         { key: "/panel/maps/heatmap", label: "Kullanım Sıklığı Haritası" },
         { key: "/panel/maps/distribution", label: "Scooter Dağılım Önerisi" },
       ],
