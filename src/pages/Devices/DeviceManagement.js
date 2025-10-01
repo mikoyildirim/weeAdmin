@@ -46,7 +46,16 @@ const DevicesPage = () => {
   };
 
   const columns = [
-    { title: "QR Label", dataIndex: "qrlabel", key: "qrlabel" },
+    {
+      title: "QR Label", dataIndex: "qrlabel", key: "qrlabel",
+      render: (_, record) => (
+        <>
+          <Button type="link" href={`/panel/devices/update/${record?._id}`}>
+            {record?.qrlabel}
+          </Button>
+        </>
+      )
+    },
     { title: "IMEI", dataIndex: "imei", key: "imei" },
     { title: "Seri No", dataIndex: "serial_number", key: "serial_number" },
     { title: "Key Secret", dataIndex: "key_secret", key: "key_secret" },
@@ -83,9 +92,8 @@ const DevicesPage = () => {
           <Button
             type="link"
             target="_blank"
-            href={`https://www.google.com/maps/dir/?api=1&destination=${
-              record?.last_location?.location?.coordinates[1] || 0
-            },${record?.last_location?.location?.coordinates[0] || 0}&travelmode=driving`}
+            href={`https://www.google.com/maps/dir/?api=1&destination=${record?.last_location?.location?.coordinates[1] || 0
+              },${record?.last_location?.location?.coordinates[0] || 0}&travelmode=driving`}
           >
             Konuma Git
           </Button>
