@@ -54,24 +54,47 @@ const DeviceUpdate = () => {
             .finally(() => setLoading(false));
     }, [id, form]);
 
-    //   const handleSave = async () => {
-    //     try {
-    //       const values = await form.validateFields();
-    //       setSaving(true);
+    const handleSave = async () => {
+        try {
+            const values = await form.validateFields();
+            setSaving(true);
 
-    //       const payload = {
-    //         ...values,
-    //       };
+            const payload = {
+                ...values,
+            };
 
-    //       await axios.put(`/devices/${id}`, payload); // PUT ile güncelleme
-    //       message.success("Cihaz başarıyla güncellendi!");
-    //     } catch (err) {
-    //       console.error(err);
-    //       message.error("Güncelleme sırasında hata oluştu.");
-    //     } finally {
-    //       setSaving(false);
-    //     }
-    //   };
+            console.log(payload)
+
+            await axios.patch(`/devices/${id}`, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    language: "tr",
+                    version: "panel"
+                }
+            }); // PATCH ile güncelleme
+            message.success("Cihaz başarıyla güncellendi!");
+        } catch (err) {
+            console.error(err);
+            message.error("Güncelleme sırasında hata oluştu.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleConsole = async () => {
+        try {
+            const values = await form.validateFields();
+            //setSaving(true);
+
+            const payload = {
+                ...values,
+            };
+            console.log(payload)
+        } catch (err) {
+            console.error(err);
+            message.error("Güncelleme sırasında hata oluştu.");
+        }
+    }
 
     if (loading) return <Spin tip="Yükleniyor..." />;
     if (error) return <Alert type="error" message={`Hata: ${error}`} />;
@@ -170,9 +193,9 @@ const DeviceUpdate = () => {
                     </Col>
                 </Row>
 
-                {/* <Button type="primary" onClick={handleSave} loading={saving}>
-          Kaydet
-        </Button> */}
+                <Button type="primary" onClick={handleSave} loading={saving}>
+                    Kaydet
+                </Button>
             </Form>
         </Card>
     );
