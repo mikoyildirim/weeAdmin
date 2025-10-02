@@ -31,6 +31,7 @@ import UnusedDevices from "./pages/Devices/UnusedDevices";
 import DeviceManagement from "./pages/Devices/DeviceManagement";
 import DeviceDetail from "./pages/Devices/Detail/DeviceDetail";
 import DeviceUpdate from "./pages/Devices/Update/DeviceUpdate";
+import DeviceCreate from "./pages/Devices/Create/DeviceCreate";
 
 // Users
 import Users from "./pages/Users/Users";
@@ -88,6 +89,7 @@ function App() {
           <Route path="devices/all" element={<DeviceManagement />} />
           <Route path="devices/detail/:id" element={<DeviceDetail />} />
           <Route path="devices/update/:id" element={<DeviceUpdate />} />
+          <Route path="devices/create" element={<DeviceCreate />} />
 
           {/* Users */}
           <Route path="users" element={<Users />} />

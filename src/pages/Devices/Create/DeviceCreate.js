@@ -1,73 +1,38 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import axios from "../../../api/axios";
 import { Card, Form, Input, Select, Spin, Row, Col, Button } from "antd";
 const { Option } = Select;
 
 const DeviceUpdate = () => {
-    const { id } = useParams();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-
     const [form] = Form.useForm();
 
-    const getDeviceById = async (deviceId) => {
-        try {
-            const response = await axios.get(`/devices/${deviceId}`);
-            return response.data;
-        } catch (err) {
-            console.error("Cihaz bilgisi alınamadı:", err);
-            throw err;
-        }
-    };
-
-    useEffect(() => {
-        if (!id) return;
-
-        setLoading(true);
-
-        getDeviceById(id)
-            .then((data) => {
-                form.setFieldsValue({
-                    controller: data.controller,
-                    tenant: data.tenant,
-                    imei: data.imei,
-                    gsm: data.gsm,
-                    city: data.city,
-                    town: data.town,
-                    lockType: data.lockType,
-                    status: data.status,
-                    qrlabel: data.qrlabel,
-                    name: data.name,
-                    key_secret: data.key_secret,
-                    serial_number: data.serial_number,
-                    battery: data.battery,
-                    price: `Şehir: ${data?.priceObject?.name}, Başlangıç Ücreti: ${data.priceObject?.startPrice} ₺, Dakika Ücreti: ${data?.priceObject?.minutePrice} ₺`,
-                });
-            })
-            .catch((err) => alert("Cihaz verileri alınırken bir hata oluştu"))
-            .finally(() => setLoading(false));
-    }, [id, form]);
-
-    //console.log(device)
-
-    const handleSave = async () => {
+    const handleCreate = async () => {
         setLoading(true)
         try {
             const values = await form.validateFields();
             setSaving(true);
 
-            const { tenant, price, ...payload } = values;
+            const payload = { ...values };
             // burada price değişikliği yapılmaması için JSON içerisinden eklemiyoruz
             // burada tenant değişikliği yapılmaması için JSON içerisinden eklemiyoruz
-            //console.log(payload)
+            console.log(payload)
 
-            await axios.patch(`/devices/${id}`, payload, {}); // PATCH ile güncelleme
-            alert("Cihaz başarıyla güncellendi!")
+            await axios.post(`/devices`, payload)
+                .then(res => {
+                    console.log(res)
+                    alert("Cihaz başarıyla oluşturuldu!")
+                })
+                .catch(err => {
+                    console.log(err)
+                    alert("Cihaz oluşturulamadı!")
+                })
+
 
         } catch (err) {
-            console.error(err);
-            alert(`Güncelleme sırasında bir hata oluştu.\n${err.response.data.error.message}`)
+            //console.error(err.response.data.error.message);
+            //alert(`Cihaz oluşturma sırasında bir hata oluştu.\n${err.response.data.error.message}`)
         } finally {
             setSaving(false);
             setLoading(false)
@@ -77,7 +42,7 @@ const DeviceUpdate = () => {
 
 
     return (
-        <Card title={`Cihaz Güncelle - ${id}`} style={{ maxWidth: 900, margin: "20px auto" }}>
+        <Card title={`Cihaz Oluştur`} style={{ maxWidth: 900, margin: "20px auto" }}>
 
             <Spin
                 spinning={loading}
@@ -98,7 +63,9 @@ const DeviceUpdate = () => {
                     </Col>
                     <Col span={12}>
                         <Form.Item label="TENANT *" name="tenant">
-                            <Input disabled style={{ color: "black" }} />
+                            <Select>
+                                <Option value="62a1e7efe74a84ea61f0d588">62a1e7efe74a84ea61f0d588</Option>
+                            </Select>
                         </Form.Item>
                     </Col>
 
@@ -117,7 +84,6 @@ const DeviceUpdate = () => {
                         <Form.Item label="İL *" name="city">
                             <Select>
                                 <Option value="SIVAS">SIVAS</Option>
-                                <Option value="WES">WES</Option>
                                 <Option value="ELAZIG">ELAZIG</Option>
                                 <Option value="BURSA">BURSA</Option>
                                 <Option value="ANTALYA">ANTALYA</Option>
@@ -177,20 +143,9 @@ const DeviceUpdate = () => {
                             <Input />
                         </Form.Item>
                     </Col>
-
-                    <Col span={12}>
-                        <Form.Item label="BATARYA *" name="battery">
-                            <Input />
-                        </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                        <Form.Item label="FİYAT *" name="price">
-                            <Input disabled style={{ color: "black" }} />
-                        </Form.Item>
-                    </Col>
                 </Row>
 
-                <Button type="primary" onClick={handleSave} loading={saving}>
+                <Button type="primary" onClick={handleCreate} loading={saving}>
                     Kaydet
                 </Button>
             </Form>

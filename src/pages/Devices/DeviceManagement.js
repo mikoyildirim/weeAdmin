@@ -104,6 +104,7 @@ const DevicesPage = () => {
 
   return (
     <Card title="Tüm Cihazlar">
+      <Button type="primary" href="create" style={{margin:"8px 8px 16px 0" }}>Cihaz Oluştur</Button>
       <Table
         columns={columns}
         dataSource={devices}
