@@ -36,6 +36,46 @@ const getIconByDevice = (device) => { // backendden çekilen cihazların durumun
   return colorIcon("red");
 };
 
+const getCustomIcon = (device) => {
+  const baseUrl = getIconByDevice(device).options.iconUrl; // mevcut renkli marker icon
+  const qr = device.qrlabel || "-";
+  const damaged = device?.damaged;
+
+  return L.divIcon({
+    className: "custom-marker",
+    html: `
+<div style="
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+">
+  <img src="${baseUrl}" style="width: 25px; height: 41px;" />
+  ${damaged
+        ? `<div style="
+            margin-left: 6px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.90); /* biraz transparent */
+            color: #555; /* açık gri */
+            padding: 4px 6px; /* üst-alt ve sağ-sol 
+            border-radius: 5px; 
+            border: 1px solid #ccc;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px; /* QR ve ünlem arası boşluk arttırıldı */
+          ">
+            <span>${qr}</span><span>⚠️</span>
+         </div>`
+        : ""
+      }
+</div>
+    `,
+    iconSize: [30, 50],
+    iconAnchor: [15, 41],
+  });
+};
+
+
 const ActiveMap = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +168,7 @@ const ActiveMap = () => {
             const [lon, lat] = device.last_location.location.coordinates.map(Number);
             const key = device.imei || device.id || `${lat}-${lon}`;
             return (
-              <Marker key={key} position={[lat, lon]} icon={getIconByDevice(device)}>
+              <Marker key={key} position={[lat, lon]} icon={getCustomIcon(device)}>
                 <Popup minWidth={200}>
                   <div style={{ lineHeight: 1.5 }}>
                     <div><strong>IMEI:</strong> {device.imei || "-"}</div>
