@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "../../../api/axios";
-import { Card, Form, Input, Select, Spin, Alert, Row, Col, Button, message } from "antd";
-
+import { Card, Form, Input, Select, Spin, Row, Col, Button} from "antd";
 const { Option } = Select;
 
 const DeviceUpdate = () => {
     const { id } = useParams();
-    const [device, setDevice] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
 
     const [form] = Form.useForm();
 
@@ -28,11 +25,9 @@ const DeviceUpdate = () => {
         if (!id) return;
 
         setLoading(true);
-        setError(null);
 
         getDeviceById(id)
             .then((data) => {
-                setDevice(data);
                 form.setFieldsValue({
                     controller: data.controller,
                     tenant: data.tenant,
@@ -42,31 +37,30 @@ const DeviceUpdate = () => {
                     town: data.town,
                     lockType: data.lockType,
                     status: data.status,
-                    qr: data.qrlabel,
+                    qrlabel: data.qrlabel,
                     name: data.name,
                     key_secret: data.key_secret,
                     serial_number: data.serial_number,
                     battery: data.battery,
-                    price: data.priceObject?.startPrice,
+                    price: `Şehir: ${data?.priceObject?.name}, Başlangıç Ücreti: ${data.priceObject?.startPrice} ₺, Dakika Ücreti: ${data?.priceObject?.minutePrice} ₺`,
                 });
             })
-            .catch((err) => setError(err.message || "Bir hata oluştu"))
+            .catch((err) => alert("Cihaz verileri alınırken bir hata oluştu"))
             .finally(() => setLoading(false));
     }, [id, form]);
 
+    //console.log(device)
+
     const handleSave = async () => {
+        setLoading(true)
         try {
             const values = await form.validateFields();
             setSaving(true);
 
-            const payload = {
-                ...values,
-            };
-
-            delete payload.qr
-            delete payload.price
-            delete payload.tenant
-            console.log(payload)
+            const { tenant, price, ...payload } = values;
+            // burada price değişikliği yapılmaması için JSON içerisinden eklemiyoruz
+            // burada tenant değişikliği yapılmaması için JSON içerisinden eklemiyoruz
+            //console.log(payload)
 
             await axios.patch(`/devices/${id}`, payload, {
                 headers: {
@@ -75,35 +69,29 @@ const DeviceUpdate = () => {
                     version: "panel"
                 }
             }); // PATCH ile güncelleme
-            message.success("Cihaz başarıyla güncellendi!");
+            alert("Cihaz başarıyla güncellendi!")
+
         } catch (err) {
             console.error(err);
-            message.error("Güncelleme sırasında hata oluştu.");
+            alert("Güncelleme sırasında bir hata oluştu.")
         } finally {
             setSaving(false);
+            setLoading(false)
         }
     };
 
-    const handleConsole = async () => {
-        try {
-            const values = await form.validateFields();
-            //setSaving(true);
 
-            const payload = {
-                ...values,
-            };
-            console.log(payload)
-        } catch (err) {
-            console.error(err);
-            message.error("Güncelleme sırasında hata oluştu.");
-        }
-    }
-
-    if (loading) return <Spin tip="Yükleniyor..." />;
-    if (error) return <Alert type="error" message={`Hata: ${error}`} />;
 
     return (
         <Card title={`Cihaz Güncelle - ${id}`} style={{ maxWidth: 900, margin: "20px auto" }}>
+
+            <Spin
+                spinning={loading}
+                tip="Yükleniyor..."
+                size="large"
+                style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 10 }}
+            />
+
             <Form layout="vertical" form={form}>
                 <Row gutter={16}>
                     <Col span={12}>
@@ -146,24 +134,24 @@ const DeviceUpdate = () => {
                         <Form.Item label="KİLİT TİPİ *" name="lockType">
                             <Select>
                                 <Option value="BLUETOOTH">BLUETOOTH</Option>
-                                <Option value="KİLİT">KİLİT</Option>
-                                <Option value="KİLİTSİZ">KİLİTSİZ</Option>
+                                <Option value="CABLE">KİLİT</Option>
+                                <Option value="NONE">KİLİTSİZ</Option>
                             </Select>
                         </Form.Item>
                     </Col>
                     <Col span={12}>
                         <Form.Item label="DURUMU *" name="status">
                             <Select>
-                                <Option value="HAZIR">HAZIR</Option>
-                                <Option value="BAĞLANMADI">BAĞLANMADI</Option>
-                                <Option value="BAĞLANDI">BAĞLANDI</Option>
-                                <Option value="KİRALAMADA">KİRALAMADA</Option>
+                                <Option value="MAINTENANCE">HAZIR</Option>
+                                <Option value="OFFLINE">BAĞLANMADI</Option>
+                                <Option value="ONLINE">BAĞLANDI</Option>
+                                <Option value="BUSY">KİRALAMADA</Option>
                             </Select>
                         </Form.Item>
                     </Col>
 
                     <Col span={12}>
-                        <Form.Item label="QR *" name="qr">
+                        <Form.Item label="QR *" name="qrlabel">
                             <Input />
                         </Form.Item>
                     </Col>

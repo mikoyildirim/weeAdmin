@@ -50,7 +50,6 @@ import Rentals from "./pages/Rentals";
 function App() {
   const token = useSelector((state) => state.user.token);
   const user = useSelector((state) => state.user.user);
-  console.log(user?.permissions.management)
   return (
     <Router>
       <Routes>
