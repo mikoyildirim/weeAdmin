@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../../api/axios";
 import { Card, Form, Input, Select, Spin, Row, Col, Button } from "antd";
+import { useNavigate } from "react-router-dom";
+
 const { Option } = Select;
 
 const DeviceUpdate = () => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [form] = Form.useForm();
-
+    const navigate = useNavigate();
     const handleCreate = async () => {
         setLoading(true)
         try {
@@ -23,6 +25,7 @@ const DeviceUpdate = () => {
                 .then(res => {
                     console.log(res)
                     alert("Cihaz başarıyla oluşturuldu!")
+                    navigate("/panel/devices/all");
                 })
                 .catch(err => {
                     console.log(err)
