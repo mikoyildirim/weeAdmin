@@ -1,5 +1,4 @@
 dashboard sayfası
-aktif haritası hasarlı cihaz gösterme
 kullanım sıklığı haritası
 scooter dağıtım önerisi
 az kullanılan cihazlar haritası ()
