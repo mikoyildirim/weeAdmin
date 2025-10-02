@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Card } from "antd";
+import { Table, Tag, Button, message, Card, Input, Space } from "antd";
 import axios from "../../api/axios"; // kendi axios instance yolunu kullan
 
 const DevicesPage = () => {
   const [devices, setDevices] = useState([]);
+  const [filteredDevices, setFilteredDevices] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const fetchDevices = async () => {
     setLoading(true);
     try {
       const res = await axios.get("/devices"); // API endpoint
       setDevices(res.data || []);
+      setFilteredDevices(res.data || []);
     } catch (err) {
       message.error("Cihazlar yüklenirken hata oluştu!");
     } finally {
@@ -21,6 +24,15 @@ const DevicesPage = () => {
   useEffect(() => {
     fetchDevices();
   }, []);
+
+  // Anlık filtreleme
+  useEffect(() => {
+    const filtered = devices.filter((d) => {
+      const text = `${d.qrlabel} ${d.imei} ${d.serial_number} ${d.gsm} ${d.city} ${d.town}`.toLowerCase();
+      return text.includes(searchText.toLowerCase());
+    });
+    setFilteredDevices(filtered);
+  }, [searchText, devices]);
 
   const renderDangerStatus = (type) => {
     switch (type) {
@@ -47,14 +59,14 @@ const DevicesPage = () => {
 
   const columns = [
     {
-      title: "QR Label", dataIndex: "qrlabel", key: "qrlabel",
+      title: "QR Label",
+      dataIndex: "qrlabel",
+      key: "qrlabel",
       render: (_, record) => (
-        <>
-          <Button type="link" href={`/panel/devices/update/${record?._id}`}>
-            {record?.qrlabel}
-          </Button>
-        </>
-      )
+        <Button type="link" href={`/panel/devices/update/${record?._id}`}>
+          {record?.qrlabel}
+        </Button>
+      ),
     },
     { title: "IMEI", dataIndex: "imei", key: "imei" },
     { title: "Seri No", dataIndex: "serial_number", key: "serial_number" },
@@ -88,26 +100,37 @@ const DevicesPage = () => {
       title: "İşlemler",
       key: "actions",
       render: (_, record) => (
-        <>
-          <Button
-            type="link"
-            target="_blank"
-            href={`https://www.google.com/maps/dir/?api=1&destination=${record?.last_location?.location?.coordinates[1] || 0
-              },${record?.last_location?.location?.coordinates[0] || 0}&travelmode=driving`}
-          >
-            Konuma Git
-          </Button>
-        </>
+        <Button
+          type="link"
+          target="_blank"
+          href={`https://www.google.com/maps/dir/?api=1&destination=${
+            record?.last_location?.location?.coordinates[1] || 0
+          },${record?.last_location?.location?.coordinates[0] || 0}&travelmode=driving`}
+        >
+          Konuma Git
+        </Button>
       ),
     },
   ];
 
   return (
     <Card title="Tüm Cihazlar">
-      <Button type="primary" href="create" style={{margin:"8px 8px 16px 0" }}>Cihaz Oluştur</Button>
+      <Space style={{ marginBottom: 16 }}>
+        <Button type="primary" href="create">
+          Cihaz Oluştur
+        </Button>
+        <Input
+          placeholder="Cihaz ara..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          style={{ width: 300 }}
+        />
+      </Space>
+
       <Table
         columns={columns}
-        dataSource={devices}
+        dataSource={filteredDevices}
         loading={loading}
         rowKey={(record) => record._id}
         scroll={{ x: true }}
