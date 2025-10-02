@@ -3,6 +3,7 @@ aktif haritası hasarlı cihaz gösterme
 kullanım sıklığı haritası
 scooter dağıtım önerisi
 cihaz yönetimi cihaz update
+device Create
 az kullanılan cihazlar haritası ()
 destek kaydı update
 kampanya create update
@@ -11,3 +12,4 @@ bildirimler
 personel yönetimi
 şüpheli işlemler
 aktif kiralamalar tutar hesaplaması
+yetkilendirme
