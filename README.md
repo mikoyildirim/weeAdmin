@@ -2,7 +2,7 @@ dashboard sayfası
 aktif haritası hasarlı cihaz gösterme
 kullanım sıklığı haritası
 scooter dağıtım önerisi
-cihaz yönetimi cihaz update
+✔cihaz yönetimi cihaz update
 device Create
 az kullanılan cihazlar haritası ()
 destek kaydı update
