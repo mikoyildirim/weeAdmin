@@ -56,7 +56,7 @@ const DeviceUpdate = () => {
                     <Col span={12}>
                         <Form.Item label="CONTROLLER *" name="controller">
                             <Select>
-                                <Option value="TELTONICA">TELTONICA</Option>
+                                <Option value="TELTONIKA">TELTONIKA</Option>
                                 <Option value="OMNI">OMNI</Option>
                             </Select>
                         </Form.Item>
