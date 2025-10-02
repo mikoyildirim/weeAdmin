@@ -63,6 +63,9 @@ const DeviceUpdate = () => {
                 ...values,
             };
 
+            delete payload.qr
+            delete payload.price
+            delete payload.tenant
             console.log(payload)
 
             await axios.patch(`/devices/${id}`, payload, {
