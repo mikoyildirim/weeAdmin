@@ -43,7 +43,9 @@ import Supports from "./pages/Supports";
 import Campaigns from "./pages/Management/Campaigns/Campaigns";
 import Financial from "./pages/Management/Financial";
 import Notifications from "./pages/Management/Notifications";
-import Staff from "./pages/Management/Staff";
+import Staff from "./pages/Management/Staff/Staff";
+import StaffCreate from "./pages/Management/Staff/Create/StaffCreate";
+import StaffUpdate from "./pages/Management/Staff/Update/StaffUpdate";
 import Fraud from "./pages/Management/Fraud";
 import Rentals from "./pages/Rentals";
 
@@ -102,6 +104,8 @@ function App() {
           <Route path="management/financial" element={<Financial />} />
           <Route path="management/notifications" element={<Notifications />} />
           <Route path="management/staff" element={<Staff />} />
+          <Route path="management/staff/create" element={<StaffCreate />} />
+          <Route path="management/staff/update/:id" element={<StaffUpdate />} />
           <Route path="management/fraud" element={<Fraud />} />
           <Route path="rentals" element={<Rentals />} />
         </Route>
