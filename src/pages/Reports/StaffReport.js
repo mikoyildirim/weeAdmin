@@ -1,33 +1,48 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, DatePicker, Button, Select, Input, message, Card, ConfigProvider, Col, Row } from "antd";
+import {
+  Space,
+  Table,
+  DatePicker,
+  Button,
+  Select,
+  Input,
+  message,
+  Card,
+  ConfigProvider,
+  Col,
+  Row,
+} from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import trTR from "antd/es/locale/tr_TR";
 import "dayjs/locale/tr";
 import exportToExcel from "../../utils/exportToExcel";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 dayjs.locale("tr");
-
 const { RangePicker } = DatePicker;
 
 const StaffReport = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]); // <-- search için
+  const [filteredData, setFilteredData] = useState([]);
   const [dates, setDates] = useState([dayjs().subtract(1, "day"), dayjs()]);
   const [cities, setCities] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
+  const [searchText, setSearchText] = useState("");
   const [paginationSize, setPaginationSize] = useState("medium");
-  const [searchText, setSearchText] = useState(""); // <-- search state
+  const [isMobile, setIsMobile] = useState(false);
 
   const user = useSelector((state) => state.user.user);
   const locations = user?.permissions?.locations || [];
   const sortedData = [...filteredData].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Batarya Raporu.xlsx`;
 
-  const [isMobile, setIsMobile] = useState(false);
+  const totalChanges = filteredData.length;
+  const avgNewBattery = filteredData.length > 0 ? (filteredData.reduce((acc, item) => acc + item.newBattery, 0) / filteredData.length).toFixed(1) : 0;
 
+  // Mobile check
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 991);
     checkMobile();
@@ -40,219 +55,157 @@ const StaffReport = () => {
   }, [isMobile]);
 
   useEffect(() => {
-    fetchCities();
-  }, []);
+    if (locations.length > 0) {
+      setCities(locations);
+      setSelectedCities(locations);
+    }
+  }, [locations]);
 
   useEffect(() => {
-    if (cities.length > 0) {
-      fetchData();
-    }
-  }, [cities, dates, selectedCities]);
-
-  const fetchCities = async () => {
-    try {
-      let cityList = locations;
-      setCities(cityList);
-      if (locations) {
-        const defaultCities = Array.isArray(locations) ? locations : [locations];
-        const validCities = defaultCities.filter(city => cityList.includes(city));
-        setSelectedCities(validCities);
-      }
-    } catch (err) {
-      message.error("Şehirler alınamadı!");
-    }
-  };
+    if (selectedCities.length > 0) fetchData();
+  }, [selectedCities, dates]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.post(
-        "staffrecords/findStaffRecordByCityAndDate",
-        {
-          startDate: dates[0].format("YYYY-MM-DD"),
-          endDate: dates[1].format("YYYY-MM-DD"),
-          cities: selectedCities,
-        }
-      );
+      const response = await axios.post("staffrecords/findStaffRecordByCityAndDate", {
+        startDate: dates[0].format("YYYY-MM-DD"),
+        endDate: dates[1].format("YYYY-MM-DD"),
+        cities: selectedCities,
+      });
       setData(response.data || []);
       setFilteredData(response.data || []);
-    } catch (error) {
+    } catch {
       message.error("Veri alınırken hata oluştu!");
     } finally {
       setLoading(false);
     }
   };
 
-  // Search işlemi
+  // Search
   useEffect(() => {
     if (!searchText) {
       setFilteredData(data);
       return;
     }
-    const filtered = data.filter((item) => {
-      return (
-        item.device?.qrlabel?.toString().toLowerCase().includes(searchText.toLowerCase()) ||
-        item.city?.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.oldBattery?.toString().includes(searchText) ||
-        item.newBattery?.toString().includes(searchText) ||
-        dayjs(item.created_date).format("YYYY-MM-DD").includes(searchText)
-      );
-    });
+    const filtered = data.filter((item) =>
+      item.device?.qrlabel?.toString().toLowerCase().includes(searchText.toLowerCase()) ||
+      item.city?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.oldBattery?.toString().includes(searchText) ||
+      item.newBattery?.toString().includes(searchText) ||
+      dayjs(item.created_date).format("YYYY-MM-DD").includes(searchText)
+    );
     setFilteredData(filtered);
   }, [searchText, data]);
 
+  // Chart data
+  const chartData = Object.values(
+    filteredData.reduce((acc, item) => {
+      const dateKey = dayjs(item.created_date).format("YYYY-MM-DD");
+      if (!acc[dateKey]) acc[dateKey] = { date: dateKey, total: 0, count: 0 };
+      acc[dateKey].total += item.newBattery;
+      acc[dateKey].count += 1;
+      return acc;
+    }, {})
+  ).map((entry) => ({ date: entry.date, avgBattery: (entry.total / entry.count).toFixed(1) }));
+
   const columns = [
-    {
-      title: "Değiştirilme Tarihi",
-      dataIndex: "created_date",
-      key: "created_date",
-      sorter: (a, b) => new Date(a.created_date) - new Date(b.created_date),
-      sortDirections: ["ascend", "descend"],
-      defaultSortOrder: "ascend",
-      align: "center",
-      render: (value) => dayjs(value).format("YYYY-MM-DD"),
-      onHeaderCell: () => ({ style: { minWidth: "120px" } }),
-      onCell: () => ({ style: { minWidth: "120px" } }),
-    },
-    {
-      title: "Cihaz QR",
-      dataIndex: ["device", "qrlabel"],
-      key: "qrlabel",
-      sorter: (a, b) => a.device.qrlabel - b.device.qrlabel,
-      sortDirections: ["ascend", "descend"],
-      align: "center",
-    },
-    {
-      title: "Eski Batarya",
-      dataIndex: "oldBattery",
-      key: "oldBattery",
-      sorter: (a, b) => a.oldBattery - b.oldBattery,
-      sortDirections: ["ascend", "descend"],
-      align: "center",
-      render: (value) => `${value} %`,
-    },
-    {
-      title: "Yeni Batarya",
-      dataIndex: "newBattery",
-      key: "newBattery",
-      sorter: (a, b) => a.newBattery - b.newBattery,
-      sortDirections: ["ascend", "descend"],
-      align: "center",
-      render: (value) => `${value} %`,
-    },
-    {
-      title: "Şehir",
-      dataIndex: "city",
-      key: "city",
-      sorter: (a, b) => a.city.localeCompare(b.city),
-      sortDirections: ["ascend", "descend"],
-      align: "center",
-    },
+    { title: "Değiştirilme Tarihi", dataIndex: "created_date", key: "created_date", sorter: (a, b) => new Date(a.created_date) - new Date(b.created_date), render: (val) => dayjs(val).format("YYYY-MM-DD"), align: "center" },
+    { title: "Cihaz QR", dataIndex: ["device", "qrlabel"], key: "qrlabel", align: "center" },
+    { title: "Eski Batarya", dataIndex: "oldBattery", key: "oldBattery", align: "center", render: (val) => `${val} %` },
+    { title: "Yeni Batarya", dataIndex: "newBattery", key: "newBattery", align: "center", render: (val) => `${val} %` },
+    { title: "Şehir", dataIndex: "city", key: "city", align: "center" },
   ];
 
   return (
-    <Card title="Batarya Değişim Raporları" variant="outlined">
-      <Row gutter={[16, 16]}>
-        {/* Tarih Aralığı */}
-        <Col xs={24} sm={24} md={24} lg={8}>
-          <ConfigProvider locale={trTR}>
-            <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
-              <label style={{ marginBottom: 4 }}>Tarih Aralığı</label>
+    <div>
+      {/* Üst Kartlar */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={12}>
+          <Card style={{ textAlign: "center", background: "#fafafa" }}>
+            <p style={{ fontSize: 28, margin: 0, fontWeight: "bold" }}>{totalChanges}</p>
+            <span>Toplam Batarya Değişimi</span>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card style={{ textAlign: "center", background: "#fafafa" }}>
+            <p style={{ fontSize: 28, margin: 0, fontWeight: "bold" }}>{avgNewBattery} %</p>
+            <span>Ortalama Yeni Batarya</span>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Filtre Card */}
+      <Card style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={8}>
+            <label>Tarih Aralığı</label>
+            <ConfigProvider locale={trTR}>
               {isMobile ? (
                 <Space direction="vertical" size={12}>
-                  <DatePicker value={dates[0]} onChange={(val) => setDates(prev => [val, prev[1]])} style={{ width: "100%" }} />
-                  <DatePicker value={dates[1]} onChange={(val) => setDates(prev => [prev[0], val])} style={{ width: "100%" }} />
+                  <DatePicker value={dates[0]} onChange={(val) => setDates([val || dates[0], dates[1]])} style={{ width: "100%" }} />
+                  <DatePicker value={dates[1]} onChange={(val) => setDates([dates[0], val || dates[1]])} style={{ width: "100%" }} />
                 </Space>
               ) : (
-                <RangePicker value={dates} onChange={(val) => setDates(val)} format="YYYY-MM-DD" style={{ width: "100%" }} />
+                <RangePicker value={dates} onChange={(val) => setDates(val || dates)} format="YYYY-MM-DD" style={{ width: "100%" }} />
               )}
+            </ConfigProvider>
+          </Col>
+          <Col xs={24} md={8}>
+            <label>Şehir Seçiniz</label>
+            <Select mode="multiple" value={selectedCities} onChange={setSelectedCities} style={{ width: "100%" }} options={cities.map((c) => ({ label: c, value: c }))} />
+          </Col>
+          <Col xs={24} md={8} style={{ display: "flex", alignItems: "flex-end" }}>
+            <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Grafik Card */}
+      {chartData.length > 0 && (
+        <Card title="Ortalama Yeni Batarya (%) Gün Bazlı" style={{ marginBottom: 16 }}>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="avgBattery" stroke="#1890ff" name="Ortalama Yeni Batarya (%)" />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+
+      {/* Arama ve Excel */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 12 }}>
+        <Col xs={24} md={12}>
+          <Input placeholder="Ara..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+        </Col>
+        <Col xs={24} md={12} style={{ textAlign: "right" }}>
+          <Button type="primary" onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
+        </Col>
+      </Row>
+
+      {/* Tablo */}
+      <Card>
+        <Table
+          columns={isMobile ? columns.slice(0, 2) : columns}
+          dataSource={filteredData}
+          loading={loading}
+          pagination={{ position: ["bottomCenter"], pageSizeOptions: ["5","10","20","50"], size: paginationSize }}
+          rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`}
+          expandable={isMobile ? { expandedRowRender: (record) => (
+            <div style={{ fontSize: 13 }}>
+              <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
+              <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
+              <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
+              <p><b>Şehir:</b> {record.city}</p>
             </div>
-          </ConfigProvider>
-        </Col>
-
-        {/* Şehir Seçiniz */}
-        <Col xs={24} sm={24} md={24} lg={8}>
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
-            <label style={{ marginBottom: 4 }}>Şehir Seçiniz</label>
-            <Select
-              mode="multiple"
-              style={{ minWidth: 200 }}
-              placeholder="Şehir seçiniz"
-              value={selectedCities}
-              onChange={(val) => setSelectedCities(val)}
-              options={cities.map((c) => ({ label: c, value: c }))}
-            />
-          </div>
-        </Col>
-
-        {/* Filtrele Butonu */}
-        <Col xs={24} sm={24} md={24} lg={8} style={{ display: "flex", alignItems: "flex-end", marginBottom: 16 }}>
-          <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>
-            Filtrele
-          </Button>
-        </Col>
-      </Row>
-
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={24} md={24} lg={16}>
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              flexWrap: isMobile ? "wrap" : "nowrap",
-              alignItems: "center",
-            }}
-          >
-            <Input
-              placeholder="Ara..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{
-                margin: isMobile ? "0 0 8px 0" : "16px 0",
-                width: isMobile ? "100%" : "300px",
-              }}
-            />
-            <Button
-              type="primary"
-              style={{
-                width: isMobile ? "100%" : "auto",
-              }}
-              onClick={() => exportToExcel(sortedData, excelFileName)}
-            >
-              Excel İndir
-            </Button>
-          </div>
-        </Col>
-      </Row>
-
-      <Table
-        columns={isMobile ? columns.slice(0, 2) : columns}
-        dataSource={filteredData}
-        loading={loading}
-        pagination={{
-          position: ["bottomCenter"],
-          pageSizeOptions: ["5", "10", "20", "50"],
-          size: paginationSize,
-        }}
-        rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`}
-        expandable={
-          isMobile
-            ? {
-              expandedRowRender: (record) => (
-                <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
-                  <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
-                  <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
-                  <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
-                  <p><b>Şehir:</b> {record.city}</p>
-                </div>
-              ),
-              expandRowByClick: true,
-            }
-            : undefined
-        }
-      />
-    </Card>
+          ), expandRowByClick: true } : undefined}
+        />
+      </Card>
+    </div>
   );
 };
 
