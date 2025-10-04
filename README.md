@@ -5,6 +5,6 @@ az kullanılan cihazlar haritası ()
 destek kaydı update
 kampanya create update
 bildirimler
-personel yönetimi
+personel yönetimi destek kaydı ve sonlandırma kayıtları 
 aktif kiralamalar tutar hesaplaması
 yetkilendirme
