@@ -10,3 +10,4 @@ aktif kiralamalar tutar hesaplaması
 yetkilendirme
 
 Kullancıı sayfasında kullanıcı ve kart durumu değişikliği
+Kullanıcı sayfası para işlemleri
