@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Tabs, Form, Input, Button, Radio, DatePicker, message, Card } from "antd";
+import { Tabs, Form, Input, Button, Radio, DatePicker, message, Card, Row, Col, Select, Space } from "antd";
 import axios from "../../../../api/axios";
 import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
+const { Option } = Select;
 const { TabPane } = Tabs;
 
 dayjs.locale("tr");
@@ -31,7 +32,7 @@ const StaffUpdate = () => {
                     email: res.data.user.email,
                     staffGsm: res.data.staffGsm,
                     staffDate: res.data.staffDate ? dayjs(res.data.staffDate) : null,
-                    status: res.data.user.active ? "true" : "false",
+                    status: res.data.user.passiveType
                 });
                 formYetkiler.setFieldsValue(res.data.user.permissions || {});
             } catch (error) {
@@ -43,6 +44,7 @@ const StaffUpdate = () => {
 
     // 📌 Bilgiler Güncelleme
     const updateBilgiler = async (values) => {
+        console.log(values)
         setLoading(true);
         try {
             const payload = {
@@ -66,9 +68,12 @@ const StaffUpdate = () => {
 
     // 📌 Yetkiler Güncelleme
     const updatePermissions = async (values) => {
+        //console.log(values)
         setLoading(true);
         try {
-            await axios.patch(`/users/update/permissions/${id}`, values);
+            await axios.patch(`/users/update/permissions/${staff?.user?._id}`, values)
+                .then(res => console.log(res))
+                .catch(err => console.log(err))
             message.success("Yetkiler başarıyla güncellendi!");
         } catch (error) {
             alert("Hata: " + (error.response?.data?.message || "Bilinmeyen hata!"));
@@ -77,11 +82,33 @@ const StaffUpdate = () => {
         setLoading(false);
     };
 
+    // 1️⃣ Önce handlePassiveType fonksiyonu
+    const handlePassiveType = (passiveType) => {
+        setLoading(true);
+        console.log(passiveType)
+        axios.post("/users/update/active/one/panel", {
+            active: passiveType === "NONE", // Aktif mi değil mi
+            gsm: staff.staffGsm,
+            passiveType: passiveType,       // NONE veya DELETED
+        })
+            .then((res) => {
+                console.log("Response:", res.data);
+                message.success("Kullanıcı durumu başarıyla güncellendi!");
+            })
+            .catch((err) => {
+                console.error("Hata Detayı:", err.response ? err.response.data : err);
+                message.error("Durum güncellenemedi: " + (err.response?.data?.message || "Bilinmeyen hata"));
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    };
+
     if (!staff) return <p>Yükleniyor...</p>;
 
     return (
         <Card style={{ padding: "16px", borderRadius: "12px" }}>
-            <h2 style={{ marginBottom: "20px" }}>Personel Güncelle</h2>
+            <h2 style={{ marginBottom: "20px" }}>Personel Güncelle: {staff.staffName}</h2>
 
             <Tabs defaultActiveKey="1">
                 {/* 1️⃣ Bilgiler */}
@@ -89,10 +116,14 @@ const StaffUpdate = () => {
                     <Form form={formBilgiler} layout="vertical" onFinish={updateBilgiler}>
                         <Form.Item label="Kullanıcı Durumu" name="status">
                             <Radio.Group>
-                                <Radio value="true">Aktif</Radio>
-                                <Radio value="false">Pasif</Radio>
+                                <Radio value="NONE">Aktif</Radio>
+                                <Radio value="DELETED">Pasif</Radio>
                             </Radio.Group>
                         </Form.Item>
+
+                        <Button type="primary" htmlType="submit" loading={loading}>
+                            Güncelle
+                        </Button>
 
                         <Form.Item
                             label="İsim"
@@ -136,14 +167,20 @@ const StaffUpdate = () => {
                 {/* 2️⃣ Yetkiler */}
                 <TabPane tab="Yetkiler" key="2">
                     <Form form={formYetkiler} layout="vertical" onFinish={updatePermissions}>
-                        {Object.keys(permissions).map((perm) => (
-                            <Form.Item label={perm} name={perm} key={perm}>
-                                <Radio.Group>
-                                    <Radio value={true}>Aktif</Radio>
-                                    <Radio value={false}>Pasif</Radio>
-                                </Radio.Group>
-                            </Form.Item>
-                        ))}
+                        <Row gutter={[16, 16]}>
+                            {Object.keys(permissions)
+                                .filter((perm) => typeof permissions[perm] === "boolean" && perm != "createCampaign") // boolean olanları al
+                                .map((perm, index) => (
+                                    <Col xs={24} sm={12} md={12} lg={6} key={perm}>
+                                        <Form.Item label={perm} name={perm}>
+                                            <Radio.Group>
+                                                <Radio value={true}>Aktif</Radio>
+                                                <Radio value={false}>Pasif</Radio>
+                                            </Radio.Group>
+                                        </Form.Item>
+                                    </Col>
+                                ))}
+                        </Row>
 
                         <Form.Item>
                             <Button type="primary" htmlType="submit" loading={loading}>
