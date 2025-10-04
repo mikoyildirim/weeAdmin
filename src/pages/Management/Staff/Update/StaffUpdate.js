@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Tabs, Form, Input, Button, Radio, DatePicker, message, Card, Row, Col, Spin, Table } from "antd";
+import { Tabs, Form, Input, Button, Radio, DatePicker, message, Card, Row, Col, Spin, Table, Tag } from "antd";
 import axios from "../../../../api/axios";
 import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
-const { TabPane } = Tabs;
+import utc from 'dayjs/plugin/utc';
 
+const { TabPane } = Tabs;
+const { TextArea } = Input;
+
+
+dayjs.extend(utc);
 dayjs.locale("tr");
+
 const StaffUpdate = () => {
     const { id } = useParams();
     const [loading, setLoading] = useState(false);
@@ -31,7 +37,7 @@ const StaffUpdate = () => {
                     staffName: res.data.staffName,
                     email: res.data.user.email,
                     staffGsm: res.data.staffGsm,
-                    staffDate: res.data.staffDate ? dayjs(res.data.staffDate) : null,
+                    staffDate: res.data.staffDate ? dayjs.utc(res.data.staffDate) : null,
                     status: res.data.user.passiveType,
                 });
                 formYetkiler.setFieldsValue(res.data.user.permissions || {});
@@ -57,29 +63,8 @@ const StaffUpdate = () => {
         fetchData();
     }, [id]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const res = await axios.get(`/staffs/${id}`);
-                setStaff(res.data);
-                setPermissions(res.data.user.permissions || {});
-                formBilgiler.setFieldsValue({
-                    staffName: res.data.staffName,
-                    email: res.data.user.email,
-                    staffGsm: res.data.staffGsm,
-                    staffDate: res.data.staffDate ? dayjs(res.data.staffDate) : null,
-                    status: res.data.user.passiveType
-                });
-                formYetkiler.setFieldsValue(res.data.user.permissions || {});
-            } catch (error) {
-                message.error("Personel bilgileri alınamadı!");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [id]);
+    console.log(staff)
+
 
     const updateBilgiler = async (values) => {
         setLoading(true);
@@ -139,7 +124,7 @@ const StaffUpdate = () => {
                     staffName: res.data.staffName,
                     email: res.data.user.email,
                     staffGsm: res.data.staffGsm,
-                    staffDate: res.data.staffDate ? dayjs(res.data.staffDate) : null,
+                    staffDate: res.data.staffDate ? dayjs.utc(res.data.staffDate) : null,
                     status: res.data.user.passiveType
                 });
                 formYetkiler.setFieldsValue(res.data.user.permissions || {});
@@ -161,49 +146,125 @@ const StaffUpdate = () => {
     }, [id]);
 
 
+    const columnsSupports = [
+        {
+            title: "QR Kod",
+            dataIndex: "qr",
+            key: "qr",
+            sorter: (a, b) => a.qr.localeCompare(b.qr),
+        },
+        {
+            title: "Kategori",
+            dataIndex: "category",
+            key: "category",
+            sorter: (a, b) => a.category.localeCompare(b.category),
+        },
+        {
+            title: "Tanım",
+            dataIndex: "description",
+            key: "description",
+            render: (text) => <TextArea
+                value={text}
+                readOnly
+                style={{ height: 80, resize: "none", overflow: "auto" }}
+            />,
+            sorter: (a, b) => a.description.localeCompare(b.description),
+        },
+        {
+            title: "Not",
+            dataIndex: "note",
+            key: "note",
+            render: (text) => <TextArea
+                value={text}
+                readOnly
+                style={{ height: 80, resize: "none", overflow: "auto" }}
+            />,
+            sorter: (a, b) => (a.note || "").localeCompare(b.note || ""),
+        },
+        {
+            title: "Durum",
+            dataIndex: "status",
+            key: "status",
+            render: (status) => {
+                let color = "default";
+                let text = status;
 
-    const columnsSonlandirma = [
+                if (status === "DONE") {
+                    color = "green";
+                    text = "Aktif";
+                } else if (status === "PENDING") {
+                    color = "orange";
+                    text = "Beklemede";
+                } else if (status === "REJECTED") {
+                    color = "red";
+                    text = "Pasif";
+                }
+
+                return <Tag color={color}>{text}</Tag>;
+            },
+            sorter: (a, b) => a.status.localeCompare(b.status),
+        },
+        {
+            title: "Oluşturma Tarihi",
+            dataIndex: "created_date",
+            key: "created_date",
+            render: (date) => dayjs.utc(date).format("DD.MM.YYYY HH.mm.ss"),
+            sorter: (a, b) => new Date(a.created_date) - new Date(b.created_date),
+        },
+    ];
+
+    const columnsRentalEnds = [
         {
             title: "Kullanıcı Adı",
             dataIndex: "member",
             key: "name",
             render: (member) => `${member.first_name} ${member.last_name}`,
+            sorter: (a, b) => {
+                const nameA = `${a.member.first_name} ${a.member.last_name}`.toLowerCase();
+                const nameB = `${b.member.first_name} ${b.member.last_name}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            },
         },
         {
             title: "Kullanıcı GSM",
             dataIndex: ["member", "gsm"],
             key: "gsm",
+            sorter: (a, b) => (a.member.gsm || "").localeCompare(b.member.gsm || ""),
         },
         {
             title: "Cihaz QR Kodu",
             dataIndex: ["device", "qrlabel"],
             key: "qrlabel",
+            sorter: (a, b) => (a.device.qrlabel || "").localeCompare(b.device.qrlabel || ""),
         },
         {
             title: "Başlangıç Saati",
             dataIndex: "start",
             key: "start",
-            render: (text) => dayjs(text).format("YYYY-MM-DD HH:mm"),
+            render: (text) => dayjs.utc(text).format("YYYY-MM-DD HH:mm"),
+            sorter: (a, b) => dayjs.utc(a.start).unix() - dayjs.utc(b.start).unix(),
         },
         {
             title: "Duration (dk)",
             dataIndex: "duration",
             key: "duration",
+            sorter: (a, b) => a.duration - b.duration,
         },
         {
             title: "Toplam (₺)",
             dataIndex: "total",
             key: "total",
             render: (val) => `${val} ₺`,
+            sorter: (a, b) => a.total - b.total,
         },
         {
             title: "Bitiş Saati",
             dataIndex: "end",
             key: "end",
-            render: (text) => dayjs(text).format("YYYY-MM-DD HH:mm"),
+            render: (text) => dayjs.utc(text).format("YYYY-MM-DD HH:mm"),
+            sorter: (a, b) => dayjs.utc(a.end).unix() - dayjs.utc(b.end).unix(),
         },
     ];
-
     if (!staff) return <Spin spinning={true}><p>Yükleniyor...</p></Spin>;
 
 
@@ -278,7 +339,12 @@ const StaffUpdate = () => {
                     </TabPane>
                     {/* 3️⃣ Destek Kayıtları */}
                     <TabPane tab="Destek Kayıtları" key="3">
-                        <p>📌 Burada destek kayıtlarını listeleyeceğiz (Table ile).</p>
+                        <Table
+                            rowKey="_id"
+                            columns={columnsSupports}
+                            dataSource={staff?.staffWallet?.supports || []}
+                            pagination={{ pageSize: 5 }}
+                        />
                     </TabPane>
 
                     {/* 4️⃣ Sonlandırma Kayıtları */}
@@ -287,7 +353,7 @@ const StaffUpdate = () => {
                             <Form.Item name="sonlandirmaKayitlari">
                                 <Table
                                     dataSource={staffDone}
-                                    columns={columnsSonlandirma}
+                                    columns={columnsRentalEnds}
                                     rowKey="_id"
                                     pagination={{ pageSize: 5 }}
                                 />
