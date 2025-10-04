@@ -113,7 +113,7 @@ const MainLayout = () => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ minHeight: "60vh" }}>
       {/* Sidebar */}
       <Sider
         collapsible
@@ -121,7 +121,7 @@ const MainLayout = () => {
         onCollapse={setCollapsed}
         width={220}
         breakpoint="lg"
-        collapsedWidth={screens.lg ? 80 : 0}
+        // collapsedWidth={screens.lg ? 80 : 0}
         onBreakpoint={(broken) => {
           if (!broken) setCollapsed(false);
         }}
@@ -135,7 +135,7 @@ const MainLayout = () => {
             justifyContent: "center",
             color: "#fff",
             fontWeight: "bold",
-            fontSize: 18,
+            fontSize: 22,
             borderBottom: "1px solid rgba(255,255,255,0.1)",
           }}
         >
