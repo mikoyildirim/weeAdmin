@@ -4,6 +4,7 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/exportToExcel";
 import utc from 'dayjs/plugin/utc';
+import { useLocation } from "react-router-dom";
 
 dayjs.extend(utc);
 dayjs.locale("tr");
@@ -11,7 +12,13 @@ dayjs.locale("tr");
 const { TabPane } = Tabs;
 const { Option } = Select;
 
+
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
+
 const Users = () => {
+  const query = useQuery();
   const [loading, setLoading] = useState(false);
   const [phone, setPhone] = useState("");
   const [userData, setUserData] = useState(null);
@@ -25,7 +32,17 @@ const Users = () => {
   const excelFileNameRentals = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kiralama Raporu.xlsx`;
   const excelFileNameCampaigns = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kampanya Raporu.xlsx`;
 
+  useEffect(() => {
+    const gsm = query.get("gsm");
+    if (gsm) {
+      // 1) Eğer sayfa içinde zaten arama fonksiyonun varsa onu çalıştır
+      searchUser();         // (opsiyonel) arama inputunu doldur
+      setPhone(gsm);     // kendi arama fonksiyonunu çağır
 
+      // 2) Veya backend'de doğrudan kullanıcı GET endpoint'in varsa onu çağır
+      // fetch(`/api/users/gsm/${gsm}`).then(...).then(setUserData)
+    }
+  }, [query]);
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");

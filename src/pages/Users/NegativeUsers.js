@@ -3,6 +3,7 @@ import { Table, Card, Row, Col, Statistic, Typography, message, Input } from "an
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
+import { Link } from "react-router-dom";
 
 dayjs.locale("tr");
 const { Title } = Typography;
@@ -104,16 +105,7 @@ const NegativeBalancePage = () => {
       align: "center",
       render: (gsm) =>
         gsm ? (
-          <a
-            href={`/searchmember?gsm=${gsm}`}
-            onClick={(e) => {
-              e.preventDefault();
-              console.log("[GSM Tıklama]", gsm);
-              window.location.href = `/searchmember?gsm=${gsm}`;
-            }}
-          >
-            {gsm}
-          </a>
+          <Link to={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>{gsm}</Link>
         ) : (
           "-"
         ),
