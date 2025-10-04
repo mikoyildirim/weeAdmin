@@ -28,6 +28,7 @@ const StaffList = () => {
   const columns = [
     {
       title: "İsim",
+      align: "center",
       dataIndex: "staffName",
       key: "staffName",
       render: (text, record) => (
@@ -36,12 +37,14 @@ const StaffList = () => {
     },
     {
       title: "Email",
+      align: "center",
       dataIndex: ["user", "email"],
       key: "email",
       render: (email) => email || "-",
     },
     {
       title: "Yetkili Şehirler",
+      align: "center",
       dataIndex: ["user", "permissions", "locations"],
       key: "locations",
       render: (locations) =>
@@ -49,6 +52,7 @@ const StaffList = () => {
     },
     {
       title: "Durum",
+      align: "center",
       dataIndex: ["user", "active"],
       key: "active",
       render: (active) =>
