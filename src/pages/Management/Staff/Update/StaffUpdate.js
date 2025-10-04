@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Tabs, Form, Input, Button, Radio, DatePicker, message, Card, Row, Col, Select, Space } from "antd";
+import { Tabs, Form, Input, Button, Radio, DatePicker, message, Card, Row, Col, Spin, Table } from "antd";
 import axios from "../../../../api/axios";
 import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
-const { Option } = Select;
 const { TabPane } = Tabs;
 
 dayjs.locale("tr");
 const StaffUpdate = () => {
-    const { id } = useParams(); // URL'den staff id al
+    const { id } = useParams();
     const [loading, setLoading] = useState(false);
     const [staff, setStaff] = useState(null);
     const [permissions, setPermissions] = useState({});
@@ -18,12 +17,50 @@ const StaffUpdate = () => {
     const [formYetkiler] = Form.useForm();
 
 
-
-    console.log(staff)
+    const [formSonlandirma] = Form.useForm();
+    const [staffDone, setStaffDone] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setLoading(true);
+                const res = await axios.get(`/staffs/${id}`);
+                setStaff(res.data);
+                setPermissions(res.data.user.permissions || {});
+                formBilgiler.setFieldsValue({
+                    staffName: res.data.staffName,
+                    email: res.data.user.email,
+                    staffGsm: res.data.staffGsm,
+                    staffDate: res.data.staffDate ? dayjs(res.data.staffDate) : null,
+                    status: res.data.user.passiveType,
+                });
+                formYetkiler.setFieldsValue(res.data.user.permissions || {});
+
+                // ✅ Sonlandırma kayıtlarını al
+                if (res.data?.user?._id) {
+                    const staffDoneRes = await axios.get(`/rentals/staffDone/${res.data.user._id}`);
+                    setStaffDone(staffDoneRes.data || []);
+
+                    // formSonlandirma içine de setle
+                    formSonlandirma.setFieldsValue({
+                        sonlandirmaKayitlari: staffDoneRes.data || [],
+                    });
+
+                    console.log("Sonlandırma kayıtları:", staffDoneRes.data);
+                }
+            } catch (error) {
+                message.error("Veri alınamadı!");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [id]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
                 const res = await axios.get(`/staffs/${id}`);
                 setStaff(res.data);
                 setPermissions(res.data.user.permissions || {});
@@ -37,14 +74,14 @@ const StaffUpdate = () => {
                 formYetkiler.setFieldsValue(res.data.user.permissions || {});
             } catch (error) {
                 message.error("Personel bilgileri alınamadı!");
+            } finally {
+                setLoading(false);
             }
         };
         fetchData();
     }, [id]);
 
-    // 📌 Bilgiler Güncelleme
     const updateBilgiler = async (values) => {
-        console.log(values)
         setLoading(true);
         try {
             const payload = {
@@ -52,155 +89,214 @@ const StaffUpdate = () => {
                 email: values.email,
                 staffDate: values.staffDate,
             };
+            if (values.staffPassword) payload.staffPassword = values.staffPassword;
 
-            if (values.staffPassword) {
-                payload.staffPassword = values.staffPassword;
-            }
-
+            handlePassiveType(values.status);
             await axios.patch(`/staffs/update/password/${id}`, payload);
             message.success("Bilgiler başarıyla güncellendi!");
         } catch (error) {
-            alert("Hata: " + (error.response?.data?.message || "Bilinmeyen hata!"));
             message.error("Bilgiler güncellenemedi!");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
-    // 📌 Yetkiler Güncelleme
     const updatePermissions = async (values) => {
-        //console.log(values)
         setLoading(true);
         try {
-            await axios.patch(`/users/update/permissions/${staff?.user?._id}`, values)
-                .then(res => console.log(res))
-                .catch(err => console.log(err))
+            await axios.patch(`/users/update/permissions/${staff?.user?._id}`, values);
             message.success("Yetkiler başarıyla güncellendi!");
         } catch (error) {
-            alert("Hata: " + (error.response?.data?.message || "Bilinmeyen hata!"));
             message.error("Yetkiler güncellenemedi!");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
-    // 1️⃣ Önce handlePassiveType fonksiyonu
     const handlePassiveType = (passiveType) => {
         setLoading(true);
-        console.log(passiveType)
         axios.post("/users/update/active/one/panel", {
-            active: passiveType === "NONE", // Aktif mi değil mi
+            active: passiveType === "NONE",
             gsm: staff.staffGsm,
-            passiveType: passiveType,       // NONE veya DELETED
+            passiveType: passiveType,
         })
-            .then((res) => {
-                console.log("Response:", res.data);
-                message.success("Kullanıcı durumu başarıyla güncellendi!");
-            })
-            .catch((err) => {
-                console.error("Hata Detayı:", err.response ? err.response.data : err);
-                message.error("Durum güncellenemedi: " + (err.response?.data?.message || "Bilinmeyen hata"));
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+            .then(() => message.success("Kullanıcı durumu başarıyla güncellendi!"))
+            .catch(() => message.error("Durum güncellenemedi!"))
+            .finally(() => setLoading(false));
     };
 
-    if (!staff) return <p>Yükleniyor...</p>;
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+
+                // 1️⃣ Staff bilgileri çek
+                const res = await axios.get(`/staffs/${id}`);
+                setStaff(res.data);
+                setPermissions(res.data.user.permissions || {});
+                formBilgiler.setFieldsValue({
+                    staffName: res.data.staffName,
+                    email: res.data.user.email,
+                    staffGsm: res.data.staffGsm,
+                    staffDate: res.data.staffDate ? dayjs(res.data.staffDate) : null,
+                    status: res.data.user.passiveType
+                });
+                formYetkiler.setFieldsValue(res.data.user.permissions || {});
+
+                // 2️⃣ Sonlandırma kayıtlarını çek (staffDone)
+                if (res.data?.user?._id) {
+                    const staffDoneRes = await axios.get(`/rentals/staffDone/${res.data.user._id}`);
+                    console.log("✅ staffDone verisi:", staffDoneRes.data);
+                }
+
+            } catch (error) {
+                console.error("❌ Hata:", error);
+                message.error("Personel bilgileri alınamadı!");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [id]);
+
+
+
+    const columnsSonlandirma = [
+        {
+            title: "Kullanıcı Adı",
+            dataIndex: "member",
+            key: "name",
+            render: (member) => `${member.first_name} ${member.last_name}`,
+        },
+        {
+            title: "Kullanıcı GSM",
+            dataIndex: ["member", "gsm"],
+            key: "gsm",
+        },
+        {
+            title: "Cihaz QR Kodu",
+            dataIndex: ["device", "qrlabel"],
+            key: "qrlabel",
+        },
+        {
+            title: "Başlangıç Saati",
+            dataIndex: "start",
+            key: "start",
+            render: (text) => dayjs(text).format("YYYY-MM-DD HH:mm"),
+        },
+        {
+            title: "Duration (dk)",
+            dataIndex: "duration",
+            key: "duration",
+        },
+        {
+            title: "Toplam (₺)",
+            dataIndex: "total",
+            key: "total",
+            render: (val) => `${val} ₺`,
+        },
+        {
+            title: "Bitiş Saati",
+            dataIndex: "end",
+            key: "end",
+            render: (text) => dayjs(text).format("YYYY-MM-DD HH:mm"),
+        },
+    ];
+
+    if (!staff) return <Spin spinning={true}><p>Yükleniyor...</p></Spin>;
+
+
+
 
     return (
-        <Card style={{ padding: "16px", borderRadius: "12px" }}>
-            <h2 style={{ marginBottom: "20px" }}>Personel Güncelle: {staff.staffName}</h2>
+        <Spin spinning={loading} tip="Yükleniyor...">
+            <Card style={{ padding: "16px", borderRadius: "12px" }}>
+                <h2 style={{ marginBottom: "20px" }}>Personel Güncelle: {staff.staffName}</h2>
+                <Tabs defaultActiveKey="1">
+                    {/* Bilgiler */}
+                    <TabPane tab="Bilgiler" key="1">
+                        <Form form={formBilgiler} layout="vertical" onFinish={updateBilgiler}>
+                            <Form.Item label="Kullanıcı Durumu" name="status">
+                                <Radio.Group>
+                                    <Radio value="NONE">Aktif</Radio>
+                                    <Radio value="DELETED">Pasif</Radio>
+                                </Radio.Group>
+                            </Form.Item>
+                            <Button type="primary" htmlType="submit">Güncelle</Button>
 
-            <Tabs defaultActiveKey="1">
-                {/* 1️⃣ Bilgiler */}
-                <TabPane tab="Bilgiler" key="1">
-                    <Form form={formBilgiler} layout="vertical" onFinish={updateBilgiler}>
-                        <Form.Item label="Kullanıcı Durumu" name="status">
-                            <Radio.Group>
-                                <Radio value="NONE">Aktif</Radio>
-                                <Radio value="DELETED">Pasif</Radio>
-                            </Radio.Group>
-                        </Form.Item>
+                            <Form.Item label="İsim" name="staffName" rules={[{ required: true, message: "İsim giriniz!" }]}>
+                                <Input />
+                            </Form.Item>
 
-                        <Button type="primary" htmlType="submit" loading={loading}>
-                            Güncelle
-                        </Button>
-
-                        <Form.Item
-                            label="İsim"
-                            name="staffName"
-                            rules={[{ required: true, message: "İsim giriniz!" }]}
-                        >
-                            <Input />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Email"
-                            name="email"
-                            rules={[
+                            <Form.Item label="Email" name="email" rules={[
                                 { required: true, message: "Email giriniz!" },
                                 { type: "email", message: "Geçerli bir email giriniz!" },
-                            ]}
-                        >
-                            <Input />
-                        </Form.Item>
+                            ]}>
+                                <Input />
+                            </Form.Item>
 
-                        <Form.Item label="Şifre" name="staffPassword">
-                            <Input.Password placeholder="Değiştirmek istemiyorsan boş bırak" />
-                        </Form.Item>
+                            <Form.Item label="Şifre" name="staffPassword">
+                                <Input.Password placeholder="Değiştirmek istemiyorsan boş bırak" />
+                            </Form.Item>
 
-                        <Form.Item label="Telefon" name="staffGsm">
-                            <Input disabled style={{ color: "black" }} />
-                        </Form.Item>
+                            <Form.Item label="Telefon" name="staffGsm">
+                                <Input disabled style={{ color: "black" }} />
+                            </Form.Item>
 
-                        <Form.Item label="İşe Başlama Tarihi" name="staffDate">
-                            <DatePicker style={{ width: "100%" }} />
-                        </Form.Item>
+                            <Form.Item label="İşe Başlama Tarihi" name="staffDate">
+                                <DatePicker style={{ width: "100%" }} />
+                            </Form.Item>
 
-                        <Form.Item>
-                            <Button type="primary" htmlType="submit" loading={loading}>
-                                Güncelle
-                            </Button>
-                        </Form.Item>
-                    </Form>
-                </TabPane>
+                            <Form.Item>
+                                <Button type="primary" htmlType="submit">Güncelle</Button>
+                            </Form.Item>
+                        </Form>
+                    </TabPane>
 
-                {/* 2️⃣ Yetkiler */}
-                <TabPane tab="Yetkiler" key="2">
-                    <Form form={formYetkiler} layout="vertical" onFinish={updatePermissions}>
-                        <Row gutter={[16, 16]}>
-                            {Object.keys(permissions)
-                                .filter((perm) => typeof permissions[perm] === "boolean" && perm != "createCampaign") // boolean olanları al
-                                .map((perm, index) => (
-                                    <Col xs={24} sm={12} md={12} lg={6} key={perm}>
-                                        <Form.Item label={perm} name={perm}>
-                                            <Radio.Group>
-                                                <Radio value={true}>Aktif</Radio>
-                                                <Radio value={false}>Pasif</Radio>
-                                            </Radio.Group>
-                                        </Form.Item>
-                                    </Col>
-                                ))}
-                        </Row>
+                    {/* Yetkiler */}
+                    <TabPane tab="Yetkiler" key="2">
+                        <Form form={formYetkiler} layout="vertical" onFinish={updatePermissions}>
+                            <Row gutter={[16, 16]}>
+                                {Object.keys(permissions)
+                                    .filter((perm) => typeof permissions[perm] === "boolean" && perm !== "createCampaign")
+                                    .map((perm) => (
+                                        <Col xs={24} sm={12} md={12} lg={6} key={perm}>
+                                            <Form.Item label={perm} name={perm}>
+                                                <Radio.Group>
+                                                    <Radio value={true}>Aktif</Radio>
+                                                    <Radio value={false}>Pasif</Radio>
+                                                </Radio.Group>
+                                            </Form.Item>
+                                        </Col>
+                                    ))}
+                            </Row>
+                            <Form.Item>
+                                <Button type="primary" htmlType="submit">Güncelle</Button>
+                            </Form.Item>
+                        </Form>
+                    </TabPane>
+                    {/* 3️⃣ Destek Kayıtları */}
+                    <TabPane tab="Destek Kayıtları" key="3">
+                        <p>📌 Burada destek kayıtlarını listeleyeceğiz (Table ile).</p>
+                    </TabPane>
 
-                        <Form.Item>
-                            <Button type="primary" htmlType="submit" loading={loading}>
-                                Güncelle
-                            </Button>
-                        </Form.Item>
-                    </Form>
-                </TabPane>
-
-                {/* 3️⃣ Destek Kayıtları */}
-                <TabPane tab="Destek Kayıtları" key="3">
-                    <p>📌 Burada destek kayıtlarını listeleyeceğiz (Table ile).</p>
-                </TabPane>
-
-                {/* 4️⃣ Sonlandırma Kayıtları */}
-                <TabPane tab="Sonlandırma Kayıtları" key="4">
-                    <p>📌 Burada sonlandırma kayıtlarını listeleyeceğiz (Table ile).</p>
-                </TabPane>
-            </Tabs>
-        </Card>
+                    {/* 4️⃣ Sonlandırma Kayıtları */}
+                    <TabPane tab="Sonlandırma Kayıtları" key="4">
+                        <Form form={formSonlandirma} layout="vertical">
+                            <Form.Item name="sonlandirmaKayitlari">
+                                <Table
+                                    dataSource={staffDone}
+                                    columns={columnsSonlandirma}
+                                    rowKey="_id"
+                                    pagination={{ pageSize: 5 }}
+                                />
+                            </Form.Item>
+                        </Form>
+                    </TabPane>
+                </Tabs>
+            </Card>
+        </Spin>
     );
 };
 
