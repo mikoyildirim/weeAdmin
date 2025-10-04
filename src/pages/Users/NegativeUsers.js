@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Table, Card, Row, Col, Statistic, Typography, message } from "antd";
+import { Table, Card, Row, Col, Statistic, Typography, message, Input } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
 
 dayjs.locale("tr");
 const { Title } = Typography;
+const { Search } = Input;
 
 const NegativeBalancePage = () => {
   const [negativeBalance, setNegativeBalance] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [todayTotal, setTodayTotal] = useState(0);
   const [monthlyTotal, setMonthlyTotal] = useState(0);
   const [overallTotal, setOverallTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
-  // 📌 Eksi bakiye verilerini çek
   const fetchData = async () => {
     setLoading(true);
     console.log("%c[Eksi Bakiye] Veri çekme başladı", "color: orange; font-weight:bold;");
@@ -24,6 +26,7 @@ const NegativeBalancePage = () => {
       console.log("[API Yanıtı]", data);
 
       setNegativeBalance(data);
+      setFilteredData(data);
       calculateTotals(data);
     } catch (error) {
       console.error("[Hata] Veri çekilirken sorun:", error);
@@ -33,7 +36,6 @@ const NegativeBalancePage = () => {
     }
   };
 
-  // 📌 Toplamları hesapla
   const calculateTotals = (data) => {
     const todayStr = dayjs().format("YYYY-MM-DD");
     const currentMonth = dayjs().format("YYYY-MM");
@@ -46,25 +48,16 @@ const NegativeBalancePage = () => {
       const balance = parseFloat(String(item.balance).replace(",", "."));
       const itemDate = dayjs(item.dangerDate);
 
-      if (!itemDate.isValid()) {
-        console.warn("[Uyarı] Geçersiz tarih:", item.dangerDate);
-        return;
-      }
+      if (!itemDate.isValid()) return;
 
       const itemDateStr = itemDate.format("YYYY-MM-DD");
       const itemMonthStr = itemDate.format("YYYY-MM");
 
-      if (itemDateStr === todayStr) {
-        todaySum += balance;
-      }
-      if (itemMonthStr === currentMonth) {
-        monthSum += balance;
-      }
+      if (itemDateStr === todayStr) todaySum += balance;
+      if (itemMonthStr === currentMonth) monthSum += balance;
 
       totalSum += balance;
     });
-
-    console.log("[Toplamlar] Bugün:", todaySum, "| Bu Ay:", monthSum, "| Genel:", totalSum);
 
     setTodayTotal(todaySum);
     setMonthlyTotal(monthSum);
@@ -75,17 +68,35 @@ const NegativeBalancePage = () => {
     fetchData();
   }, []);
 
+  const handleSearch = (value) => {
+    setSearchText(value);
+    if (!value) {
+      setFilteredData(negativeBalance);
+      return;
+    }
+
+    const filtered = negativeBalance.filter((item) => {
+      return (
+        (item.name?.toLowerCase().includes(value.toLowerCase()) || false) ||
+        (item.gsm?.toLowerCase().includes(value.toLowerCase()) || false)
+      );
+    });
+    setFilteredData(filtered);
+  };
+
   const columns = [
     {
       title: "Tarih",
       dataIndex: "dangerDate",
       align: "center",
-      render: (val) => dayjs(val).isValid() ? dayjs(val).format("YYYY-MM-DD HH:mm") : "-",
+      render: (val) => (dayjs(val).isValid() ? dayjs(val).format("YYYY-MM-DD HH:mm") : "-"),
+      sorter: (a, b) => dayjs(a.dangerDate).unix() - dayjs(b.dangerDate).unix(),
     },
     {
       title: "İsim Soyisim",
       dataIndex: "name",
       align: "center",
+      sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
     },
     {
       title: "Telefon",
@@ -106,12 +117,14 @@ const NegativeBalancePage = () => {
         ) : (
           "-"
         ),
+      sorter: (a, b) => (a.gsm || "").localeCompare(b.gsm || ""),
     },
     {
       title: "Eksi Bakiye",
       dataIndex: "balance",
       align: "center",
       render: (val) => `${val}₺`,
+      sorter: (a, b) => a.balance - b.balance,
     },
   ];
 
@@ -162,18 +175,29 @@ const NegativeBalancePage = () => {
         </Col>
       </Row>
 
+      {/* Search */}
+      <Row style={{ marginBottom: 10 }} justify="end">
+        <Col xs={24} md={6}>
+          <Search
+            placeholder="Ara..."
+            allowClear
+            enterButton
+            value={searchText}
+            onChange={(e) => handleSearch(e.target.value)}
+            onSearch={handleSearch}
+          />
+        </Col>
+      </Row>
+
       {/* Tablo */}
       <Card>
         <Table
           columns={columns}
-          dataSource={negativeBalance}
+          dataSource={filteredData}
           rowKey={(record) => record._id || record.gsm}
           loading={loading}
           pagination={{ pageSize: 10 }}
           bordered
-          onChange={(pagination, filters, sorter) => {
-            console.log("[Tablo Değişti]", { pagination, filters, sorter });
-          }}
         />
       </Card>
     </div>
