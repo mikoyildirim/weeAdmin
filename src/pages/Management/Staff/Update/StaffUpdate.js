@@ -190,14 +190,14 @@ const StaffUpdate = () => {
                 let text = status;
 
                 if (status === "DONE") {
-                    color = "green";
-                    text = "Aktif";
-                } else if (status === "PENDING") {
-                    color = "orange";
-                    text = "Beklemede";
-                } else if (status === "REJECTED") {
                     color = "red";
                     text = "Pasif";
+                } else if (status === "CONTROLLED") {
+                    color = "orange";
+                    text = "Beklemede";
+                } else if (status === "ACTIVE") {
+                    color = "Green";
+                    text = "Aktif";
                 }
 
                 return <Tag color={color}>{text}</Tag>;
@@ -249,6 +249,7 @@ const StaffUpdate = () => {
             dataIndex: "duration",
             key: "duration",
             sorter: (a, b) => a.duration - b.duration,
+            render: (value) => `${Math.ceil(value / 60)} dk`
         },
         {
             title: "Toplam (₺)",

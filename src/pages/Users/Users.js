@@ -5,25 +5,20 @@ import dayjs from "dayjs";
 import exportToExcel from "../../utils/exportToExcel";
 import utc from 'dayjs/plugin/utc';
 import { useLocation } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 dayjs.extend(utc);
 dayjs.locale("tr");
 
 const { TabPane } = Tabs;
-const { Option } = Select;
-
-
-function useQuery() {
-  return new URLSearchParams(useLocation().search);
-}
 
 const Users = () => {
-  const query = useQuery();
+  const [form] = Form.useForm();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [phone, setPhone] = useState("");
   const [userData, setUserData] = useState(null);
   const [searched, setSearched] = useState(false);
-  const [userStatus, setUserStatus] = useState("");
+  const [userPassiveType, setUserPassiveType] = useState("");
   const [cardIsActive, setCardIsActive] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState("medium");
@@ -32,17 +27,24 @@ const Users = () => {
   const excelFileNameRentals = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kiralama Raporu.xlsx`;
   const excelFileNameCampaigns = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kampanya Raporu.xlsx`;
 
-  useEffect(() => {
-    const gsm = query.get("gsm");
-    if (gsm) {
-      // 1) Eğer sayfa içinde zaten arama fonksiyonun varsa onu çalıştır
-      searchUser();         // (opsiyonel) arama inputunu doldur
-      setPhone(gsm);     // kendi arama fonksiyonunu çağır
+  // useEffect(() => {
+  //   const params = new URLSearchParams(window.location.search);
+  //   const gsm = params.get("gsm");
+  //   if (gsm) {
+  //     setPhone(gsm);
+  //     console.log("İlk yüklemede GSM:", gsm);
+  //   }
+  // }, []); // ✅ sadece ilk yüklemede çalışır
 
-      // 2) Veya backend'de doğrudan kullanıcı GET endpoint'in varsa onu çağır
-      // fetch(`/api/users/gsm/${gsm}`).then(...).then(setUserData)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gsm = params.get("gsm");
+    if (gsm) {
+      setPhone(gsm);
+      searchUser(); // parametreyle çağırmak daha güvenli
+      //console.log("İlk yüklemede GSM:", gsm);
     }
-  }, [query]);
+  }, [phone]); // ✅ phone değişince çalışır
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");
@@ -55,11 +57,6 @@ const Users = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ""); // sadece rakam
-    setPhone(value);
-  };
-
   // Formatlar
   const formatDateTime = (date) => {
     return date ? dayjs.utc(date).format("YYYY-MM-DD HH.mm.ss") : "-";
@@ -69,7 +66,17 @@ const Users = () => {
     return date ? dayjs.utc(date).format("YYYY-MM-DD") : "-";
   };
 
+  const searchUserButton = (values) => {
+    //console.log("Form verileri:", values);
+    const { phone } = values;
+    setPhone(phone)
+    //console.log(phone)
+    navigate(`/panel/users?gsm=${encodeURIComponent(phone)}`);
+  };
+
+
   const searchUser = async () => {
+
     if (!phone) {
       message.warning("Lütfen telefon numarası giriniz");
       return;
@@ -80,11 +87,14 @@ const Users = () => {
     setSearched(false);
 
     try {
-      const res = await axios.get(`/members/listByTenantGsm/${phone}`);
+      const res = await axios.get(`/members/listByTenantGsm/${phone}`)
+      // .then(res => console.log(res.data))
+      // .catch(err => console.log(err))
+      //console.log(res.data)
       setUserData(res.data || null);
       if (res.data) {
-        setUserStatus(res.data.userStatus || "");
-        setCardIsActive(res.data.wallet.cards[0].isActive || "");
+        setUserPassiveType(res.data?.user?.passiveType || "");
+        setCardIsActive(res.data?.wallet?.cards[0] ? res.data?.wallet?.cards[0]?.isActive : "");
       }
     } catch (err) {
       console.error(err);
@@ -95,8 +105,34 @@ const Users = () => {
     }
   };
 
-  const handleCardIsActiveChange = (value, isActive) => {
-    if (isActive === "card") setCardIsActive(value);
+  const handleIsActiveChange = async (value, cardOrUser) => {
+    if (cardOrUser === "card") {
+      setCardIsActive(value);
+      const walletId = userData.wallet._id; // wallet ID
+      const payload = { isActive: cardIsActive }
+      console.log(userData.wallet.cards[0]._id)
+      await axios.post(`wallets/card/isActive/${walletId}`, payload,)
+        .then(res => {
+          console.log(res.data)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    } else {
+      setUserPassiveType(value)
+      const status = userPassiveType === "NONE"
+      await axios.post(`/users/update/active/one/panel`, {
+        active: status,
+        gsm: phone,
+        passiveType: userPassiveType,
+      })
+        .then(res => {
+          console.log(res.data)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    }
   };
 
   // transactions filtresi + sıralama
@@ -126,7 +162,7 @@ const Users = () => {
     }
     return acc;
   }, {});
-
+  console.log(cardIsActive)
 
   //console.log("cardIsActive",cardIsActive,"data",userData.wallet.cards[0].isActive)
 
@@ -399,22 +435,17 @@ const Users = () => {
     <>
       <h1>Kullanıcı Bilgileri</h1>
 
-      <Card title={"Kullanıcı Arama"}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={24} md={24} lg={16}>
-            <Input
-              placeholder="Telefon numarası ile ara..."
-              value={phone}
-              onChange={handlePhoneChange}
-              style={{ width: "300px", marginRight: "8px" }}
-              onPressEnter={searchUser}
-              maxLength={15}
-            />
-            <Button type="primary" onClick={searchUser}>
+      <Card title="Kullanıcı Arama">
+        <Form form={form} layout="inline" onFinish={searchUserButton}>
+          <Form.Item name="phone" rules={[{ required: true, message: "Telefon numarası girin!" }]}>
+            <Input placeholder="Telefon numarası ile ara..." style={{ width: 300, marginRight: 8 }} maxLength={15} />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
               Kullanıcı Ara
             </Button>
-          </Col>
-        </Row>
+          </Form.Item>
+        </Form>
       </Card>
 
       {loading && <Spin style={{ marginTop: 20 }} />}
@@ -466,29 +497,26 @@ const Users = () => {
                     <Row gutter={[16, 16]}>
                       <Col span={8}>
                         <Form.Item label="Uyruk Bilgisi">
-                          <Input value={userData.nation} disabled style={{ color: "black" }} />
+                          <Input value={userData.nation || "-"} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
                         <Form.Item label="Şehir Bilgisi">
-                          <Input value={userData.city} disabled style={{ color: "black" }} />
+                          <Input value={userData.city || "-"} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
                         <Form.Item label="Cinsiyet Bilgisi">
-                          <Input value={userData.gender} disabled style={{ color: "black" }} />
+                          <Input value={userData.gender || "-"} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                     </Row>
                   </Col>
-
-
-
                   <Col span={12}>
                     <Row gutter={[16, 16]}>
                       <Col span={12}>
                         <Form.Item label="Cüzdan Miktarı">
-                          <Input value={`${userData.wallet?.balance} ₺`} disabled style={{ color: "black" }} />
+                          <Input value={`${Number(userData.wallet?.balance).toFixed(2)}  ₺`} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
 
@@ -502,7 +530,7 @@ const Users = () => {
 
                   <Col span={12}>
                     <Form.Item label="Kullanıcı Telefon Adı">
-                      <Input value={userData.OSBuildNumber} disabled style={{ color: "black" }} />
+                      <Input value={userData.OSBuildNumber || "-"} disabled style={{ color: "black" }} />
                     </Form.Item>
                   </Col>
                   <Col span={6}>
@@ -519,37 +547,51 @@ const Users = () => {
                   <Col span={6}>
                     <Form.Item label="Kullanıcı Durumu">
                       <Select
-                        value={userStatus}
-                        onChange={(value) => handleCardIsActiveChange(value, "user")}
+                        value={userPassiveType}
+                        onChange={(value) => setUserPassiveType(value)}
                         style={{ minWidth: "150px" }}
                         options={[
-                          { value: true, label: 'Aktif' },
-                          { value: false, label: 'Pasif' },
+                          { value: 'NONE', label: 'NORMAL' },
+                          { value: 'DELETED', label: 'SİLİNDİ' },
+                          { value: 'BLOCKED', label: 'KARA LİSTE' },
+                          { value: 'SUSPENDED', label: 'ASKIYA AL' },
                         ]}
                       >
-
                       </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="Kart Durumu" >
-                      <Select
-                        //defaultValue={value}
-                        value={cardIsActive}
-                        onChange={(value) => handleCardIsActiveChange(value, "card")}
-                        style={{ minWidth: "150px" }}
-                        options={[
-                          { value: true, label: 'Güvenli' },
-                          { value: false, label: 'Şüpheli' },
-                        ]}
+                      <Button type="primary"
+                        onClick={() => handleIsActiveChange(userPassiveType, "user")}
                       >
-
-                      </Select>
+                        Kaydet
+                      </Button>
                     </Form.Item>
-                    <Button type="primary">
-                      Kaydet
-                    </Button>
                   </Col>
+                  {
+                    userData?.wallet?.cards[0] ?
+                      <Col span={6}>
+                        <Form.Item label="Kart Durumu" >
+                          <Select
+                            //defaultValue={value}
+                            value={cardIsActive}
+                            onChange={(value) => setCardIsActive(value)}
+                            style={{ minWidth: "150px" }}
+                            options={[
+                              { value: true, label: 'Güvenli' },
+                              { value: false, label: 'Şüpheli' },
+                            ]}
+                          >
+
+                          </Select>
+                        </Form.Item>
+                        <Button type="primary"
+                          onClick={() => handleIsActiveChange(cardIsActive, "card")}
+                        >
+                          Kaydet
+                        </Button>
+                      </Col>
+                      :
+                      <>
+                      </>
+                  }
                 </Row>
               </Form>
             </TabPane>
