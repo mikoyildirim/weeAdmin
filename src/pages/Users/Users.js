@@ -26,7 +26,7 @@ const Users = () => {
 
   const [transactionType, setTransactionType] = useState('5');
   const [amount, setAmount] = useState('');
-  const [fineType, setFineType] = useState('');
+  const [fineType, setFineType] = useState('park');
   const [qrCode, setQrCode] = useState('');
   const [iyzicoID, setTransactionNo] = useState('');
 
@@ -150,16 +150,17 @@ const Users = () => {
     try {
       const dateHourSecond = dayjs().format("HH:mm:ss")
       const date = dayjs().format("YYYY-MM-DD")
-      let payload = { gsm: userData.gsm, amount, dateHourSecond, date };
+      let payload = { gsm: userData.gsm, amount };
 
       if (transactionType !== '3') {
-        payload = { ...payload, type: transactionType };
+        payload = { ...payload, type: transactionType, dateHourSecond, date };
         if (iyzicoID) {
           payload = { ...payload, iyzicoID: iyzicoID };
         }
         await axios.post('/transactions/addTransactionPanel', payload)
       } else if (transactionType === '3') {
-        payload = { ...payload, type: transactionType, qrlabel: qrCode, fineType };
+        payload = { ...payload, qrlabel: qrCode, fineType };
+        console.log(payload)
         await axios.post('/transactions/addFine', payload)
           .then(res => console.log(res.data))
       }
@@ -170,7 +171,7 @@ const Users = () => {
       setFineType('');
       setQrCode('');
       setTransactionNo('');
-      setTransactionType('para');
+      setTransactionType('5');
 
       // İstersen kullanıcı detay sayfasına yönlendirebilirsin
       // navigate(`/searchmember?gsm=${userData.gsm}`);
@@ -787,19 +788,32 @@ const Users = () => {
 
                   {transactionType === '3' && (
                     <>
-                      <Col span={8}>
-                        <Form.Item label="Tutar">
-                          <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
+                      <Col span={12}>
                         <Form.Item label="Ceza Türü">
-                          <Input style={{ color: "black" }} value={fineType} onChange={e => setFineType(e.target.value)} />
+                          <Select
+                            value={fineType}
+                            onChange={setFineType}
+                            style={{ minWidth: "150px" }}
+                            options={[
+                              { value: 'park', label: 'Park' },
+                              { value: 'lock', label: 'Kilit' },
+                              { value: 'photo', label: 'Fotoğraf' },
+                              { value: 'damage', label: 'Cihaz Hasar' },
+                              { value: 'stolenCard', label: 'Çalıntı Kart' },
+                              { value: 'stolenDevice', label: 'Çalıntı Cihaz' },
+                              { value: 'other', label: 'Diğer' },
+                            ]}
+                          />
                         </Form.Item>
                       </Col>
-                      <Col span={8}>
+                      <Col span={12}>
                         <Form.Item label="QR Kod">
                           <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="Tutar">
+                          <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
                         </Form.Item>
                       </Col>
                     </>
