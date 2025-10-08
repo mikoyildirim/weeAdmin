@@ -23,6 +23,16 @@ const Users = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState("medium");
 
+
+  const [transactionType, setTransactionType] = useState('5');
+  const [amount, setAmount] = useState('');
+  const [fineType, setFineType] = useState('');
+  const [qrCode, setQrCode] = useState('');
+  const [iyzicoID, setTransactionNo] = useState('');
+
+
+
+
   const excelFileNameCharges = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Yükleme Raporu.xlsx`;
   const excelFileNameRentals = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kiralama Raporu.xlsx`;
   const excelFileNameCampaigns = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kampanya Raporu.xlsx`;
@@ -41,7 +51,7 @@ const Users = () => {
     const gsm = params.get("gsm");
     if (gsm) {
       setPhone(gsm);
-      searchUser(); // parametreyle çağırmak daha güvenli
+      searchUser();
       //console.log("İlk yüklemede GSM:", gsm);
     }
   }, [phone]); // ✅ phone değişince çalışır
@@ -135,6 +145,43 @@ const Users = () => {
     }
   };
 
+
+  const handleMakeMoney = async () => {
+    try {
+      const dateHourSecond = dayjs().format("HH:mm:ss")
+      const date = dayjs().format("YYYY-MM-DD")
+      let payload = { gsm: userData.gsm, amount, dateHourSecond, date };
+
+      if (transactionType !== '3') {
+        payload = { ...payload, type: transactionType };
+        if (iyzicoID) {
+          payload = { ...payload, iyzicoID: iyzicoID };
+        }
+        await axios.post('/transactions/addTransactionPanel', payload)
+      } else if (transactionType === '3') {
+        payload = { ...payload, type: transactionType, qrlabel: qrCode, fineType };
+        await axios.post('/transactions/addFine', payload)
+          .then(res => console.log(res.data))
+      }
+
+      message.success('İşlem başarıyla kaydedildi!');
+      // İşlem sonrası formu sıfırla
+      setAmount('');
+      setFineType('');
+      setQrCode('');
+      setTransactionNo('');
+      setTransactionType('para');
+
+      // İstersen kullanıcı detay sayfasına yönlendirebilirsin
+      // navigate(`/searchmember?gsm=${userData.gsm}`);
+    } catch (error) {
+      console.error(error);
+      message.error('İşlem sırasında bir hata oluştu!');
+    }
+  };
+
+
+
   // transactions filtresi + sıralama
   const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1 || (t.type === -1 && !t.rental)) || [])
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
@@ -204,6 +251,7 @@ const Users = () => {
       "İşlem Versiyon": d.version || d.rental?.version || "-",
     };
   });
+
   const excelDataCampaigns = campaigns.map(d => ({ // excel ve pdf indirirken filtrelenmiş halini indirir. yani ekranda ne görünüyorsa o
     "Date": dayjs.utc(d.date).format("DD.MM.YYYY HH.mm"),
     "Yükleme ID": `${d.transaction_id} Wee Puan`,
@@ -558,12 +606,10 @@ const Users = () => {
                         ]}
                       >
                       </Select>
-                      <Button type="primary"
-                        onClick={() => handleIsActiveChange(userPassiveType, "user")}
-                      >
-                        Kaydet
-                      </Button>
                     </Form.Item>
+                    <Button type="primary" onClick={() => handleIsActiveChange(userPassiveType, "user")}>
+                      Kaydet
+                    </Button>
                   </Col>
                   {
                     userData?.wallet?.cards[0] ?
@@ -578,13 +624,9 @@ const Users = () => {
                               { value: true, label: 'Güvenli' },
                               { value: false, label: 'Şüpheli' },
                             ]}
-                          >
-
-                          </Select>
+                          />
                         </Form.Item>
-                        <Button type="primary"
-                          onClick={() => handleIsActiveChange(cardIsActive, "card")}
-                        >
+                        <Button type="primary" onClick={() => handleIsActiveChange(cardIsActive, "card")}>
                           Kaydet
                         </Button>
                       </Col>
@@ -702,6 +744,93 @@ const Users = () => {
                 }}
               />
             </TabPane>
+            <TabPane tab={`Para İşlemleri`} key="5">
+              <Form layout="vertical" labelAlign="left">
+                <Row gutter={[24]}>
+                  <Col span={12}>
+                    <Form.Item label="Kullanıcı Adı Soyadı">
+                      <Input disabled style={{ color: "black" }} value={userData.user?.name} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Kullanıcı GSM">
+                      <Input disabled style={{ color: "black" }} value={userData.gsm} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Row gutter={[24]}>
+                  <Col span={12}>
+                    <Form.Item label="İşlem Türü">
+                      <Select
+                        value={transactionType}
+                        onChange={setTransactionType}
+                        style={{ minWidth: "150px" }}
+                        options={[
+                          { value: '1', label: 'Hediye Ekle' },
+                          { value: '2', label: 'Para İade' },
+                          { value: '3', label: 'Ceza Ekle' },
+                          { value: '4', label: 'İyzico Para İade' },
+                          { value: '5', label: 'Wee Puan Ekle' },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  {['1', '2', '5'].includes(transactionType) && (
+                    <Col span={12}>
+                      <Form.Item label="Tutar">
+                        <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                      </Form.Item>
+                    </Col>
+                  )}
+
+                  {transactionType === '3' && (
+                    <>
+                      <Col span={8}>
+                        <Form.Item label="Tutar">
+                          <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item label="Ceza Türü">
+                          <Input style={{ color: "black" }} value={fineType} onChange={e => setFineType(e.target.value)} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item label="QR Kod">
+                          <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
+                        </Form.Item>
+                      </Col>
+                    </>
+                  )}
+
+                  {transactionType === '4' && (
+                    <>
+                      <Col span={12}>
+                        <Form.Item label="Tutar">
+                          <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label="İşlem No">
+                          <Input style={{ color: "black" }} value={iyzicoID} onChange={e => setTransactionNo(e.target.value)} />
+                        </Form.Item>
+                      </Col>
+                    </>
+                  )}
+                </Row>
+
+                <Row gutter={[24]} style={{ marginTop: 16 }}>
+                  <Col>
+                    <Button type="primary" onClick={handleMakeMoney}>
+                      İşlemi Kaydet
+                    </Button>
+                  </Col>
+                </Row>
+              </Form>
+            </TabPane>
+
           </Tabs>
         </Card>
       )}

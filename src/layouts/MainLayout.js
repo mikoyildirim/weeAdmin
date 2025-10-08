@@ -76,7 +76,7 @@ const MainLayout = () => {
       label: "Kullanıcı İşlemleri",
       children: [
         { key: "/panel/users", label: "Kullanıcılar" },
-        { key: "/panel/users/negative", label: "Eksideki Kullanıcılar" },
+        { key: "/panel/users/negative", label: "Borçlu Kullanıcılar" },
       ],
     },
     { key: "/panel/calls", icon: <PhoneOutlined />, label: "Çağrı İşlemleri" },
