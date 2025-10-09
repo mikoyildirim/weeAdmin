@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Card, Tabs, Table, Button, Input, Modal, Badge, message } from "antd";
+import { Card, Tabs, Table, Button, Input, Modal, Tag, message, Select, Form } from "antd";
 import { useSelector } from "react-redux";
 import axios from "../api/axios";
+import dayjs from "dayjs";
+import { Link } from "react-router-dom";
 
 const { TabPane } = Tabs;
 
@@ -10,6 +12,12 @@ const statusColors = {
   CONTROLLED: "orange",
   DONE: "gray",
 };
+
+const statusTr = {
+  ACTIVE: "AKTİF",
+  CONTROLLED: "İNCELENDİ",
+  DONE: "PASİF",
+}
 
 const Supports = () => {
   const userPermissions = useSelector((state) => state.user.user?.permissions) || {};
@@ -27,6 +35,8 @@ const Supports = () => {
     setLoading(true);
     try {
       const res = await axios.get("/supports/find/listWithGroup");
+      console.log(res.data)
+
       setSupports(res.data || []);
     } catch (err) {
       message.error("Destek kayıtları alınamadı!");
@@ -53,10 +63,11 @@ const Supports = () => {
 
   const handleModalUpdate = async () => {
     try {
-      await axios.post("/supports/update/" + selectedSupport._id, {
+      await axios.post("/supports/" + selectedSupport._id, {
         status: selectedSupport.status,
         note: selectedSupport.note,
-      });
+      }).then()
+      .catch(err=>console.log(err))
       setModalVisible(false);
       fetchSupports();
     } catch (err) {
@@ -64,51 +75,79 @@ const Supports = () => {
     }
   };
 
+
+
   const columns = [
     {
       title: "Oluşturulma Tarihi",
       dataIndex: "created_date",
       key: "created_date",
-      render: (d) => new Date(d).toLocaleString(),
+      align: "center",
+      render: (d) => dayjs.utc(d).format("DD.MM.YYYY HH:mm:ss"),
     },
     {
       title: "GSM",
       dataIndex: ["member", "gsm"],
       key: "gsm",
-      render: (_, r) => r.member?.gsm || "Yok",
+      align: "center",
+      render: (gsm) =>
+        gsm ? (
+          <Link to={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>{gsm}</Link>
+        ) : (
+          "-"
+        ),
     },
     {
       title: "Ad Soyad",
       dataIndex: ["member", "first_name"],
       key: "name",
+      align: "center",
       render: (_, r) => `${r.member?.first_name || ""} ${r.member?.last_name || ""}`,
     },
-    { title: "Kategori", dataIndex: "category", key: "category" },
+    { title: "Kategori", dataIndex: "category", key: "category", align: "center", },
     {
       title: "Tanım",
       dataIndex: "description",
       key: "description",
+      align: "center",
       render: (d) => <Input.TextArea value={d} rows={2} readOnly bordered={false} style={{ background: "#f5f5f5" }} />,
+    },
+    {
+      title: "QR",
+      dataIndex: "qr",
+      key: "qr",
+      align: "center",
+      render: (qr) =>
+        qr ? (
+          <Link to={`/panel/devices/detail/${qr}`}>{qr}</Link>
+        ) : (
+          "-"
+        ),
     },
     {
       title: "Durum",
       dataIndex: "status",
       key: "status",
-      render: (s) => <Badge color={statusColors[s]} text={s} />,
+      align: "center",
+      render: (s) => <Tag color={statusColors[s]} style={{ margin: 0 }}>{statusTr[s]}</Tag>
     },
+
     { title: "Şehir", dataIndex: "city", key: "city", render: (c) => c || "Yok" },
     {
       title: "Açıklama",
       dataIndex: "note",
       key: "note",
+      align: "center",
       render: (n) => <Input.TextArea value={n || "Veri yok..."} rows={2} readOnly bordered={false} style={{ background: "#f5f5f5" }} />,
     },
   ];
+
 
   if (userPermissions.updateSupport) {
     columns.push({
       title: "İşlem",
       key: "action",
+      align: "center",
       render: (_, r) => (
         <Button type="primary" ghost size="small" onClick={() => openModal(r)}>
           Güncelle
@@ -136,6 +175,9 @@ const Supports = () => {
 
       <Tabs type="card" tabBarGutter={8}>
         {supports.map((category) => (
+
+
+
           <TabPane tab={category.title} key={category.title}>
             <Table
               dataSource={category.supports}
@@ -160,16 +202,22 @@ const Supports = () => {
         okText="Kaydet"
         cancelText="Kapat"
       >
-        <label>Durum:</label>
-        <select
-          className="form-control"
-          value={selectedSupport.status || ""}
-          onChange={(e) => setSelectedSupport({ ...selectedSupport, status: e.target.value })}
-        >
-          <option value="ACTIVE">AKTİF</option>
-          <option value="CONTROLLED">İNCELENDİ</option>
-          <option value="DONE">ÇÖZÜLDÜ</option>
-        </select>
+
+
+        <Form.Item label="Durum: ">
+          <Select
+            value={selectedSupport.status || ""}
+            onChange={(value) => setSelectedSupport({ ...selectedSupport, status: value })}
+            style={{ minWidth: "150px" }}
+            options={[
+              { value: 'ACTIVE', label: 'AKTİF' },
+              { value: 'CONTROLLED', label: 'İNCELENDİ' },
+              { value: 'DONE', label: 'ÇÖZÜLDÜ' },
+            ]}
+          />
+        </Form.Item>
+
+
 
         <label>Not:</label>
         <Input.TextArea
