@@ -3,11 +3,14 @@ import React, { useEffect, useState, useRef } from "react";
 import { Table, Button, Modal, Input, Typography, message, Card, Tooltip, Progress, Space } from "antd";
 import { useSelector } from "react-redux";
 // Axios yolunu projenize göre ayarlayın
-import axios from "../api/axios"; 
+import axios from "../api/axios";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import dayjs from "dayjs";
+import utc from 'dayjs/plugin/utc';
 
 const { Title, Text } = Typography;
+dayjs.extend(utc);
 
 // Leaflet ikon düzeltmesi (Modal ve Webpack uyumu için)
 delete L.Icon.Default.prototype._getIconUrl;
@@ -18,7 +21,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Mini harita referanslarını saklamak için bileşen dışında bir nesne kullanılır.
-const miniMapRefs = {}; 
+const miniMapRefs = {};
 
 const Rentals = () => {
   const user = useSelector((state) => state.user.user);
@@ -34,7 +37,7 @@ const Rentals = () => {
   const [mapVisible, setMapVisible] = useState(false);
   const [mapData, setMapData] = useState([]);
   const [geofences, setGeofences] = useState([]);
-  
+
   // Büyük harita Leaflet referansları
   const mapRef = useRef(null);
   const markersRef = useRef(L.layerGroup());
@@ -49,6 +52,7 @@ const Rentals = () => {
     } catch {
       message.error("Kiralama verileri alınamadı!");
     } finally {
+
       setLoading(false);
     }
   };
@@ -69,7 +73,7 @@ const Rentals = () => {
     const interval = setInterval(() => {
       fetchRentals();
       fetchGeofences();
-    }, 30000); 
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -78,33 +82,48 @@ const Rentals = () => {
     setSelectedRental(rental);
     const startPrice = rental.device.priceObject.startPrice || 0;
     const minutePrice = rental.device.priceObject.minutePrice || 0;
-    
+
     const now = new Date();
     const rentalTime = new Date(rental.date);
-    const diffMinutes = Math.max(0, Math.round((now - rentalTime) / 60000)); 
-    
+    //const diffMinutes = dayjs().diff(dayjs.utc(rental.date).format('HH.mm.ss'), "minute")
+    const parsed = dayjs.utc(rental.date);
+
+    // Şimdiki zamana göre fark
+    const diffMinutes = dayjs().diff(parsed.format("YYYY-MM-DD HH:mm:ss"), "minute");
+
+    console.log(parsed.format("YYYY-MM-DD HH:mm:ss")); // doğru saat gösterir
+    console.log("Dakika farkı:", diffMinutes);
+    console.log(rental)
+    console.log(diffMinutes)
     let totalCalc = 0;
-    
+
     // PHP/Laravel Mantığı: Başlangıç ücreti ilk dakikayı karşılar.
     if (diffMinutes > 0) {
-        totalCalc = startPrice; 
-        if (diffMinutes > 1) {
-            totalCalc += (diffMinutes - 1) * minutePrice; 
-        }
-    } 
-    
+      totalCalc = startPrice;
+      if (diffMinutes > 1) {
+        totalCalc += (diffMinutes) * minutePrice;
+        //totalCalc += rental.device.priceObject.startPrice
+      }
+    }
+
     setDuration(diffMinutes);
     setTotal(totalCalc.toFixed(2));
     setEndModalVisible(true);
   };
 
+
+  //console.log(rentals[0].status)
+  //console.log(dayjs().diff(dayjs(rentals[0].start), "minute"))
+
+
   const handleEndRental = async () => {
-     try {
+    try {
       await axios.post("/rentals/endManual", {
         rentalID: selectedRental._id,
-        durationtime: duration * 60, 
+        duration: duration * 60,
         total: parseFloat(total),
-      });
+      }).then(res=>console.log(res.data))
+      .catch(err=>console.log(err));
       message.success("Sürüş başarıyla sonlandırıldı!");
       setEndModalVisible(false);
       fetchRentals();
@@ -117,53 +136,53 @@ const Rentals = () => {
     setMapData(avldatas);
     setMapVisible(true);
   };
-  
+
   // Büyük Harita Modalının Yönetimi
   useEffect(() => {
     if (mapVisible && mapData.length > 0) {
-        const initialPoint = mapData.at(-1);
+      const initialPoint = mapData.at(-1);
 
-        if (mapRef.current) {
-            mapRef.current.setView([initialPoint.lat, initialPoint.lng], 17);
-            markersRef.current.clearLayers();
-            linesRef.current.clearLayers();
-        } else {
-            const map = L.map("map").setView([initialPoint.lat, initialPoint.lng], 17);
-            L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, minZoom: 12 }).addTo(map);
-            markersRef.current.addTo(map);
-            linesRef.current.addTo(map);
-            mapRef.current = map; 
-        }
+      if (mapRef.current) {
+        mapRef.current.setView([initialPoint.lat, initialPoint.lng], 17);
+        markersRef.current.clearLayers();
+        linesRef.current.clearLayers();
+      } else {
+        const map = L.map("map").setView([initialPoint.lat, initialPoint.lng], 17);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, minZoom: 12 }).addTo(map);
+        markersRef.current.addTo(map);
+        linesRef.current.addTo(map);
+        mapRef.current = map;
+      }
 
-        const map = mapRef.current;
-        const markers = markersRef.current;
-        const lines = linesRef.current;
+      const map = mapRef.current;
+      const markers = markersRef.current;
+      const lines = linesRef.current;
 
-        const pointList = mapData.map((p) => [p.lat, p.lng]);
-        L.marker([mapData[0].lat, mapData[0].lng]).addTo(markers);
-        L.polyline(pointList, { color: "red", weight: 3, opacity: 0.5 }).addTo(lines);
+      const pointList = mapData.map((p) => [p.lat, p.lng]);
+      L.marker([mapData[0].lat, mapData[0].lng]).addTo(markers);
+      L.polyline(pointList, { color: "red", weight: 3, opacity: 0.5 }).addTo(lines);
 
-        geofences.forEach((area) =>
-            area.locations.forEach((loc) => {
-                const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
-                let color = "grey";
-                let fillOpacity = 0.3;
-                
-                if (loc.type === "DENY") {
-                    color = "red";
-                    fillOpacity = 0.4;
-                } else if (loc.type === "SpeedLimitedZone") {
-                    color = "yellow";
-                    fillOpacity = 0.4;
-                }
-                
-                if (loc.type === "DENY" || loc.type === "SpeedLimitedZone") {
-                    L.polygon(coords, { color, fillColor: color, fillOpacity }).addTo(map);
-                }
-            })
-        );
-        
-        setTimeout(() => map.invalidateSize(), 0); 
+      geofences.forEach((area) =>
+        area.locations.forEach((loc) => {
+          const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
+          let color = "grey";
+          let fillOpacity = 0.3;
+
+          if (loc.type === "DENY") {
+            color = "red";
+            fillOpacity = 0.4;
+          } else if (loc.type === "SpeedLimitedZone") {
+            color = "yellow";
+            fillOpacity = 0.4;
+          }
+
+          if (loc.type === "DENY" || loc.type === "SpeedLimitedZone") {
+            L.polygon(coords, { color, fillColor: color, fillOpacity }).addTo(map);
+          }
+        })
+      );
+
+      setTimeout(() => map.invalidateSize(), 0);
     }
   }, [mapVisible, mapData, geofences]);
 
@@ -172,50 +191,50 @@ const Rentals = () => {
     rentals.forEach((r) => {
       const miniMapId = `mini-map-${r._id}`;
       const element = document.getElementById(miniMapId);
-      
-      if (element && r.avldatas.length) {
-          
-          if (miniMapRefs[r._id]) {
-              miniMapRefs[r._id].invalidateSize();
-              return; 
-          }
-          
-          if (element.hasAttribute('_leaflet_id')) {
-             try {
-                L.map(miniMapId).remove(); 
-             } catch(e) { /* ignore */ }
-          }
 
-          // Haritayı sıfırdan oluştur.
-          const initialPoint = r.avldatas[0];
-          const miniMap = L.map(miniMapId, { 
-              zoomControl: false, 
-              attributionControl: false,
-              dragging: false,
-              scrollWheelZoom: false,
-              tap: false,
-              touchZoom: false,
-          }).setView([initialPoint.lat, initialPoint.lng], 15);
-          
-          L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(miniMap);
-          
-          const latlngs = r.avldatas.map((p) => [p.lat, p.lng]);
-          L.polyline(latlngs, { color: "blue", weight: 2 }).addTo(miniMap);
-          
-          // Harita nesnesini sakla
-          miniMapRefs[r._id] = miniMap;
+      if (element && r.avldatas.length) {
+
+        if (miniMapRefs[r._id]) {
+          miniMapRefs[r._id].invalidateSize();
+          return;
+        }
+
+        if (element.hasAttribute('_leaflet_id')) {
+          try {
+            L.map(miniMapId).remove();
+          } catch (e) { /* ignore */ }
+        }
+
+        // Haritayı sıfırdan oluştur.
+        const initialPoint = r.avldatas[0];
+        const miniMap = L.map(miniMapId, {
+          zoomControl: false,
+          attributionControl: false,
+          dragging: false,
+          scrollWheelZoom: false,
+          tap: false,
+          touchZoom: false,
+        }).setView([initialPoint.lat, initialPoint.lng], 15);
+
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(miniMap);
+
+        const latlngs = r.avldatas.map((p) => [p.lat, p.lng]);
+        L.polyline(latlngs, { color: "blue", weight: 2 }).addTo(miniMap);
+
+        // Harita nesnesini sakla
+        miniMapRefs[r._id] = miniMap;
       }
     });
 
     // Temizleme Fonksiyonu: Listeden çıkan (sonlandırılan) haritaları temizler.
     return () => {
-        Object.keys(miniMapRefs).forEach(id => {
-             const rentalExists = rentals.some(r => r._id === id);
-             if (!rentalExists && miniMapRefs[id]) { 
-                 miniMapRefs[id].remove();
-                 delete miniMapRefs[id];
-             }
-        });
+      Object.keys(miniMapRefs).forEach(id => {
+        const rentalExists = rentals.some(r => r._id === id);
+        if (!rentalExists && miniMapRefs[id]) {
+          miniMapRefs[id].remove();
+          delete miniMapRefs[id];
+        }
+      });
     };
   }, [rentals]);
 
@@ -225,18 +244,18 @@ const Rentals = () => {
     setDuration(val);
 
     if (selectedRental) {
-        const startPrice = selectedRental.device.priceObject.startPrice || 0;
-        const minutePrice = selectedRental.device.priceObject.minutePrice || 0;
-        let totalCalc = 0; 
-        
-        // PHP/Laravel Mantığı: Başlangıç ücreti ilk dakikayı karşılar.
-        if (val > 0) {
-            totalCalc = startPrice;
-            if (val > 1) {
-                totalCalc += (val - 1) * minutePrice;
-            }
+      const startPrice = selectedRental.device.priceObject.startPrice || 0;
+      const minutePrice = selectedRental.device.priceObject.minutePrice || 0;
+      let totalCalc = 0;
+
+      // PHP/Laravel Mantığı: Başlangıç ücreti ilk dakikayı karşılar.
+      if (val > 0) {
+        totalCalc = startPrice;
+        if (val > 1) {
+          totalCalc += (val) * minutePrice;
         }
-        setTotal(totalCalc.toFixed(2));
+      }
+      setTotal(totalCalc.toFixed(2));
     }
   };
 
@@ -304,7 +323,7 @@ const Rentals = () => {
     },
     {
       // Hata düzeltildi: ** kaldırıldı.
-      title: "Nokta Sayısı", 
+      title: "Nokta Sayısı",
       dataIndex: "avldatas",
       key: "points",
       align: "center",
@@ -371,7 +390,7 @@ const Rentals = () => {
             onChange={handleDurationChange}
           />
           <Text>Sürüş Tutarı (₺):</Text>
-          <Input type="text" value={total} readOnly /> 
+          <Input type="text" value={total} readOnly />
         </Space>
       </Modal>
 
@@ -381,15 +400,15 @@ const Rentals = () => {
         title={<Title level={4}>Harita Konumu</Title>}
         onCancel={() => setMapVisible(false)}
         width={800}
-        bodyStyle={{ height: "70vh", padding: 0 }} 
+        bodyStyle={{ height: "70vh", padding: 0 }}
         footer={<Button onClick={() => setMapVisible(false)}>Kapat</Button>}
         afterClose={() => {
-            if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
-                markersRef.current = L.layerGroup();
-                linesRef.current = L.layerGroup();
-            }
+          if (mapRef.current) {
+            mapRef.current.remove();
+            mapRef.current = null;
+            markersRef.current = L.layerGroup();
+            linesRef.current = L.layerGroup();
+          }
         }}
       >
         <div id="map" style={{ height: "100%", width: "100%" }} />

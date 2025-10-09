@@ -4,7 +4,7 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/exportToExcel";
 import utc from 'dayjs/plugin/utc';
-import { useLocation } from "react-router-dom";
+
 import { useNavigate } from "react-router-dom";
 dayjs.extend(utc);
 dayjs.locale("tr");
