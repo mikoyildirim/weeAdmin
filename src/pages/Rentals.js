@@ -82,19 +82,11 @@ const Rentals = () => {
     setSelectedRental(rental);
     const startPrice = rental.device.priceObject.startPrice || 0;
     const minutePrice = rental.device.priceObject.minutePrice || 0;
-
-    const now = new Date();
-    const rentalTime = new Date(rental.date);
-    //const diffMinutes = dayjs().diff(dayjs.utc(rental.date).format('HH.mm.ss'), "minute")
     const parsed = dayjs.utc(rental.date);
 
     // Şimdiki zamana göre fark
     const diffMinutes = dayjs().diff(parsed.format("YYYY-MM-DD HH:mm:ss"), "minute");
 
-    console.log(parsed.format("YYYY-MM-DD HH:mm:ss")); // doğru saat gösterir
-    console.log("Dakika farkı:", diffMinutes);
-    console.log(rental)
-    console.log(diffMinutes)
     let totalCalc = 0;
 
     // PHP/Laravel Mantığı: Başlangıç ücreti ilk dakikayı karşılar.
@@ -102,7 +94,6 @@ const Rentals = () => {
       totalCalc = startPrice;
       if (diffMinutes > 1) {
         totalCalc += (diffMinutes) * minutePrice;
-        //totalCalc += rental.device.priceObject.startPrice
       }
     }
 
@@ -110,11 +101,6 @@ const Rentals = () => {
     setTotal(totalCalc.toFixed(2));
     setEndModalVisible(true);
   };
-
-
-  //console.log(rentals[0].status)
-  //console.log(dayjs().diff(dayjs(rentals[0].start), "minute"))
-
 
   const handleEndRental = async () => {
     try {
@@ -266,7 +252,7 @@ const Rentals = () => {
       title: "Tarih",
       dataIndex: "date",
       key: "date",
-      render: (d) => new Date(d).toLocaleString(),
+      render: (d) => dayjs.utc(d).format("DD.MM.YYYY HH:mm:ss"),
       align: "center",
     },
     {
@@ -292,7 +278,7 @@ const Rentals = () => {
       dataIndex: ["member", "gsm"],
       key: "gsm",
       render: (gsm) => (
-        <Button type="link" href={`/searchmember?gsm=${gsm}`}>
+        <Button type="link" href={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>
           {gsm}
         </Button>
       ),
@@ -309,6 +295,7 @@ const Rentals = () => {
         else if (b <= 50) color = "orange";
         return (
           <Tooltip title={`${b || 0}% Batarya`}>
+            <p style={{margin:0}}>{b || 0}%</p>
             <Progress percent={b || 0} size="small" strokeColor={color} showInfo={false} />
           </Tooltip>
         );
@@ -330,9 +317,9 @@ const Rentals = () => {
       render: (avl, r) => (
         <Space direction="vertical" align="center">
           <Text>{avl.length}</Text>
-          <Card size="small" style={{ width: 80, height: 80, padding: 0 }} bodyStyle={{ padding: 0 }}>
+          {/* <Card size="small" style={{ width: 80, height: 80, padding: 0 }} bodyStyle={{ padding: 0 }}>
             <div id={`mini-map-${r._id}`} style={{ width: "100%", height: "100%" }} />
-          </Card>
+          </Card> */}
         </Space>
       ),
     },
