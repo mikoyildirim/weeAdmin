@@ -173,6 +173,7 @@ const Users = () => {
       setQrCode('');
       setTransactionNo('');
       setTransactionType('5');
+      searchUser()
 
       // İstersen kullanıcı detay sayfasına yönlendirebilirsin
       // navigate(`/searchmember?gsm=${userData.gsm}`);
