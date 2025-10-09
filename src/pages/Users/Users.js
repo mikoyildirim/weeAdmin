@@ -31,7 +31,7 @@ const Users = () => {
   const [iyzicoID, setTransactionNo] = useState('');
 
 
-
+  
 
   const excelFileNameCharges = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Yükleme Raporu.xlsx`;
   const excelFileNameRentals = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kiralama Raporu.xlsx`;
@@ -46,13 +46,17 @@ const Users = () => {
   //   }
   // }, []); // ✅ sadece ilk yüklemede çalışır
 
+
+
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const gsm = params.get("gsm");
+    setPhone(gsm);
     if (gsm) {
-      setPhone(gsm);
       searchUser();
       //console.log("İlk yüklemede GSM:", gsm);
+      form.setFieldsValue({ phone })
     }
   }, [phone]); // ✅ phone değişince çalışır
 
@@ -152,18 +156,15 @@ const Users = () => {
       const date = dayjs().format("YYYY-MM-DD")
       let payload = { gsm: userData.gsm, amount };
 
-      if (transactionType !== '3') {
-        payload = { ...payload, type: transactionType, dateHourSecond, date };
-        if (iyzicoID) {
-          payload = { ...payload, iyzicoID: iyzicoID };
-        }
-        await axios.post('/transactions/addTransactionPanel', payload)
-      } else if (transactionType === '3') {
+      if (transactionType === '3') {
         payload = { ...payload, qrlabel: qrCode, fineType };
-        console.log(payload)
-        await axios.post('/transactions/addFine', payload)
-          .then(res => console.log(res.data))
+        await axios.post('/transactions/addFine', payload);
+      } else {
+        payload = { ...payload, type: transactionType, dateHourSecond, date };
+        if (iyzicoID) payload.iyzicoID = iyzicoID;
+        await axios.post('/transactions/addTransactionPanel', payload);
       }
+
 
       message.success('İşlem başarıyla kaydedildi!');
       // İşlem sonrası formu sıfırla
@@ -210,7 +211,6 @@ const Users = () => {
     }
     return acc;
   }, {});
-  console.log(cardIsActive)
 
   //console.log("cardIsActive",cardIsActive,"data",userData.wallet.cards[0].isActive)
 

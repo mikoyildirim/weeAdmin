@@ -9,4 +9,4 @@ personel yönetimi destek kaydı ve sonlandırma kayıtları
 aktif kiralamalar tutar hesaplaması
 yetkilendirme
 
-
+users sayfasına sekmede ileri geri yapınca veri güncellenmiyor
