@@ -12,4 +12,3 @@ users sayfasına sekmede ileri geri yapınca veri güncellenmiyor
 users sayfasına sürüş fotoprafı eklenecek
 users sayfasına sürüş düzenle butonu eklenecek
 devices detail sayfasında kullancıının telefon numarasına tıklama users sayfasına yönlendirme
-Personel yönetimi sayfasına search
