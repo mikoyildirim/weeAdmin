@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import utc from 'dayjs/plugin/utc';
+import { Link } from "react-router-dom";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -151,6 +152,12 @@ const StaffUpdate = () => {
             title: "QR Kod",
             dataIndex: "qr",
             key: "qr",
+            render: (qr) =>
+                qr ? (
+                    <Link to={`/panel/devices/detail/${qr}`}>{qr}</Link>
+                ) : (
+                    "-"
+                ),
             sorter: (a, b) => a.qr.localeCompare(b.qr),
         },
         {
@@ -229,12 +236,24 @@ const StaffUpdate = () => {
             title: "Kullanıcı GSM",
             dataIndex: ["member", "gsm"],
             key: "gsm",
+            render: (gsm) =>
+                gsm ? (
+                    <Link to={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>{gsm}</Link>
+                ) : (
+                    "-"
+                ),
             sorter: (a, b) => (a.member.gsm || "").localeCompare(b.member.gsm || ""),
         },
         {
             title: "Cihaz QR Kodu",
             dataIndex: ["device", "qrlabel"],
             key: "qrlabel",
+            render: (qr) =>
+                qr ? (
+                    <Link to={`/panel/devices/detail/${qr}`}>{qr}</Link>
+                ) : (
+                    "-"
+                ),
             sorter: (a, b) => (a.device.qrlabel || "").localeCompare(b.device.qrlabel || ""),
         },
         {
@@ -345,6 +364,7 @@ const StaffUpdate = () => {
                             columns={columnsSupports}
                             dataSource={staff?.staffWallet?.supports || []}
                             pagination={{ pageSize: 5 }}
+                            scroll={{ x: true }}
                         />
                     </TabPane>
 
@@ -357,6 +377,7 @@ const StaffUpdate = () => {
                                     columns={columnsRentalEnds}
                                     rowKey="_id"
                                     pagination={{ pageSize: 5 }}
+                                    scroll={{ x: true }}
                                 />
                             </Form.Item>
                         </Form>

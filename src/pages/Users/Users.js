@@ -31,7 +31,7 @@ const Users = () => {
   const [iyzicoID, setTransactionNo] = useState('');
 
 
-  
+
 
   const excelFileNameCharges = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Yükleme Raporu.xlsx`;
   const excelFileNameRentals = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kiralama Raporu.xlsx`;
@@ -572,7 +572,7 @@ const Users = () => {
 
                       <Col span={12}>
                         <Form.Item label="WeePuan Miktarı">
-                          <Input value={`${userData?.wallet?.score || 0} Wee Puan`} disabled style={{ color: "black" }} />
+                          <Input value={`${Number(userData?.wallet?.score || 0).toFixed(2)} Wee Puan`} disabled style={{ color: "black" }} />
                         </Form.Item>
                       </Col>
                     </Row>
