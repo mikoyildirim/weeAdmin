@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table } from "antd";
+import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table, Modal } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/exportToExcel";
@@ -31,6 +31,8 @@ const Users = () => {
   const [iyzicoID, setTransactionNo] = useState('');
 
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImg, setSelectedImg] = useState(null);
 
 
   const excelFileNameCharges = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Yükleme Raporu.xlsx`;
@@ -107,6 +109,7 @@ const Users = () => {
       //console.log(res.data)
       setUserData(res.data || null);
       if (res.data) {
+        // console.log(res.data)
         setUserPassiveType(res.data?.user?.passiveType || "");
         setCardIsActive(res.data?.wallet?.cards[0] ? res.data?.wallet?.cards[0]?.isActive : "");
       }
@@ -118,6 +121,23 @@ const Users = () => {
       setSearched(true);
     }
   };
+
+  const showImage = async (imageObj) => {
+    try {
+      console.log(imageObj)
+      const { key, url } = { ...imageObj }
+      await axios.post('/rentals/showImage', { key, url })
+        .then(res => {
+          console.log(res.data)
+          setSelectedImg(res.data.image);
+        })
+        .catch(err => console.log(err))
+    } catch (error) {
+      console.error('showImage hatası:', error.message);
+    }
+  };
+
+
 
   const handleIsActiveChange = async (value, cardOrUser) => {
     if (cardOrUser === "card") {
@@ -193,7 +213,6 @@ const Users = () => {
     .sort((a, b) => new Date(a.rental?.start) - new Date(b.rental?.start))
     .reverse();
 
-
   const campaigns = (userData?.wallet?.transactions?.filter(t => t.type === 3) || [])
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
 
@@ -261,7 +280,7 @@ const Users = () => {
     "İşlem Versiyon": d.version,
   }));
 
-  console.log(userData)
+  // console.log(userData)
   //console.log(userData?.wallet?.transactions?.filter(t => t.transaction_id === "ceza/fine"))
 
   // Columns
@@ -431,9 +450,26 @@ const Users = () => {
     },
     {
       title: "Görsel",
-      dataIndex: "image",
       key: "image",
       align: "center",
+      render: (record) => {
+        const imageObj = record?.rental?.imageObj;
+        const disabled = !imageObj?.url;
+        return (
+          <Button
+            type="primary"
+            disabled={disabled}
+            onClick={() => {
+              showImage(imageObj)
+              setIsModalOpen(true);
+            }}
+          >
+            Fotoğrafı Görüntüle
+          </Button>
+        )
+
+      }
+
     },
     {
       title: "Sürüşü Düzenle",
@@ -847,6 +883,24 @@ const Users = () => {
             </TabPane>
 
           </Tabs>
+          <Modal
+            title="Sürüş Fotoğrafı"
+            open={isModalOpen}
+            onCancel={() => setIsModalOpen(false)}
+            footer={null}
+            height="800px"
+            width="fit-content"
+          >
+            {selectedImg ? (
+              <img
+                src={`data:image/png;base64,${selectedImg}`}
+                alt="Base64 Görsel"
+                style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+              />
+            ) : (
+              <p>Görsel bulunamadı</p>
+            )}
+          </Modal>
         </Card>
       )}
     </>
