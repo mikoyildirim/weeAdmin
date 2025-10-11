@@ -9,4 +9,4 @@ yetkilendirme
 
 users sayfasına sekmede ileri geri yapınca veri güncellenmiyor
 users sayfasına sürüş düzenle butonu eklenecek
-devices detail sayfasında kullancıının telefon numarasına tıklama users sayfasına yönlendirme
+devices detail sayfasında kullanıcının telefon numarasına tıklama users sayfasına yönlendirme

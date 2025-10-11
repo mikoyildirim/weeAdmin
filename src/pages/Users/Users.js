@@ -123,8 +123,8 @@ const Users = () => {
   };
 
   const showImage = async (imageObj) => {
+    setSelectedImg("")
     try {
-      console.log(imageObj)
       const { key, url } = { ...imageObj }
       await axios.post('/rentals/showImage', { key, url })
         .then(res => {
@@ -452,23 +452,21 @@ const Users = () => {
       title: "Görsel",
       key: "image",
       align: "center",
-      render: (record) => {
-        const imageObj = record?.rental?.imageObj;
-        const disabled = !imageObj?.url;
-        return (
-          <Button
-            type="primary"
-            disabled={disabled}
-            onClick={() => {
-              showImage(imageObj)
-              setIsModalOpen(true);
-            }}
-          >
-            Fotoğrafı Görüntüle
-          </Button>
-        )
+      render: (_, record) => (
+        <Button
+          type="primary"
+          disabled={!record?.rental?.imageObj}
+          onClick={() => {
+            console.log("Clicked:", record);
+            showImage(record?.rental?.imageObj);
+            setIsModalOpen(true);
+          }}
+        >
+          Fotoğrafı Görüntüle
+        </Button>
+      ),
 
-      }
+
 
     },
     {
