@@ -207,7 +207,15 @@ const DeviceDetail = () => {
       dataIndex: "memberGsm",
       key: "memberGsm",
       align: "center",
-      sorter: (a, b) => a.memberGsm.localeCompare(b.memberGsm)
+      sorter: (a, b) => a.memberGsm.localeCompare(b.memberGsm),
+      render: (gsm) =>
+        gsm ? (
+          <Link onClick={() => navigate(`/panel/users?gsm=${encodeURIComponent(gsm)}`)}>
+            {lastUserInfo.phone}
+          </Link>
+        ) : (
+          "-"
+        ),
     },
     {
       title: "Sürüş Süresi",
@@ -255,7 +263,7 @@ const DeviceDetail = () => {
               </Col>
               <Col span={12}>
                 <Form.Item label="GSM Numarası">
-                  <Link onClick={() => navigate(`/city/${lastUserInfo.city}`)}>
+                  <Link onClick={() => navigate(`/panel/users?gsm=${encodeURIComponent(lastUserInfo.phone)}`)}>
                     {lastUserInfo.phone}
                   </Link>
                 </Form.Item>
@@ -306,7 +314,11 @@ const DeviceDetail = () => {
                 ? {
                   expandedRowRender: (record) => (
                     <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
-                      <p><b>GSM:</b> {record.memberGsm}</p>
+                      <p><b>GSM:</b>
+
+                        <Link onClick={() => navigate(`/panel/users?gsm=${encodeURIComponent(record.memberGsm)}`)}>
+                          {record.memberGsm}
+                        </Link></p>
                       <p><b>Sürüş Süresi:</b> {record.timeDrive} </p>
                       <Button
                         type="primary"
