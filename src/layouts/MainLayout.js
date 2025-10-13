@@ -27,7 +27,6 @@ const MainLayout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
-
   const [collapsed, setCollapsed] = useState(false);
   const screens = useBreakpoint();
 
@@ -112,20 +111,25 @@ const MainLayout = () => {
     ],
   };
 
+  const siderWidth = collapsed ? 80 : 220;
+
   return (
-    <Layout style={{ minHeight: "60vh" }}>
-      {/* Sidebar */}
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* SABİT SİDEBAR */}
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
         width={220}
-        breakpoint="lg"
-        // collapsedWidth={screens.lg ? 80 : 0}
-        onBreakpoint={(broken) => {
-          if (!broken) setCollapsed(false);
+        style={{
+          background: "#001529",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          height: "100vh",
+          overflow: "auto",
         }}
-        style={{ background: "#001529" }}
       >
         <div
           style={{
@@ -147,13 +151,11 @@ const MainLayout = () => {
           selectedKeys={[location.pathname]}
           onClick={handleMenuClick}
           items={menuItems}
-          style={{ borderRight: 0 }}
         />
       </Sider>
 
-      {/* Main layout */}
-      <Layout>
-        {/* Header */}
+      <Layout style={{ marginLeft: siderWidth, transition: "margin-left 0.2s" }}>
+        {/* SABİT HEADER */}
         <Header
           style={{
             background: "#fff",
@@ -162,36 +164,37 @@ const MainLayout = () => {
             justifyContent: "space-between",
             alignItems: "center",
             boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+            position: "fixed",
+            top: 0,
+            left: siderWidth,
+            right: 0,
+            height: 64,
+            zIndex: 10,
+            transition: "left 0.2s",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={toggleCollapsed}
-              style={{ fontSize: 18, marginRight: 16 }}
-            />
-          </div>
+          <Button
+            type="text"
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleCollapsed}
+            style={{ fontSize: 18, marginRight: 16 }}
+          />
           <Dropdown menu={userMenu} placement="bottomRight">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                cursor: "pointer",
-                gap: 8,
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", cursor: "pointer", gap: 8 }}>
               <Avatar style={{ backgroundColor: "#1890ff" }} icon={<UserOutlined />} />
               <span>{user?.name || "Admin"}</span>
             </div>
           </Dropdown>
         </Header>
 
-        {/* Content */}
+        {/* KAYAN İÇERİK */}
         <Content
           style={{
-            margin: screens.xs ? 0 : 16,
+            marginTop: 64,
+            padding: 16,
             minHeight: "calc(100vh - 64px)",
+            overflow: "auto",
+            background: "#f5f5f5",
           }}
         >
           <Outlet />
