@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc';
+import { Link } from "react-router-dom";
 
 dayjs.extend(utc);
 
@@ -126,7 +127,7 @@ const LostMap = () => {
                 <Popup minWidth={200}>
                   <div style={{ lineHeight: 1.5 }}>
                     <div><strong>TARİH:</strong> {dayjs.utc(device.created_date).format('DD.MM.YYYY HH:mm') || "-"}</div>
-                    <div><strong>QRCODE:</strong> {device.qrlabel || "-"}</div>
+                    <div><strong>QRCODE:</strong> {device.qrlabel ? <Link to={`/panel/devices/update/${encodeURIComponent(device._id)}`}>{device.qrlabel}</Link> : "-"} </div>
                     <div style={{ marginTop: 6 }}>
                       <a target="_blank" rel="noreferrer"
                         href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`}>

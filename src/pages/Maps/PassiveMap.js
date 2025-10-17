@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "../../api/axios";
+import { Link } from "react-router-dom";
 
 // Leaflet default icon fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -139,7 +140,7 @@ const PassiveMap = () => {
                 <Popup minWidth={200}>
                   <div style={{ lineHeight: 1.5 }}>
                     <div><strong>IMEI:</strong> {device.imei || "-"}</div>
-                    <div><strong>QRCODE:</strong> {device.qrlabel || "-"}</div>
+                    <div><strong>QRCODE:</strong> {device.qrlabel ? <Link to={`/panel/devices/update/${encodeURIComponent(device._id)}`}>{device.qrlabel}</Link> : "-"} </div>
                     <div><strong>BATARYA:</strong> %{device.battery ?? "-"}</div>
                     <div><strong>DURUM:</strong> {device.status ?? "-"}</div>
                     <div style={{ marginTop: 6 }}>
