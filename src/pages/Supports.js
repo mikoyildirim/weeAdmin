@@ -26,6 +26,8 @@ const Supports = () => {
   const [gsm, setGsm] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSupport, setSelectedSupport] = useState({});
+  const [filteredSupports, setFilteredSupports] = useState([]);
+
 
   useEffect(() => {
     fetchSupports();
@@ -38,6 +40,7 @@ const Supports = () => {
       console.log(res.data)
 
       setSupports(res.data || []);
+      setFilteredSupports(res.data || []);
     } catch (err) {
       message.error("Destek kayıtları alınamadı!");
     } finally {
@@ -45,16 +48,6 @@ const Supports = () => {
     }
   };
 
-  const searchWithGsm = async (e) => {
-    e.preventDefault();
-    if (!gsm) return;
-    try {
-      const res = await axios.post("/supports/find/findWithGsm", { gsm });
-      setSupports(res.data || []);
-    } catch (err) {
-      message.error("Kayıt bulunamadı!");
-    }
-  };
 
   const openModal = (support) => {
     setSelectedSupport(support);
@@ -62,17 +55,35 @@ const Supports = () => {
   };
 
   const handleModalUpdate = async () => {
+    console.log(selectedSupport)
     try {
       await axios.post("/supports/" + selectedSupport._id, {
         status: selectedSupport.status,
         note: selectedSupport.note,
-      }).then()
-      .catch(err=>console.log(err))
+      }).then(res=>console.log(res.data))
+        .catch(err => console.log("Güncelleme başarısız!",err))
       setModalVisible(false);
       fetchSupports();
     } catch (err) {
-      message.error("Güncelleme başarısız!");
+      console.log("Güncelleme başarısız!",err);
     }
+  };
+
+  const handleGsmSearch = (value) => {
+    setGsm(value);
+    if (!value) {
+      setFilteredSupports(supports);
+      return;
+    }
+    const filtered = supports
+      .map((category) => ({
+        ...category,
+        supports: category.supports.filter((s) =>
+          s.member?.gsm?.includes(value)
+        ),
+      }))
+      .filter(category => category.supports.length > 0); // Boş kategorileri kaldır
+    setFilteredSupports(filtered);
   };
 
 
@@ -161,20 +172,15 @@ const Supports = () => {
       style={{ borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
       bodyStyle={{ padding: 16 }}
     >
-      <form onSubmit={searchWithGsm} style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        <Input
-          placeholder="Cep Telefonu"
-          value={gsm}
-          onChange={(e) => setGsm(e.target.value)}
-          style={{ minWidth: 180 }}
-        />
-        <Button type="primary" htmlType="submit">
-          Ara
-        </Button>
-      </form>
+      <Input
+        placeholder="Cep Telefonu"
+        value={gsm}
+        onChange={(e) => handleGsmSearch(e.target.value)}
+        style={{ minWidth: 180, marginBottom: 16 }}
+      />
 
       <Tabs type="card" tabBarGutter={8}>
-        {supports.map((category) => (
+        {filteredSupports.map((category) => (
 
 
 
@@ -207,7 +213,11 @@ const Supports = () => {
         <Form.Item label="Durum: ">
           <Select
             value={selectedSupport.status || ""}
-            onChange={(value) => setSelectedSupport({ ...selectedSupport, status: value })}
+            onChange={(value) => {
+              
+              setSelectedSupport({ ...selectedSupport, status: value })
+              console.log(selectedSupport)
+            }}
             style={{ minWidth: "150px" }}
             options={[
               { value: 'ACTIVE', label: 'AKTİF' },

@@ -211,7 +211,7 @@ const DeviceDetail = () => {
       render: (gsm) =>
         gsm ? (
           <Link onClick={() => navigate(`/panel/users?gsm=${encodeURIComponent(gsm)}`)}>
-            {lastUserInfo.phone}
+            {gsm}
           </Link>
         ) : (
           "-"
@@ -274,6 +274,7 @@ const DeviceDetail = () => {
                   {/* Buton */}
                   <Button
                     type="primary"
+                    disabled={!tableData[0]?.photo}
                     onClick={() => {
                       setSelectedImg(tableData[0].photo);
                       setIsModalOpen(true);
