@@ -282,6 +282,7 @@ const Users = () => {
 
       const pointList = mapData.map((p) => [p.lat, p.lng]);
       L.marker([mapData[0].lat, mapData[0].lng]).addTo(markers);
+      L.marker([mapData.at(-1).lat, mapData.at(-1).lng]).addTo(markers);
       L.polyline(pointList, { color: "red", weight: 3, opacity: 0.5 }).addTo(lines);
 
       geofences.forEach((area) =>
