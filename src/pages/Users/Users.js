@@ -4,6 +4,7 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/exportToExcel";
 import utc from 'dayjs/plugin/utc';
+import { GlobalOutlined, CameraFilled } from "@ant-design/icons"; // üst kısma ekle
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -606,9 +607,10 @@ const Users = () => {
         <Button type="primary" onClick={() => {
           console.log(r.rental.avldatas)
           openMapModal(r.rental.avldatas)
-        }}>
-          HARİTA
-        </Button>
+        }}
+          icon={<GlobalOutlined />}
+
+        />
       )
 
 
@@ -626,9 +628,10 @@ const Users = () => {
             showImage(record?.rental?.imageObj);
             setIsModalOpen(true);
           }}
-        >
-          Fotoğrafı Görüntüle
-        </Button>
+          icon={<CameraFilled/>}
+        
+          
+        />
       ),
 
 
