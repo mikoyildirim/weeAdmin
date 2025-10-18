@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../../api/axios";
 import { Card, Form, Input, Select, Spin, Row, Col, Button } from "antd";
 const { Option } = Select;
@@ -10,6 +10,8 @@ const DeviceUpdate = () => {
     const [saving, setSaving] = useState(false);
 
     const [form] = Form.useForm();
+
+    const navigate = useNavigate()
 
     const getDeviceById = async (deviceId) => {
         try {
@@ -63,8 +65,8 @@ const DeviceUpdate = () => {
             //console.log(payload)
 
             await axios.patch(`/devices/${id}`, payload, {}); // PATCH ile güncelleme
-            alert("Cihaz başarıyla güncellendi!")
-
+            //alert("Cihaz başarıyla güncellendi!")
+            navigate(`/panel/devices/all`)
         } catch (err) {
             console.error(err);
             alert(`Güncelleme sırasında bir hata oluştu.\n${err.response.data.error.message}`)

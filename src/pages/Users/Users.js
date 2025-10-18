@@ -1,15 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table, Modal } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/exportToExcel";
 import utc from 'dayjs/plugin/utc';
 
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+
 import { useNavigate } from "react-router-dom";
+import Title from "antd/es/typography/Title";
 dayjs.extend(utc);
 dayjs.locale("tr");
 
 const { TabPane } = Tabs;
+
+// Leaflet ikon düzeltmesi (Modal ve Webpack uyumu için)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
+
+// Mini harita referanslarını saklamak için bileşen dışında bir nesne kullanılır.
+const miniMapRefs = {};
+
+
 
 const Users = () => {
   const [form] = Form.useForm();
@@ -34,10 +52,33 @@ const Users = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImg, setSelectedImg] = useState(null);
 
+  const [mapVisible, setMapVisible] = useState(false);
+  const [mapData, setMapData] = useState([]);
+  const [geofences, setGeofences] = useState([]);
+
+  // Büyük harita Leaflet referansları
+  const mapRef = useRef(null);
+  const markersRef = useRef(L.layerGroup());
+  const linesRef = useRef(L.layerGroup());
+
 
   const excelFileNameCharges = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Yükleme Raporu.xlsx`;
   const excelFileNameRentals = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kiralama Raporu.xlsx`;
   const excelFileNameCampaigns = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kampanya Raporu.xlsx`;
+
+
+  // transactions filtresi + sıralama
+  const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1 || (t.type === -1 && !t.rental)) || [])
+    .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
+
+  let rentals = (userData?.wallet?.transactions?.filter(t => t.rental) || []) // transaction içerisinde rental değeri dolu ise rentals tablosuna ekle
+    .sort((a, b) => new Date(a.rental?.start) - new Date(b.rental?.start))
+    .reverse();
+
+  const campaigns = (userData?.wallet?.transactions?.filter(t => t.type === 3) || [])
+    .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
+
+
 
   // useEffect(() => {
   //   const params = new URLSearchParams(window.location.search);
@@ -49,7 +90,14 @@ const Users = () => {
   // }, []); // ✅ sadece ilk yüklemede çalışır
 
 
-
+  const fetchGeofences = async () => {
+    try {
+      const res = await axios.get("/geofences");
+      setGeofences(res.data || []);
+    } catch {
+      console.log("Geofence alınamadı");
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -60,6 +108,7 @@ const Users = () => {
       //console.log("İlk yüklemede GSM:", gsm);
       form.setFieldsValue({ phone })
     }
+    fetchGeofences();
   }, [phone]); // ✅ phone değişince çalışır
 
   useEffect(() => {
@@ -204,17 +253,115 @@ const Users = () => {
   };
 
 
+  const openMapModal = (avldatas) => {
+    setMapData(avldatas);
+    setMapVisible(true);
+  };
 
-  // transactions filtresi + sıralama
-  const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1 || (t.type === -1 && !t.rental)) || [])
-    .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
 
-  let rentals = (userData?.wallet?.transactions?.filter(t => t.rental) || []) // transaction içerisinde rental değeri dolu ise rentals tablosuna ekle
-    .sort((a, b) => new Date(a.rental?.start) - new Date(b.rental?.start))
-    .reverse();
+  // Büyük Harita Modalının Yönetimi
+  useEffect(() => {
+    if (mapVisible && mapData.length > 0) {
+      const initialPoint = mapData.at(-1);
 
-  const campaigns = (userData?.wallet?.transactions?.filter(t => t.type === 3) || [])
-    .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
+      if (mapRef.current) {
+        mapRef.current.setView([initialPoint.lat, initialPoint.lng], 17);
+        markersRef.current.clearLayers();
+        linesRef.current.clearLayers();
+      } else {
+        const map = L.map("map").setView([initialPoint.lat, initialPoint.lng], 17);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, minZoom: 12 }).addTo(map);
+        markersRef.current.addTo(map);
+        linesRef.current.addTo(map);
+        mapRef.current = map;
+      }
+
+      const map = mapRef.current;
+      const markers = markersRef.current;
+      const lines = linesRef.current;
+
+      const pointList = mapData.map((p) => [p.lat, p.lng]);
+      L.marker([mapData[0].lat, mapData[0].lng]).addTo(markers);
+      L.polyline(pointList, { color: "red", weight: 3, opacity: 0.5 }).addTo(lines);
+
+      geofences.forEach((area) =>
+        area.locations.forEach((loc) => {
+          const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
+          let color = "grey";
+          let fillOpacity = 0.3;
+
+          if (loc.type === "DENY") {
+            color = "red";
+            fillOpacity = 0.4;
+          } else if (loc.type === "SpeedLimitedZone") {
+            color = "yellow";
+            fillOpacity = 0.4;
+          }
+
+          if (loc.type === "DENY" || loc.type === "SpeedLimitedZone") {
+            L.polygon(coords, { color, fillColor: color, fillOpacity }).addTo(map);
+          }
+        })
+      );
+
+      setTimeout(() => map.invalidateSize(), 0);
+    }
+  }, [mapVisible, mapData, geofences]);
+
+  // Mini Haritaların Yönetimi (Hata Engelleme ve Önizleme)
+  useEffect(() => {
+    rentals.forEach((r) => {
+      const miniMapId = `mini-map-${r._id}`;
+      const element = document.getElementById(miniMapId);
+
+      if (element && r.avldatas.length) {
+
+        if (miniMapRefs[r._id]) {
+          miniMapRefs[r._id].invalidateSize();
+          return;
+        }
+
+        if (element.hasAttribute('_leaflet_id')) {
+          try {
+            L.map(miniMapId).remove();
+          } catch (e) { /* ignore */ }
+        }
+
+        // Haritayı sıfırdan oluştur.
+        const initialPoint = r.avldatas[0];
+        const miniMap = L.map(miniMapId, {
+          zoomControl: false,
+          attributionControl: false,
+          dragging: false,
+          scrollWheelZoom: false,
+          tap: false,
+          touchZoom: false,
+        }).setView([initialPoint.lat, initialPoint.lng], 15);
+
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(miniMap);
+
+        const latlngs = r.avldatas.map((p) => [p.lat, p.lng]);
+        L.polyline(latlngs, { color: "blue", weight: 2 }).addTo(miniMap);
+
+        // Harita nesnesini sakla
+        miniMapRefs[r._id] = miniMap;
+      }
+    });
+
+    // Temizleme Fonksiyonu: Listeden çıkan (sonlandırılan) haritaları temizler.
+    return () => {
+      Object.keys(miniMapRefs).forEach(id => {
+        const rentalExists = rentals.some(r => r._id === id);
+        if (!rentalExists && miniMapRefs[id]) {
+          miniMapRefs[id].remove();
+          delete miniMapRefs[id];
+        }
+      });
+    };
+  }, [rentals]);
+
+
+
 
 
   const values = ["iyzico", "hediye", "ceza/fine", "iyzico/iade", "iade/return"];
@@ -447,6 +594,23 @@ const Users = () => {
           "").toString().localeCompare(
             (b.version || b.rental?.version || b.ip || "").toString()
           ),
+    },
+
+
+    {
+      title: "Harita",
+      key: "map",
+      align: "center",
+      render: (_, r) => (
+        <Button type="primary" onClick={() => {
+          console.log(r.rental.avldatas)
+          openMapModal(r.rental.avldatas)
+        }}>
+          HARİTA
+        </Button>
+      )
+
+
     },
     {
       title: "Görsel",
@@ -898,6 +1062,25 @@ const Users = () => {
             ) : (
               <p>Görsel bulunamadı</p>
             )}
+          </Modal>
+          {/* Büyük Harita Modal */}
+          <Modal
+            open={mapVisible}
+            title={<Title level={4}>Harita Konumu</Title>}
+            onCancel={() => setMapVisible(false)}
+            width={800}
+            bodyStyle={{ height: "70vh", padding: 0 }}
+            footer={<Button onClick={() => setMapVisible(false)}>Kapat</Button>}
+            afterClose={() => {
+              if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+                markersRef.current = L.layerGroup();
+                linesRef.current = L.layerGroup();
+              }
+            }}
+          >
+            <div id="map" style={{ height: "100%", width: "100%" }} />
           </Modal>
         </Card>
       )}
