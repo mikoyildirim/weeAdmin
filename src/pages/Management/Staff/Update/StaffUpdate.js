@@ -27,6 +27,39 @@ const StaffUpdate = () => {
     const [formSonlandirma] = Form.useForm();
     const [staffDone, setStaffDone] = useState([]);
 
+
+
+    const permissionLabels = {
+        showHeatMap: "Isı Haritası Görüntüleme",
+        addDevice: "Cihaz Oluşturma",
+        addGift: "Hediye Ekleme",
+        showReport: "Rapor (Ciro) Görüntüleme",
+        sendNotification: "Bildirim Gönderme",
+        rentalUpdate: "Kiralama Güncelleme",
+        audioRecording: "Ses Kaydı",
+        showRental: "Kiralama Görüntüleme",
+        updateDevice: "Cihaz Güncelleme",
+        showSupport: "Destek Kaydı Görüntüleme",
+        updatePassiveType: "Kullanıcı Tipi Güncelleme",
+        addPrice: "Fiyat Ekleme",
+        showCampaign: "Kampanya Görüntüleme",
+        staffRecord: "Batarya Değişim Kayıtları",
+        endRental: "Kiralama Sonlandırma",
+        deleteDevice: "Cihaz Silme",
+        updateSupport: "Destek Kaydı Durumu Güncelleme",
+        showImage: "Sürüş Sonrası Görsel Görüntüleme",
+        updatePrice: "Fiyat Güncelleme",
+        management: "Yönetim",
+        showFilter: "Filtreleme",
+        showDevice: "Cihaz Görüntüleme",
+        showMember: "Kullanıcı Görüntüleme",
+        deleteSupport: "Destek Kaydı Silme",
+        checkFraud: "Şüpheli İşlemler",
+        staffCreate: "Staff Oluşturma",
+        successTransactions: "Başarılı İşlemler",
+        // buraya tüm izinlerini ekleyebilirsin
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -343,7 +376,7 @@ const StaffUpdate = () => {
                                     .filter((perm) => typeof permissions[perm] === "boolean" && perm !== "createCampaign")
                                     .map((perm) => (
                                         <Col xs={24} sm={12} md={12} lg={6} key={perm}>
-                                            <Form.Item label={perm} name={perm}>
+                                            <Form.Item label={permissionLabels[perm] || perm} name={perm}>
                                                 <Radio.Group>
                                                     <Radio value={true}>Aktif</Radio>
                                                     <Radio value={false}>Pasif</Radio>
