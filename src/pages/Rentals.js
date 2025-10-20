@@ -108,8 +108,8 @@ const Rentals = () => {
         rentalID: selectedRental._id,
         duration: duration * 60,
         total: parseFloat(total),
-      }).then(res=>console.log(res.data))
-      .catch(err=>console.log(err));
+      }).then(res => console.log(res.data))
+        .catch(err => console.log(err));
       message.success("Sürüş başarıyla sonlandırıldı!");
       setEndModalVisible(false);
       fetchRentals();
@@ -261,8 +261,8 @@ const Rentals = () => {
       key: "qr",
       align: "center",
       render: (_, r) => (
-        <Button type="primary" onClick={() => openMapModal(r.avldatas)}>
-          {r.device.qrlabel}
+        <Button type="link" onClick={() => openMapModal(r.avldatas)}>
+          <span style={{ userSelect: "text" }}>{r.device.qrlabel}</span>
         </Button>
       ),
     },
@@ -279,7 +279,7 @@ const Rentals = () => {
       key: "gsm",
       render: (gsm) => (
         <Button type="link" href={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>
-          {gsm}
+          <span style={{ userSelect: "text" }}>{gsm}</span>
         </Button>
       ),
       align: "center",
@@ -295,7 +295,7 @@ const Rentals = () => {
         else if (b <= 50) color = "orange";
         return (
           <Tooltip title={`${b || 0}% Batarya`}>
-            <p style={{margin:0}}>{b || 0}%</p>
+            <p style={{ margin: 0 }}>{b || 0}%</p>
             <Progress percent={b || 0} size="small" strokeColor={color} showInfo={false} />
           </Tooltip>
         );

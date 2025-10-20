@@ -4,10 +4,9 @@ scooter dağıtım önerisi
 az kullanılan cihazlar haritası ()
 kampanya create update
 bildirimler test
-personel yönetimi destek kaydı ve sonlandırma kayıtları 
 yetkilendirme
 
-users sayfasına sekmede ileri geri yapınca veri güncellenmiyor
+
 users sayfasında kiralamlara sürüş düzenle butonu eklenecek
 
 kayıp haritasında cihaz bulundu işlemi

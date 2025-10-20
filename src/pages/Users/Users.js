@@ -10,7 +10,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Title from "antd/es/typography/Title";
 dayjs.extend(utc);
 dayjs.locale("tr");
@@ -31,6 +31,7 @@ const miniMapRefs = {};
 
 
 const Users = () => {
+  const location = useLocation();
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -103,6 +104,7 @@ const Users = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const gsm = params.get("gsm");
+    setUserData(null)
     setPhone(gsm);
     if (gsm) {
       searchUser();
@@ -110,7 +112,7 @@ const Users = () => {
       form.setFieldsValue({ phone })
     }
     fetchGeofences();
-  }, [phone]); // ✅ phone değişince çalışır
+  }, [phone, location.search]); // ✅ phone değişince çalışır
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");
@@ -628,9 +630,9 @@ const Users = () => {
             showImage(record?.rental?.imageObj);
             setIsModalOpen(true);
           }}
-          icon={<CameraFilled/>}
-        
-          
+          icon={<CameraFilled />}
+
+
         />
       ),
 
