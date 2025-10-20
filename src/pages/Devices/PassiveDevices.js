@@ -111,7 +111,7 @@ const PassiveDevices = () => {
             type="link"
             href={`/panel/devices/detail/${record.qrlabel}`}
           >
-            {record.qrlabel}
+            <span style={{ userSelect: "text" }}>{record.qrlabel}</span>
           </Button>
         </>
       ),

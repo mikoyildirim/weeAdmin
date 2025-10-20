@@ -64,7 +64,7 @@ const DevicesPage = () => {
       key: "qrlabel",
       render: (_, record) => (
         <Button type="link" href={`/panel/devices/update/${record?._id}`}>
-          {record?.qrlabel}
+          <span style={{ userSelect: "text" }}>{record?.qrlabel}</span>
         </Button>
       ),
     },

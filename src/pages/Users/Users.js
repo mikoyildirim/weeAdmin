@@ -511,7 +511,12 @@ const Users = () => {
       dataIndex: ["rental", "device", "qrlabel"],
       key: "qr",
       align: "center",
-      render: (_, record) => (record.rental.device.qrlabel || "-"),
+
+      render: (_, record) => (
+        <Button type="link"  href={`/panel/devices/detail/${record?.rental?.device?.qrlabel}`}>
+          <span style={{ userSelect: "text" }}>{record?.rental?.device?.qrlabel || "-"}</span>
+        </Button>
+      ),
       sorter: (a, b) =>
         (a.rental?.device?.qrlabel || "").localeCompare(b.rental?.device?.qrlabel || ""),
     },
