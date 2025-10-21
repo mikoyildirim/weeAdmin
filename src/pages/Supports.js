@@ -60,12 +60,12 @@ const Supports = () => {
       await axios.post("/supports/" + selectedSupport._id, {
         status: selectedSupport.status,
         note: selectedSupport.note,
-      }).then(res=>console.log(res.data))
-        .catch(err => console.log("Güncelleme başarısız!",err))
+      }).then(res => console.log(res.data))
+        .catch(err => console.log("Güncelleme başarısız!", err))
       setModalVisible(false);
       fetchSupports();
     } catch (err) {
-      console.log("Güncelleme başarısız!",err);
+      console.log("Güncelleme başarısız!", err);
     }
   };
 
@@ -95,6 +95,8 @@ const Supports = () => {
       key: "created_date",
       align: "center",
       render: (d) => dayjs.utc(d).format("DD.MM.YYYY HH:mm:ss"),
+      sorter: (a, b) => dayjs(a.created_date).valueOf() - dayjs(b.created_date).valueOf(),
+      defaultSortOrder: "descend",
     },
     {
       title: "GSM",
@@ -214,7 +216,7 @@ const Supports = () => {
           <Select
             value={selectedSupport.status || ""}
             onChange={(value) => {
-              
+
               setSelectedSupport({ ...selectedSupport, status: value })
               console.log(selectedSupport)
             }}

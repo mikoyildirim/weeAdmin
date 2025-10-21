@@ -15,6 +15,7 @@ bildirim gönderme sayfasında tablo sıralama, input alanları görsel düzenle
 kampanyalar sayfasında showCampaign sayfasına yönşendirme ve burada kampanya düzenleme
 personel güncelleme sayfası izinler türkçe yazılacak
 batarya rapoorundan cihaza yönlendirme
+users sayfası search
 
 responsive:
 aktif kiralamalar
