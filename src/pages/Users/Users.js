@@ -81,7 +81,6 @@ const Users = () => {
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
 
 
-
   // useEffect(() => {
   //   const params = new URLSearchParams(window.location.search);
   //   const gsm = params.get("gsm");
@@ -513,7 +512,7 @@ const Users = () => {
       align: "center",
 
       render: (_, record) => (
-        <Button type="link"  href={`/panel/devices/detail/${record?.rental?.device?.qrlabel}`}>
+        <Button type="link" href={`/panel/devices/detail/${record?.rental?.device?.qrlabel}`}>
           <span style={{ userSelect: "text" }}>{record?.rental?.device?.qrlabel || "-"}</span>
         </Button>
       ),
@@ -636,19 +635,20 @@ const Users = () => {
             setIsModalOpen(true);
           }}
           icon={<CameraFilled />}
-
-
         />
       ),
-
-
-
     },
     {
       title: "Sürüşü Düzenle",
       dataIndex: "editDriving",
       key: "editDriving",
       align: "center",
+      render: (_, record) => (
+        <Button
+          type="primary"
+          href={`users/showRental/${record.rental._id}`}
+        >Sürüş Düzenle</Button>
+      )
     },
   ];
 

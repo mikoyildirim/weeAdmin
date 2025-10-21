@@ -20,7 +20,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../store/userSlice";
 
 const { Sider, Content, Header } = Layout;
-const { useBreakpoint } = Grid;
 
 const MainLayout = () => {
   const navigate = useNavigate();
@@ -28,7 +27,6 @@ const MainLayout = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
   const [collapsed, setCollapsed] = useState(false);
-  const screens = useBreakpoint();
 
   const toggleCollapsed = () => setCollapsed(!collapsed);
 

@@ -36,6 +36,7 @@ import DeviceCreate from "./pages/Devices/Create/DeviceCreate";
 // Users
 import Users from "./pages/Users/Users";
 import NegativeUsers from "./pages/Users/NegativeUsers";
+import ShowRental from "./pages/Users/ShowRental/ShowRental";
 
 // Others
 import Calls from "./pages/Calls";
@@ -96,7 +97,7 @@ function App() {
           {/* Users */}
           <Route path="users" element={<Users />} />
           <Route path="users/negative" element={<NegativeUsers />} />
-
+          <Route path="users/showRental/:id" element={<ShowRental />} />
           {/* Others */}
           <Route path="calls" element={<Calls />} />
           <Route path="supports" element={<Supports />} />
@@ -108,6 +109,7 @@ function App() {
           <Route path="management/staff/update/:id" element={<StaffUpdate />} />
           <Route path="management/fraud" element={<Fraud />} />
           <Route path="rentals" element={<Rentals />} />
+
         </Route>
 
         {/* Fallback */}
