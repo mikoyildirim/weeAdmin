@@ -14,7 +14,6 @@ az kullanılan cihazlar sayfası
 bildirim gönderme sayfasında tablo sıralama, input alanları görsel düzenleme, search işlemi, excel indirme,
 kampanyalar sayfasında showCampaign sayfasına yönşendirme ve burada kampanya düzenleme
 users sayfası search
-haritalar search
 
 responsive:
 aktif kiralamalar

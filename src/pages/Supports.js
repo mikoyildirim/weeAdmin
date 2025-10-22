@@ -23,7 +23,7 @@ const Supports = () => {
   const userPermissions = useSelector((state) => state.user.user?.permissions) || {};
   const [supports, setSupports] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [gsm, setGsm] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSupport, setSelectedSupport] = useState({});
   const [filteredSupports, setFilteredSupports] = useState([]);
@@ -69,8 +69,8 @@ const Supports = () => {
     }
   };
 
-  const handleGsmSearch = (value) => {
-    setGsm(value);
+  const handleSearch = (value) => {
+    setSearchText(value);
     if (!value) {
       setFilteredSupports(supports);
       return;
@@ -79,7 +79,7 @@ const Supports = () => {
       .map((category) => ({
         ...category,
         supports: category.supports.filter((s) =>
-          s.member?.gsm?.includes(value)
+          s.member?.gsm?.includes(value) || s?.qr?.includes(value)
         ),
       }))
       .filter(category => category.supports.length > 0); // Boş kategorileri kaldır
@@ -175,9 +175,9 @@ const Supports = () => {
       bodyStyle={{ padding: 16 }}
     >
       <Input
-        placeholder="Cep Telefonu"
-        value={gsm}
-        onChange={(e) => handleGsmSearch(e.target.value)}
+        placeholder="GSM ya da QR"
+        value={searchText}
+        onChange={(e) => handleSearch(e.target.value)}
         style={{ minWidth: 180, marginBottom: 16 }}
       />
 

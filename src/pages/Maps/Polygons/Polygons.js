@@ -1,6 +1,6 @@
 // src/pages/Maps/Polygons.js
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, message, Card } from "antd";
+import { Table, Button, Modal, message, Card, Col, Row, Input } from "antd";
 import axios from "../../../api/axios";
 
 import "leaflet/dist/leaflet.css";
@@ -12,7 +12,8 @@ const Polygons = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);;
-
+  const [filteredGeofences, setFilteredGeofences] = useState([]);
+  const [searchText, setSearchText] = useState(""); // <-- search state
 
   // API'den poligonları çek
   const fetchPolygons = async () => {
@@ -29,6 +30,25 @@ const Polygons = () => {
   useEffect(() => {
     fetchPolygons();
   }, []);
+
+
+  useEffect(() => {
+    if (!searchText) {
+      setFilteredGeofences(geofences);
+      return;
+    }
+
+    const lowerSearch = searchText.toLowerCase();
+    const filtered = geofences.filter((item) =>
+      item.name?.toLowerCase().includes(lowerSearch) ||
+      item.ilceMernisKodu?.toString().includes(lowerSearch) ||
+      item.status?.toLowerCase().includes(lowerSearch) ||
+      item.type?.toLowerCase().includes(lowerSearch)
+    );
+    setFilteredGeofences(filtered);
+  }, [searchText, geofences]);
+
+
 
   // Poligon silme
   const deletePolygon = async (id) => {
@@ -100,11 +120,25 @@ const Polygons = () => {
 
   return (
     <Card title="Poligon Yönetimi">
-      <Button type="primary" style={{ marginBottom: 16 }}
-        href={`/panel/maps/polygons/createpolygon`}>
-        Yeni Poligon Ekle
-      </Button>
-      <Table columns={columns} dataSource={geofences} rowKey="_id" loading={loading} />
+      <Row style={{ marginBottom: 16, width: '100%', display: "flex", justifyContent: "space-between" }}>
+        <Button type="primary" href={`/panel/maps/polygons/createpolygon`}>
+          Yeni Poligon Ekle
+        </Button>
+        <Input
+          placeholder="Ara..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          style={{ width: "200px" }} // istersen genişliği full yapabilirsin
+        />
+      </Row>
+
+      <Table
+        columns={columns}
+        dataSource={filteredGeofences}
+        rowKey="_id"
+        loading={loading}
+      />
     </Card>
   );
 };
