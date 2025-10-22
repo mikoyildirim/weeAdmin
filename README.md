@@ -6,9 +6,6 @@ kampanya create update
 bildirimler test
 yetkilendirme
 
-
-users sayfasında kiralamlara sürüş düzenle butonu eklenecek
-
 kayıp haritasında cihaz bulundu işlemi
 az kullanılan cihazlar sayfası
 bildirim gönderme sayfasında tablo sıralama, input alanları görsel düzenleme, search işlemi, excel indirme,
