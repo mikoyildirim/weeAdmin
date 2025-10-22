@@ -30,11 +30,11 @@ const ShowRental = () => {
       console.log("Yerel:", dayjs().format());
       await axios.patch(`/rentals/${id}`, {
         "total": values.total,
-        "start": values.startDate,
+        "start": dayjs(values.startDate).add(3, "hour"),
         "date": dayjs().format(),
         "created_date": dayjs().format(),
         "duration": values.duration,
-        "end": values.endDate
+        "end": dayjs(values.endDate).add(3, "hour"),
       }).then((res) => {
         console.log(res.data)
       }).catch((error) => {
