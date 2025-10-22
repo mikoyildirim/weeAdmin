@@ -13,21 +13,18 @@ const ShowRental = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [priceObject, setPriceObject] = useState(null);
-
+  const [isInvalidDateRange, setIsInvalidDateRange] = useState(false); // 🔹 yeni state
+  const navigate = useNavigate()
 
   useEffect(() => {
     getRental()
   }, [])
 
-  console.log(priceObject)
-
 
   const handleSave = async () => {
     try {
-
+      setLoading(true)
       const values = await form.validateFields();
-      console.log("Form verileri:", values.startDate);
-      console.log("Yerel:", dayjs().format());
       await axios.patch(`/rentals/${id}`, {
         "total": values.total,
         "start": dayjs(values.startDate).add(3, "hour"),
@@ -37,12 +34,16 @@ const ShowRental = () => {
         "end": dayjs(values.endDate).add(3, "hour"),
       }).then((res) => {
         console.log(res.data)
+        setLoading(false)
+        navigate(`/panel/users?gsm=${encodeURIComponent(rental.member.gsm)}`)
       }).catch((error) => {
+        setLoading(false)
         console.log(error)
       })
       // burada API isteği veya işlem yapılabilir
     } catch (error) {
       console.log("Doğrulama hatası:", error);
+      setLoading(false)
     }
   };
 
@@ -57,26 +58,28 @@ const ShowRental = () => {
     const startTime = dayjs(start, "YYYY-MM-DD HH:mm");
     const endTime = dayjs(end, "YYYY-MM-DD HH:mm");
 
-    if (endTime.isAfter(startTime)) {
-      const diffMinutes = (endTime.diff(startTime, "minute"));
-      let total = 0;
-
-      if (diffMinutes <= 0) {
-        total = priceObject.startPrice; // sadece başlangıç ücreti
-      } else {
-        total = priceObject.startPrice + diffMinutes * priceObject.minutePrice;
-      }
-
-      form.setFieldsValue({
-        duration: diffMinutes,
-        total: total.toFixed(2),
-      });
+    // 🔹 bitiş tarihi başlangıçtan önceyse butonu disable yap
+    if (endTime.isBefore(startTime)) {
+      setIsInvalidDateRange(true);
     } else {
-      form.setFieldsValue({
-        duration: 0,
-        total: priceObject.startPrice.toFixed(2),
-      });
+      setIsInvalidDateRange(false);
     }
+
+    if (!priceObject) return;
+
+    const diffMinutes = endTime.diff(startTime, "minute");
+    let total = 0;
+
+    if (diffMinutes <= 0) {
+      total = priceObject.startPrice;
+    } else {
+      total = priceObject.startPrice + diffMinutes * priceObject.minutePrice;
+    }
+
+    form.setFieldsValue({
+      duration: diffMinutes > 0 ? diffMinutes : 0,
+      total: total.toFixed(2),
+    });
   };
 
   const getRental = async () => {
@@ -91,7 +94,7 @@ const ShowRental = () => {
           city: res.data.device.city,
           startDate: dayjs.utc(res.data.start).format("YYYY-MM-DD HH:mm"),
           endDate: dayjs.utc(res.data.end).format("YYYY-MM-DD HH:mm"),
-          duration: Math.trunc(res.data.duration/60),
+          duration: Math.trunc(res.data.duration / 60),
           total: res.data.total,
         });
         setLoading(false)
@@ -132,12 +135,12 @@ const ShowRental = () => {
           </Col>
           <Col span={12}>
             <Form.Item label="Başlangıç Saati" name="startDate">
-              <Input style={{ color: "black" }} onChange={handleDateChange} />
+              <Input type="datetime-local"  style={{ color: "black" }} onChange={handleDateChange} />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item label="Bitiş Saati" name="endDate">
-              <Input style={{ color: "black" }} onChange={handleDateChange} />
+              <Input type="datetime-local"  style={{ color: "black" }} onChange={handleDateChange} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -152,9 +155,14 @@ const ShowRental = () => {
           </Col>
         </Row>
 
-        <Button type="primary" htmlType="submit" >
+        <Button type="primary" htmlType="submit" disabled={isInvalidDateRange}>
           Kaydet
         </Button>
+        {isInvalidDateRange && (
+          <div style={{ color: "red", marginTop: 8 }}>
+            ⚠️ Bitiş tarihi başlangıç tarihinden önce olamaz!
+          </div>
+        )}
       </Form>
     </Card>
   )

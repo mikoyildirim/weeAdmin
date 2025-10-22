@@ -123,7 +123,6 @@ const Rentals = () => {
     setMapVisible(true);
   };
 
-  // Büyük Harita Modalının Yönetimi
   useEffect(() => {
     if (mapVisible && mapData.length > 0) {
       const initialPoint = mapData.at(-1);
@@ -134,7 +133,10 @@ const Rentals = () => {
         linesRef.current.clearLayers();
       } else {
         const map = L.map("map").setView([initialPoint.lat, initialPoint.lng], 17);
-        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, minZoom: 12 }).addTo(map);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          minZoom: 12,
+        }).addTo(map);
         markersRef.current.addTo(map);
         linesRef.current.addTo(map);
         mapRef.current = map;
@@ -146,30 +148,69 @@ const Rentals = () => {
 
       const pointList = mapData.map((p) => [p.lat, p.lng]);
       L.marker([mapData[0].lat, mapData[0].lng]).addTo(markers);
+      L.marker([mapData.at(-1).lat, mapData.at(-1).lng]).addTo(markers);
       L.polyline(pointList, { color: "red", weight: 3, opacity: 0.5 }).addTo(lines);
+
+      // 1️⃣ Dünya sınırı
+      const worldCoords = [
+        [90, -180],
+        [90, 180],
+        [-90, 180],
+        [-90, -180],
+      ];
+
+      // 2️⃣ ALLOW bölgelerini delik olarak topla
+      const allowHoles = [];
 
       geofences.forEach((area) =>
         area.locations.forEach((loc) => {
           const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
-          let color = "grey";
-          let fillOpacity = 0.3;
-
-          if (loc.type === "DENY") {
-            color = "red";
-            fillOpacity = 0.4;
-          } else if (loc.type === "SpeedLimitedZone") {
-            color = "yellow";
-            fillOpacity = 0.4;
+          if (loc.type === "ALLOW") {
+            allowHoles.push(coords);
           }
+        })
+      );
 
-          if (loc.type === "DENY" || loc.type === "SpeedLimitedZone") {
-            L.polygon(coords, { color, fillColor: color, fillOpacity }).addTo(map);
+      // 3️⃣ Gri katmanı çiz (dış sınır + delikler)
+      L.polygon([worldCoords, ...allowHoles], {
+        color: "grey",
+        fillColor: "grey",
+        fillOpacity: 0.4,
+        stroke: false,
+      }).addTo(map);
+
+      // 🔹 ALLOW bölgelerinin kenarlarını ayrı çiz
+      allowHoles.forEach((holeCoords) => {
+        L.polyline(holeCoords, {
+          color: "#748181ff",     // kenar rengi (örnek: açık mavi)
+          weight: 2,            // kalınlık
+          opacity: 1,           // çizginin opaklığı
+        }).addTo(map);
+      });
+
+      // 4️⃣ Diğer bölgeleri (DENY, SpeedLimitedZone) ayrı çiz
+      geofences.forEach((area) =>
+        area.locations.forEach((loc) => {
+          const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
+          if (loc.type === "DENY") {
+            L.polygon(coords, {
+              color: "red",
+              fillColor: "red",
+              fillOpacity: 0.4,
+            }).addTo(map);
+          } else if (loc.type === "SpeedLimitedZone") {
+            L.polygon(coords, {
+              color: "yellow",
+              fillColor: "yellow",
+              fillOpacity: 0.4,
+            }).addTo(map);
           }
         })
       );
 
       setTimeout(() => map.invalidateSize(), 0);
     }
+
   }, [mapVisible, mapData, geofences]);
 
   // Mini Haritaların Yönetimi (Hata Engelleme ve Önizleme)

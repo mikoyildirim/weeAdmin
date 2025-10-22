@@ -13,9 +13,8 @@ kayıp haritasında cihaz bulundu işlemi
 az kullanılan cihazlar sayfası
 bildirim gönderme sayfasında tablo sıralama, input alanları görsel düzenleme, search işlemi, excel indirme,
 kampanyalar sayfasında showCampaign sayfasına yönşendirme ve burada kampanya düzenleme
-personel güncelleme sayfası izinler türkçe yazılacak
-batarya rapoorundan cihaza yönlendirme
 users sayfası search
+haritalar search
 
 responsive:
 aktif kiralamalar

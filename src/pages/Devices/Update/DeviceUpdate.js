@@ -150,7 +150,7 @@ const DeviceUpdate = () => {
                     <Col span={12}>
                         <Form.Item label="DURUMU *" name="status">
                             <Select>
-                                <Option value="MAINTENANCE">HAZIR</Option>
+                                <Option value="MAINTENANCE">BAKIMDA</Option>
                                 <Option value="OFFLINE">BAĞLANMADI</Option>
                                 <Option value="ONLINE">BAĞLANDI</Option>
                                 <Option value="BUSY">KİRALAMADA</Option>
