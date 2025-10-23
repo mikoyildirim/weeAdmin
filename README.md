@@ -8,7 +8,7 @@ yetkilendirme
 
 kayıp haritasında cihaz bulundu işlemi
 az kullanılan cihazlar sayfası
-bildirim gönderme sayfasında tablo sıralama, input alanları görsel düzenleme, search işlemi, excel indirme,
+bildirim gönderme sayfası, input alanları görsel düzenleme
 kampanyalar sayfasında showCampaign sayfasına yönşendirme ve burada kampanya düzenleme
 users sayfası search
 
@@ -23,7 +23,7 @@ destek kayıtları
 borçlu kullanıcılar
 kullanıcılar
 cihaz yönetimi
-cihaz detayı
+cihaz detayı 
 haritalar
 yeni poligon
 yükleme raporu
