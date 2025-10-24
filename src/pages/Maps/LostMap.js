@@ -7,6 +7,7 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc';
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 dayjs.extend(utc);
 
@@ -52,6 +53,8 @@ const LostMap = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [polygons, setPolygons] = useState([]);
+  const userName = useSelector((state) => state.user.user?.name) || {};
+
 
   const fetchPolygons = async () => { // polygonları backend den çekiyoruz 
     try {
@@ -74,6 +77,17 @@ const LostMap = () => {
       setLoading(false);
     }
   };
+
+  const lostUpdate = async (deviceID) => {
+    await axios.post(`supports/${deviceID}`, {
+      status: 'DONE',
+      note: `${userName} tarafından cihaz bulundu.`
+    })
+    .then((res)=>{
+      console.log(res)
+    })
+    .catch(err=>console.log(err))
+  }
 
   useEffect(() => {
     fetchLostDevices();
@@ -141,7 +155,7 @@ const LostMap = () => {
                       </a>
                     </div>
                     <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                      <Button size="small" >Cihaz Bulundu</Button>
+                      <Button size="small" onClick={lostUpdate(device?._id)}>Cihaz Bulundu</Button>
                     </div>
                   </div>
                 </Popup>

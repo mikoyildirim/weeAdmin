@@ -6,11 +6,11 @@ kampanya create update
 bildirimler test
 yetkilendirme
 
-kayıp haritasında cihaz bulundu işlemi
 az kullanılan cihazlar sayfası
-bildirim gönderme sayfası, input alanları görsel düzenleme
 kampanyalar sayfasında showCampaign sayfasına yönşendirme ve burada kampanya düzenleme
 users sayfası search
+aktif cihazlar ve pasif cihazlar son görülme tarihleri 3 saat ileri alınacak
+aktif haritasında zoom ayarı yapılacak
 
 responsive:
 aktif kiralamalar
