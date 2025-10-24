@@ -118,12 +118,7 @@ const ActiveMap = () => {
       d.last_location.location.coordinates[1] != null
   );
 
-  const center = devicesWithLocation.length
-    ? [
-      parseFloat(devicesWithLocation[0].last_location.location.coordinates[1]),
-      parseFloat(devicesWithLocation[0].last_location.location.coordinates[0]),
-    ]
-    : [39.75, 37.02]; // Sivas fallback
+  const center = [39.75, 37.02]; // Sivas fallback
 
   const handleRing = async (imei) => {
     try {
