@@ -7,9 +7,8 @@ bildirimler test
 yetkilendirme
 
 az kullanılan cihazlar sayfası
-kampanyalar sayfasında showCampaign sayfasına yönşendirme ve burada kampanya düzenleme
 users sayfası search
-aktif cihazlar ve pasif cihazlar son görülme tarihleri 3 saat ileri alınacak
+cihaz güncelleme sayfasına konum güncelleme işlemi eklenecek
 
 responsive:
 aktif kiralamalar

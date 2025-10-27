@@ -42,6 +42,7 @@ import ShowRental from "./pages/Users/ShowRental/ShowRental";
 import Calls from "./pages/Calls";
 import Supports from "./pages/Supports";
 import Campaigns from "./pages/Management/Campaigns/Campaigns";
+import ShowCampaigns from "./pages/Management/Campaigns/ShowCampaigns";
 import Financial from "./pages/Management/Financial";
 import Notifications from "./pages/Management/Notifications";
 import Staff from "./pages/Management/Staff/Staff";
@@ -102,6 +103,7 @@ function App() {
           <Route path="calls" element={<Calls />} />
           <Route path="supports" element={<Supports />} />
           <Route path="management/campaigns/campaigns" element={<Campaigns />} />
+          <Route path="management/campaigns/showCampaigns/:id" element={<ShowCampaigns />} />
           <Route path="management/financial" element={<Financial />} />
           <Route path="management/notifications" element={<Notifications />} />
           <Route path="management/staff" element={<Staff />} />
