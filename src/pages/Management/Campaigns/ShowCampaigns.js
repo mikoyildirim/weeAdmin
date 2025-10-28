@@ -108,7 +108,14 @@ const ShowCampaignsPage = () => {
                 📢 Kampanya Bilgileri
             </Title>
 
-            <Form form={form} layout="vertical" onFinish={handleFinish}>
+            <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleFinish}
+                validateMessages={{
+                    required: "Bu alan boş bırakılamaz!",
+                }}
+            >
                 <Row gutter={16}>
                     <Col span={24}>
                         <Form.Item
@@ -121,10 +128,14 @@ const ShowCampaignsPage = () => {
                     </Col>
 
                     <Col span={24}>
-                        <Form.Item label="Kampanya Görseli">
+                        <Form.Item
+                            label="Kampanya Görseli"
+                            rules={[{ required: true, message: "Bu alan boş bırakılamaz!" }]}
+                        >
                             <Upload
-                                listType="picture"
+                                listType="picture-card"
                                 fileList={fileList}
+                                maxCount={1}
                                 onRemove={(file) =>
                                     setFileList(fileList.filter((f) => f.uid !== file.uid))
                                 }
@@ -137,17 +148,26 @@ const ShowCampaignsPage = () => {
                             >
                                 <Button icon={<UploadOutlined />}>Yükle</Button>
                             </Upload>
+
+                            {/* Burada büyük önizleme */}
+                            {fileList.length > 0 && (
+                                <img
+                                    src={fileList[0].url}
+                                    alt="Kampanya Görseli"
+                                    style={{ marginTop: 16, width: "100%", maxWidth: 500 }}
+                                />
+                            )}
                         </Form.Item>
                     </Col>
 
                     <Col span={24}>
-                        <Form.Item label="Kampanya Açıklaması" name="description">
+                        <Form.Item label="Kampanya Açıklaması" name="description" rules={[{ required: true }]}>
                             <TextArea rows={3} />
                         </Form.Item>
                     </Col>
 
                     <Col span={24}>
-                        <Form.Item label="Katılım Koşulları">
+                        <Form.Item label="Katılım Koşulları" >
                             <List
                                 dataSource={conditions}
                                 renderItem={(item, index) => (
@@ -180,9 +200,16 @@ const ShowCampaignsPage = () => {
                     <Col span={12}>
                         <Form.Item label="Kampanya Tipi" name="campaignType">
                             <Select>
-                                <Option value="FOLLOWSOCIAL">Sosyal Medya Takip</Option>
-                                <Option value="SEASONAL">Sezonluk Kampanya</Option>
-                                <Option value="GENERAL">Genel Kampanya</Option>
+                                <Option value="FOLLOWSOCIAL">Takip Et Kazan Kampanyası</Option>
+                                <Option value="BIRTHDAY">Doğum Günü Kampanyası</Option>
+                                <Option value="LOAD">Yükleme Kampanyası</Option>
+                                <Option value="RENTAL">Sürüş Kampanyası</Option>
+                                <Option value="PASSIVEDEVICE">Pasif Cihaz Kampanyası</Option>
+                                <Option value="UNUSED">Kullanılmayan Cihazlar Kampanyası</Option>
+                                <Option value="RANK">Rütbe Kampanyası</Option>
+                                <Option value="REFERENCECODE">Referans Kodu Kampanyası</Option>
+                                <Option value="SCORE">Poligon Kampanyası</Option>
+                                <Option value="STATION">Bataryası Düşük Cihaz Kampanyası</Option>
                             </Select>
                         </Form.Item>
                     </Col>
