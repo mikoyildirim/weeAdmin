@@ -55,6 +55,7 @@ const LostMap = () => {
   const [polygons, setPolygons] = useState([]);
   const userName = useSelector((state) => state.user.user?.name) || {};
 
+  console.log(devices)
 
   const fetchPolygons = async () => { // polygonları backend den çekiyoruz 
     try {
@@ -78,15 +79,15 @@ const LostMap = () => {
     }
   };
 
-  const lostUpdate = async (deviceID) => {
-    await axios.post(`supports/${deviceID}`, {
+  const lostUpdate = async (supportID) => {
+    await axios.post(`supports/${supportID}`, {
       status: 'DONE',
       note: `${userName} tarafından cihaz bulundu.`
     })
-    .then((res)=>{
-      console.log(res)
-    })
-    .catch(err=>console.log(err))
+      .then((res) => {
+        console.log(res)
+      })
+      .catch(err => console.log(err))
   }
 
   useEffect(() => {
@@ -141,7 +142,7 @@ const LostMap = () => {
                 <Popup minWidth={200}>
                   <div style={{ lineHeight: 1.5 }}>
                     <div><strong>TARİH:</strong> {dayjs.utc(device.created_date).format('DD.MM.YYYY HH:mm') || "-"}</div>
-                    <div><strong>QRCODE:</strong> {device.qrlabel ? <Link to={`/panel/devices/update/${encodeURIComponent(device._id)}`}>{device.qrlabel}</Link> : "-"} </div>
+                    <div><strong>QRCODE:</strong> {device.qrlabel} </div>
                     <div style={{ marginTop: 6 }}>
                       <a target="_blank" rel="noreferrer"
                         href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`}>
@@ -155,7 +156,7 @@ const LostMap = () => {
                       </a>
                     </div>
                     <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                      <Button size="small" onClick={lostUpdate(device?._id)}>Cihaz Bulundu</Button>
+                      <Button size="small" onClick={() => lostUpdate(device?.support_id)}>Cihaz Bulundu</Button>
                     </div>
                   </div>
                 </Popup>

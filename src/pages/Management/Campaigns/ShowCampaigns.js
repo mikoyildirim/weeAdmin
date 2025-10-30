@@ -54,7 +54,7 @@ const ShowCampaignsPage = () => {
             setFileList(
                 res.data.image
                     ? [{ url: res.data.image, name: "Kampanya Görseli", uid: "-1" }]
-                    : []
+                    : [] 
             );
 
             form.setFieldsValue({
