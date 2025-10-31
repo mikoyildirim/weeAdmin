@@ -54,9 +54,9 @@ const ShowCampaignsPage = () => {
             setFileList(
                 res.data.image
                     ? [{ url: res.data.image, name: "Kampanya Görseli", uid: "-1" }]
-                    : [] 
+                    : []
             );
-
+            console.log(campaign)
             form.setFieldsValue({
                 campaignName: res.data.campaignName,
                 description: res.data.description,
@@ -86,9 +86,31 @@ const ShowCampaignsPage = () => {
         setConditions(newConditions);
     };
 
-    const handleFinish = (values) => {
-        console.log("Kaydedilecek değerler:", { ...values, conditions });
-        // Burada axios ile backend'e PUT veya POST isteği gönderebilirsin
+    const handleFinish = async (values) => {
+        let imageBase64 = null;
+
+        if (fileList.length > 0 && fileList[0].originFileObj) {
+            const file = fileList[0].originFileObj;
+            const reader = new FileReader();
+
+            imageBase64 = await new Promise((resolve, reject) => {
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+            });
+        } else if (fileList[0]?.url) {
+            // Eğer eski bir görsel varsa (örneğin kampanyayı düzenliyorsan)
+            imageBase64 = fileList[0].url;
+        }
+        const payload = {
+            ...values,
+            conditions,
+            image: imageBase64,
+        }
+        console.log("Kaydedilecek değerler:", payload);
+        await axios.patch(`/campaigns/${id}`, payload)
+        .then((res)=>console.log(res.data))
+        .catch((err)=>console.log(err))
     };
 
     if (loading)
@@ -136,18 +158,15 @@ const ShowCampaignsPage = () => {
                                 listType="picture-card"
                                 fileList={fileList}
                                 maxCount={1}
-                                onRemove={(file) =>
-                                    setFileList(fileList.filter((f) => f.uid !== file.uid))
-                                }
+                                onRemove={(file) => setFileList(fileList.filter((f) => f.uid !== file.uid))}
                                 beforeUpload={(file) => {
-                                    setFileList([
-                                        { ...file, url: URL.createObjectURL(file), uid: file.uid },
-                                    ]);
-                                    return false;
+                                    setFileList([{ ...file, url: URL.createObjectURL(file), originFileObj: file }]);
+                                    return false; // yükleme iptal
                                 }}
                             >
                                 <Button icon={<UploadOutlined />}>Yükle</Button>
                             </Upload>
+
 
                             {/* Burada büyük önizleme */}
                             {fileList.length > 0 && (
@@ -197,7 +216,7 @@ const ShowCampaignsPage = () => {
                         </Form.Item>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={isMobile ? 24 : 12}>
                         <Form.Item label="Kampanya Tipi" name="campaignType">
                             <Select>
                                 <Option value="FOLLOWSOCIAL">Takip Et Kazan Kampanyası</Option>
@@ -214,7 +233,7 @@ const ShowCampaignsPage = () => {
                         </Form.Item>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={isMobile ? 24 : 12}>
                         <Form.Item label="İndirim Türü" name="discountType">
                             <Select>
                                 <Option value="AMOUNT">Tutar</Option>
@@ -223,25 +242,25 @@ const ShowCampaignsPage = () => {
                         </Form.Item>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={isMobile ? 24 : 12}>
                         <Form.Item label="Yüzdesel İndirim" name="percentage">
                             <InputNumber min={0} style={{ width: "100%" }} />
                         </Form.Item>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={isMobile ? 24 : 12}>
                         <Form.Item label="İndirim Tutarı" name="amount">
                             <InputNumber min={0} style={{ width: "100%" }} />
                         </Form.Item>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={isMobile ? 24 : 12}>
                         <Form.Item label="Başlangıç Tarihi" name="startDate">
                             <DatePicker showTime style={{ width: "100%" }} />
                         </Form.Item>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={isMobile ? 24 : 12}>
                         <Form.Item label="Bitiş Tarihi" name="endDate"
                             rules={[
                                 {
@@ -259,13 +278,13 @@ const ShowCampaignsPage = () => {
                         </Form.Item>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={isMobile ? 24 : 12}>
                         <Form.Item label="Öncelik" name="priority">
                             <InputNumber min={1} style={{ width: "100%" }} />
                         </Form.Item>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={isMobile ? 24 : 12}>
                         <Form.Item label="Kampanya Durumu" name="status">
                             <Radio.Group>
                                 <Radio value="ACTIVE">Aktif</Radio>

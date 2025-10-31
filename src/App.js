@@ -102,7 +102,7 @@ function App() {
           {/* Others */}
           <Route path="calls" element={<Calls />} />
           <Route path="supports" element={<Supports />} />
-          <Route path="management/campaigns/campaigns" element={<Campaigns />} />
+          <Route path="management/campaigns/listCampaigns" element={<Campaigns />} />
           <Route path="management/campaigns/showCampaigns/:id" element={<ShowCampaigns />} />
           <Route path="management/financial" element={<Financial />} />
           <Route path="management/notifications" element={<Notifications />} />

@@ -83,7 +83,7 @@ const MainLayout = () => {
       icon: <SettingOutlined />,
       label: "Yönetim İşlemleri",
       children: [
-        { key: "/panel/management/campaigns/campaigns", label: "Kampanyalar" },
+        { key: "/panel/management/campaigns/listCampaigns", label: "Kampanyalar" },
         { key: "/panel/management/financial", label: "Yönetim İşlemleri" },
         { key: "/panel/management/notifications", label: "Bildirimler" },
         { key: "/panel/management/staff", label: "Personel Yönetimi" },
