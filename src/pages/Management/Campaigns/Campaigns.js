@@ -120,7 +120,7 @@ const CampaignsPage = () => {
           />
         </Col>
         <Col xs={24} sm={24} md={12} lg={8}>
-          <Button type="primary" href="/panel/management/campaigns/newCampaign" >Yeni Kampanya</Button>
+          <Button type="primary" href="/panel/management/campaigns/createCampaign" >Kampanya Oluştur</Button>
         </Col>
       </Row>
 
