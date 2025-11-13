@@ -191,6 +191,7 @@ const Users = () => {
 
 
   const handleIsActiveChange = async (value, cardOrUser) => {
+    setLoading(true)
     if (cardOrUser === "card") {
       setCardIsActive(value);
       const walletId = userData.wallet._id; // wallet ID
@@ -198,9 +199,11 @@ const Users = () => {
       console.log(userData.wallet.cards[0]._id)
       await axios.post(`wallets/card/isActive/${walletId}`, payload,)
         .then(res => {
+          setLoading(false)
           console.log(res.data)
         })
         .catch(err => {
+          setLoading(false)
           console.log(err)
         })
     } else {
@@ -212,9 +215,11 @@ const Users = () => {
         passiveType: userPassiveType,
       })
         .then(res => {
+          setLoading(false)
           console.log(res.data)
         })
         .catch(err => {
+          setLoading(false)
           console.log(err)
         })
     }
@@ -737,405 +742,869 @@ const Users = () => {
 
       <Card title="Kullanıcı Arama">
         <Form form={form} layout="inline" onFinish={searchUserButton}>
-          <Form.Item name="phone" rules={[{ required: true, message: "Telefon numarası girin!" }]}>
-            <Input placeholder="Telefon numarası ile ara..." style={{ width: 300, marginRight: 8 }} maxLength={15} />
+          <Form.Item name="phone" rules={[{ required: true, message: "Telefon numarası girin!" }]}
+            style={{
+              ...(isMobile ? { width: '100%' } : {}),
+            }}>
+            <Input placeholder="Telefon numarası ile ara..." style={{ width: '100%', maxWidth: 300, marginRight: 8 }} maxLength={15} />
           </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
+          <Form.Item
+            style={{
+              ...(isMobile ? { width: '100%', marginTop: 20 } : {}),
+            }}>
+            <Button type="primary" htmlType="submit"
+              style={{
+                ...(isMobile ? { width: '100%' } : {}),
+              }}>
               Kullanıcı Ara
             </Button>
           </Form.Item>
         </Form>
       </Card>
 
-      {loading && <Spin style={{ marginTop: 20 }} />}
-
-      {!loading && searched && !userData && (
-        <Card style={{ marginTop: 20 }}>
-          <p style={{ color: "red", fontWeight: "bold" }}>Kullanıcı bulunamadı.</p>
-        </Card>
-      )}
-
-      {userData && (
-        <Card style={{ marginTop: 20 }}>
-          <Tabs defaultActiveKey="1">
-            {/* Bilgiler Tab */}
-            <TabPane tab="Bilgiler" key="1">
-              <Form layout="vertical">
-                <Row gutter={[16, 16]}>
-
-                  <Col span={6}>
-                    <Form.Item label="Kullanıcı Adı Soyadı">
-                      <Input value={userData.user?.name} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="TC Kimlik Numarası">
-                      <Input value={userData.tckno} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
-
-                  <Col span={12}>
-                    <Form.Item label="Toplam Hareket Adeti">
-                      <Input value={`${userData.wallet?.transactions.length || 0} adet`} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
-
-                  <Col span={6}>
-                    <Form.Item label="Kullanıcı Doğum Tarihi">
-                      <Input value={formatDateOnly(userData.birth_date)} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="Email Adresi">
-                      <Input value={userData.user?.email} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
-
-                  {/* Uyruk - Şehir - Cinsiyet yan yana */}
-                  <Col span={12}>
-                    <Row gutter={[16, 16]}>
-                      <Col span={8}>
-                        <Form.Item label="Uyruk Bilgisi">
-                          <Input value={userData.nation || "-"} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item label="Şehir Bilgisi">
-                          <Input value={userData.city || "-"} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item label="Cinsiyet Bilgisi">
-                          <Input value={userData.gender || "-"} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </Col>
-                  <Col span={12}>
-                    <Row gutter={[16, 16]}>
-                      <Col span={12}>
-                        <Form.Item label="Cüzdan Miktarı">
-                          <Input value={`${Number(userData.wallet?.balance).toFixed(2)}  ₺`} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-
-                      <Col span={12}>
-                        <Form.Item label="WeePuan Miktarı">
-                          <Input value={`${Number(userData?.wallet?.score || 0).toFixed(2)} Wee Puan`} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </Col>
-
-                  <Col span={12}>
-                    <Form.Item label="Kullanıcı Telefon Adı">
-                      <Input value={userData.OSBuildNumber || "-"} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="Kullanıcı Referans Kodu">
-                      <Input value={userData.referenceCode} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
-                  <Col span={6}>
-                    <Form.Item label="Takip Et Kazan Kampanyası">
-                      <Input value={userData.followSocial} disabled style={{ color: "black" }} />
-                    </Form.Item>
-                  </Col>
-
-                  <Col span={6}>
-                    <Form.Item label="Kullanıcı Durumu">
-                      <Select
-                        value={userPassiveType}
-                        onChange={(value) => setUserPassiveType(value)}
-                        style={{ minWidth: "150px" }}
-                        options={[
-                          { value: 'NONE', label: 'NORMAL' },
-                          { value: 'DELETED', label: 'SİLİNDİ' },
-                          { value: 'BLOCKED', label: 'KARA LİSTE' },
-                          { value: 'SUSPENDED', label: 'ASKIYA AL' },
-                        ]}
-                      >
-                      </Select>
-                    </Form.Item>
-                    <Button type="primary" onClick={() => handleIsActiveChange(userPassiveType, "user")}>
-                      Kaydet
-                    </Button>
-                  </Col>
-                  {
-                    userData?.wallet?.cards[0] ?
-                      <Col span={6}>
-                        <Form.Item label="Kart Durumu" >
-                          <Select
-                            //defaultValue={value}
-                            value={cardIsActive}
-                            onChange={(value) => setCardIsActive(value)}
-                            style={{ minWidth: "150px" }}
-                            options={[
-                              { value: true, label: 'Güvenli' },
-                              { value: false, label: 'Şüpheli' },
-                            ]}
-                          />
-                        </Form.Item>
-                        <Button type="primary" onClick={() => handleIsActiveChange(cardIsActive, "card")}>
-                          Kaydet
-                        </Button>
-                      </Col>
-                      :
-                      <>
-                      </>
-                  }
-                </Row>
-              </Form>
-            </TabPane>
-
-            {/* Yüklemeler Tab */}
-            <TabPane tab={`Yüklemeler (${uploads.length})`} key="2">
-              <Row gutter={[24]} justify="space-between" align="middle">
-                <Col span={12}>
-                  <Button
-                    type="primary"
-                    style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
-                    onClick={() => exportToExcel(excelDataUploads, excelFileNameCharges)}
-                  >
-                    Excel İndir
-                  </Button>
-                </Col>
-
-                <Col span={12}>
-                  <Form layout="vertical" justify="end" >
-                    <Row gutter={[24]} justify="end">
-                      <Col span={4}>
-                        <Form.Item label="Yükleme">
-                          <Input value={counts["iyzico"]} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={4}>
-                        <Form.Item label="Hediye">
-                          <Input value={counts["hediye"]} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={4}>
-                        <Form.Item label="Ceza">
-                          <Input value={counts["ceza/fine"]} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={4}>
-                        <Form.Item label="İyzico İade">
-                          <Input value={counts["iyzico/iade"]} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={4}>
-                        <Form.Item label="İade">
-                          <Input value={counts["iade/return"]} disabled style={{ color: "black" }} />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </Form>
-                </Col>
-              </Row>
-
-
-              <Table
-                columns={uploadColumns}
-                dataSource={uploads}
-                rowKey={(record, index) => record.id || `row-${index}`}
-                scroll={{ x: true }}
-                pagination={{
-                  position: ["bottomCenter"],
-                  pageSizeOptions: ["5", "10", "20", "50"],
-                  size: paginationSize,
-                }}
-
-              />
-            </TabPane>
-
-            {/* Kiralamalar Tab */}
-            <TabPane tab={`Kiralamalar (${rentals.length})`} key="3">
-              <Button
-                type="primary"
-                style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
-                onClick={() => exportToExcel(excelDataRentals, excelFileNameRentals)}
-              >
-                Excel İndir
-              </Button>
-              <Table
-                columns={rentalColumns}
-                dataSource={rentals}
-                rowKey={(record, index) => record.id || `row-${index}`}
-                scroll={{ x: true }}
-                pagination={{
-                  position: ["bottomCenter"],
-                  pageSizeOptions: ["5", "10", "20", "50"],
-                  size: paginationSize,
-                }}
-              />
-            </TabPane>
-
-            {/* Kampanyalar Tab */}
-            <TabPane tab={`Kampanyalar (${campaigns.length})`} key="4">
-              <Button
-                type="primary"
-                style={{
-                  width: isMobile ? "100%" : "auto",
-                }}
-                onClick={() => exportToExcel(excelDataCampaigns, excelFileNameCampaigns)}
-              >
-                Excel İndir
-              </Button>
-              <Table
-                columns={campaignColumns}
-                dataSource={campaigns}
-                rowKey={(record, index) => record.id || `row-${index}`}
-                scroll={{ x: true }}
-                pagination={{
-                  position: ["bottomCenter"],
-                  pageSizeOptions: ["5", "10", "20", "50"],
-                  size: paginationSize,
-                }}
-              />
-            </TabPane>
-            <TabPane tab={`Para İşlemleri`} key="5">
-              <Form layout="vertical" labelAlign="left">
-                <Row gutter={[24]}>
-                  <Col span={12}>
-                    <Form.Item label="Kullanıcı Adı Soyadı">
-                      <Input disabled style={{ color: "black" }} value={userData.user?.name} />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item label="Kullanıcı GSM">
-                      <Input disabled style={{ color: "black" }} value={userData.gsm} />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row gutter={[24]}>
-                  <Col span={12}>
-                    <Form.Item label="İşlem Türü">
-                      <Select
-                        value={transactionType}
-                        onChange={setTransactionType}
-                        style={{ minWidth: "150px" }}
-                        options={[
-                          { value: '1', label: 'Hediye Ekle' },
-                          { value: '2', label: 'Para İade' },
-                          { value: '3', label: 'Ceza Ekle' },
-                          { value: '4', label: 'İyzico Para İade' },
-                          { value: '5', label: 'Wee Puan Ekle' },
-                        ]}
-                      />
-                    </Form.Item>
-                  </Col>
-
-                  {['1', '2', '5'].includes(transactionType) && (
-                    <Col span={12}>
-                      <Form.Item label="Tutar">
-                        <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
-                      </Form.Item>
-                    </Col>
-                  )}
-
-                  {transactionType === '3' && (
-                    <>
-                      <Col span={12}>
-                        <Form.Item label="Ceza Türü">
-                          <Select
-                            value={fineType}
-                            onChange={setFineType}
-                            style={{ minWidth: "150px" }}
-                            options={[
-                              { value: 'park', label: 'Park' },
-                              { value: 'lock', label: 'Kilit' },
-                              { value: 'photo', label: 'Fotoğraf' },
-                              { value: 'damage', label: 'Cihaz Hasar' },
-                              { value: 'stolenCard', label: 'Çalıntı Kart' },
-                              { value: 'stolenDevice', label: 'Çalıntı Cihaz' },
-                              { value: 'other', label: 'Diğer' },
-                            ]}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item label="QR Kod">
-                          <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item label="Tutar">
-                          <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
-                        </Form.Item>
-                      </Col>
-                    </>
-                  )}
-
-                  {transactionType === '4' && (
-                    <>
-                      <Col span={12}>
-                        <Form.Item label="Tutar">
-                          <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item label="İşlem No">
-                          <Input style={{ color: "black" }} value={iyzicoID} onChange={e => setTransactionNo(e.target.value)} />
-                        </Form.Item>
-                      </Col>
-                    </>
-                  )}
-                </Row>
-
-                <Row gutter={[24]} style={{ marginTop: 16 }}>
-                  <Col>
-                    <Button type="primary" onClick={handleMakeMoney}>
-                      İşlemi Kaydet
-                    </Button>
-                  </Col>
-                </Row>
-              </Form>
-            </TabPane>
-
-          </Tabs>
-          <Modal
-            title="Sürüş Fotoğrafı"
-            open={isModalOpen}
-            onCancel={() => setIsModalOpen(false)}
-            footer={null}
-            height="800px"
-            width="fit-content"
-          >
-            {selectedImg ? (
-              <img
-                src={`data:image/png;base64,${selectedImg}`}
-                alt="Base64 Görsel"
-                style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-              />
-            ) : (
-              <p>Görsel bulunamadı</p>
+      {searched && (
+        <div style={{ position: "relative" }}>
+          {/* Blur efekti için card'ı saran div */}
+          <div style={{ filter: loading ? "blur(3px)" : "none", pointerEvents: loading ? "none" : "auto" }}>
+            {!loading && !userData && (
+              <Card style={{ marginTop: 20, display: "flex", justifyContent: "center", alignItems: "center", width: '100%' }}>
+                <p style={{ color: "red", fontWeight: "bold" }}>Kullanıcı bulunamadı.</p>
+              </Card>
             )}
-          </Modal>
-          {/* Büyük Harita Modal */}
-          <Modal
-            open={mapVisible}
-            title={<Title level={4}>Harita Konumu</Title>}
-            onCancel={() => setMapVisible(false)}
-            width={800}
-            bodyStyle={{ height: "70vh", padding: 0 }}
-            footer={<Button onClick={() => setMapVisible(false)}>Kapat</Button>}
-            afterClose={() => {
-              if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
-                markersRef.current = L.layerGroup();
-                linesRef.current = L.layerGroup();
-              }
-            }}
-          >
-            <div id="map" style={{ height: "100%", width: "100%" }} />
-          </Modal>
-        </Card>
+
+            {userData && (
+              isMobile ? (
+                <Card style={{ marginTop: 20, width: '100%' }}>
+                  <Tabs
+                    defaultActiveKey="1"
+                    tabBarGutter={16}
+                    tabBarStyle={{
+                      display: "flex",
+                      flexWrap: window.innerWidth < 768 ? "wrap" : "nowrap",
+                    }}
+                  >
+                    {/* Bilgiler Tab */}
+                    <TabPane tab="Bilgiler" key="1">
+                      <Form layout="vertical">
+                        <Row gutter={[16, 16]}>
+
+                          <Col span={12}>
+                            <Form.Item label="Kullanıcı Adı Soyadı">
+                              <Input value={userData.user?.name} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item label="TC Kimlik Numarası">
+                              <Input value={userData.tckno} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={24}>
+                            <Row span={12}>
+                              <Col span={24}>
+                                <Form.Item label="Toplam Hareket Adeti">
+                                  <Input value={`${userData.wallet?.transactions.length || 0} adet`} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Col>
+                          <Col span={24}>
+                            <Row gutter={[16, 16]}>
+                              <Col span={12}>
+                                <Form.Item label="Kullanıcı D.T.">
+                                  <Input value={formatDateOnly(userData.birth_date)} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="Email Adresi">
+                                  <Input value={userData.user?.email} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Col>
+
+
+
+                          {/* Uyruk - Şehir - Cinsiyet yan yana */}
+                          <Col span={24}>
+                            <Row gutter={[16, 16]}>
+                              <Col span={8}>
+                                <Form.Item label="Uyruk Bilgisi">
+                                  <Input value={userData.nation || "-"} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={8}>
+                                <Form.Item label="Şehir Bilgisi">
+                                  <Input value={userData.city || "-"} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={8}>
+                                <Form.Item label="Cinsiyet Bilgisi">
+                                  <Input value={userData.gender || "-"} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Col>
+                          <Col span={24}>
+                            <Row gutter={[16, 16]}>
+                              <Col span={12}>
+                                <Form.Item label="Cüzdan Miktarı">
+                                  <Input value={`${Number(userData.wallet?.balance).toFixed(2)}  ₺`} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+
+                              <Col span={12}>
+                                <Form.Item label="WeePuan Miktarı">
+                                  <Input value={`${Number(userData?.wallet?.score || 0).toFixed(2)} Wee Puan`} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Col>
+
+                          <Col span={24}>
+                            <Form.Item label="Kullanıcı Telefon Adı">
+                              <Input value={userData.OSBuildNumber || "-"} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item label="Kullanıcı Referans Kodu">
+                              <Input value={userData.referenceCode} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item label="Takip Et Kazan Kampanyası">
+                              <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={24}>
+                            <Col>
+
+                            </Col>
+                            <Form.Item label="Kullanıcı Durumu">
+                              <Select
+                                value={userPassiveType}
+                                onChange={(value) => setUserPassiveType(value)}
+                                style={{ minWidth: "150px" }}
+                                options={[
+                                  { value: 'NONE', label: 'NORMAL' },
+                                  { value: 'DELETED', label: 'SİLİNDİ' },
+                                  { value: 'BLOCKED', label: 'KARA LİSTE' },
+                                  { value: 'SUSPENDED', label: 'ASKIYA AL' },
+                                ]}
+                              >
+                              </Select>
+                            </Form.Item>
+
+                            <Button type="primary" onClick={() => handleIsActiveChange(userPassiveType, "user")} style={{ width: '100%' }}>
+                              Kaydet
+                            </Button>
+                          </Col>
+                          {
+                            userData?.wallet?.cards[0] ?
+                              <Col span={24}>
+                                <Form.Item label="Kart Durumu" >
+                                  <Select
+                                    //defaultValue={value}
+                                    value={cardIsActive}
+                                    onChange={(value) => setCardIsActive(value)}
+                                    style={{ minWidth: "150px" }}
+                                    options={[
+                                      { value: true, label: 'Güvenli' },
+                                      { value: false, label: 'Şüpheli' },
+                                    ]}
+                                  />
+                                </Form.Item>
+                                <Button type="primary" onClick={() => handleIsActiveChange(cardIsActive, "card")} style={{ width: '100%' }}>
+                                  Kaydet
+                                </Button>
+                              </Col>
+                              :
+                              <>
+                              </>
+                          }
+                        </Row>
+                      </Form>
+                    </TabPane>
+
+                    {/* Yüklemeler Tab */}
+                    <TabPane tab={`Yüklemeler (${uploads.length})`} key="2">
+                      <Row gutter={[24]} justify="space-between" align="middle">
+                        <Col span={12}>
+                          <Button
+                            type="primary"
+                            style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
+                            onClick={() => exportToExcel(excelDataUploads, excelFileNameCharges)}
+                          >
+                            Excel İndir
+                          </Button>
+                        </Col>
+
+                        <Col span={12}>
+                          <Form layout="vertical" justify="end" >
+                            <Row gutter={[24]} justify="end">
+                              <Col span={4}>
+                                <Form.Item label="Yükleme">
+                                  <Input value={counts["iyzico"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Form.Item label="Hediye">
+                                  <Input value={counts["hediye"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Form.Item label="Ceza">
+                                  <Input value={counts["ceza/fine"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Form.Item label="İyzico İade">
+                                  <Input value={counts["iyzico/iade"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Form.Item label="İade">
+                                  <Input value={counts["iade/return"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Form>
+                        </Col>
+                      </Row>
+
+
+                      <Table
+                        columns={uploadColumns}
+                        dataSource={uploads}
+                        rowKey={(record, index) => record.id || `row-${index}`}
+                        scroll={{ x: true }}
+                        pagination={{
+                          position: ["bottomCenter"],
+                          pageSizeOptions: ["5", "10", "20", "50"],
+                          size: paginationSize,
+                        }}
+
+                      />
+                    </TabPane>
+
+                    {/* Kiralamalar Tab */}
+                    <TabPane tab={`Kiralamalar (${rentals.length})`} key="3">
+                      <Button
+                        type="primary"
+                        style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
+                        onClick={() => exportToExcel(excelDataRentals, excelFileNameRentals)}
+                      >
+                        Excel İndir
+                      </Button>
+                      <Table
+                        columns={rentalColumns}
+                        dataSource={rentals}
+                        rowKey={(record, index) => record.id || `row-${index}`}
+                        scroll={{ x: true }}
+                        pagination={{
+                          position: ["bottomCenter"],
+                          pageSizeOptions: ["5", "10", "20", "50"],
+                          size: paginationSize,
+                        }}
+                      />
+                    </TabPane>
+
+                    {/* Kampanyalar Tab */}
+                    <TabPane tab={`Kampanyalar (${campaigns.length})`} key="4">
+                      <Button
+                        type="primary"
+                        style={{
+                          width: isMobile ? "100%" : "auto",
+                          marginBottom: 16,
+                        }}
+                        onClick={() =>
+                          exportToExcel(excelDataCampaigns, excelFileNameCampaigns)
+                        }
+                      >
+                        Excel İndir
+                      </Button>
+
+                      <Table
+                        columns={[
+                          // sadece ilk 2 sütun görünsün
+                          campaignColumns[0],
+                          campaignColumns[1],
+                        ]}
+                        dataSource={campaigns}
+                        rowKey={(record, index) => record.id || `row-${index}`}
+                        scroll={{ x: true }}
+                        pagination={{
+                          position: ["bottomCenter"],
+                          pageSizeOptions: ["5", "10", "20", "50"],
+                          size: paginationSize,
+                        }}
+                        expandable={{
+                          // + butonuna tıklanınca gösterilecek detay alanı
+                          expandedRowRender: (record) => (
+                            <div style={{ marginLeft: 20 }}>
+                              {campaignColumns.slice(2).map((col) => (
+                                <p key={col.key || col.dataIndex}>
+                                  <b>{col.title}:</b> {record[col.dataIndex]}
+                                </p>
+                              ))}
+                            </div>
+                          ),
+                          expandRowByClick: true, // satıra tıklayarak da açma
+                        }}
+                      />
+                    </TabPane>
+
+                    <TabPane tab={`Para İşlemleri`} key="5">
+                      <Form layout="vertical" labelAlign="left">
+                        <Row gutter={[24]}>
+                          <Col span={12}>
+                            <Form.Item label="Kullanıcı Adı Soyadı">
+                              <Input disabled style={{ color: "black" }} value={userData.user?.name} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item label="Kullanıcı GSM">
+                              <Input disabled style={{ color: "black" }} value={userData.gsm} />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+
+                        <Row gutter={[24]}>
+                          <Col span={12}>
+                            <Form.Item label="İşlem Türü">
+                              <Select
+                                value={transactionType}
+                                onChange={setTransactionType}
+                                style={{ minWidth: "150px" }}
+                                options={[
+                                  { value: '1', label: 'Hediye Ekle' },
+                                  { value: '2', label: 'Para İade' },
+                                  { value: '3', label: 'Ceza Ekle' },
+                                  { value: '4', label: 'İyzico Para İade' },
+                                  { value: '5', label: 'Wee Puan Ekle' },
+                                ]}
+                              />
+                            </Form.Item>
+                          </Col>
+
+                          {['1', '2', '5'].includes(transactionType) && (
+                            <Col span={12}>
+                              <Form.Item label="Tutar">
+                                <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                              </Form.Item>
+                            </Col>
+                          )}
+
+                          {transactionType === '3' && (
+                            <>
+                              <Col span={12}>
+                                <Form.Item label="Ceza Türü">
+                                  <Select
+                                    value={fineType}
+                                    onChange={setFineType}
+                                    style={{ minWidth: "150px" }}
+                                    options={[
+                                      { value: 'park', label: 'Park' },
+                                      { value: 'lock', label: 'Kilit' },
+                                      { value: 'photo', label: 'Fotoğraf' },
+                                      { value: 'damage', label: 'Cihaz Hasar' },
+                                      { value: 'stolenCard', label: 'Çalıntı Kart' },
+                                      { value: 'stolenDevice', label: 'Çalıntı Cihaz' },
+                                      { value: 'other', label: 'Diğer' },
+                                    ]}
+                                  />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="QR Kod">
+                                  <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="Tutar">
+                                  <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                            </>
+                          )}
+
+                          {transactionType === '4' && (
+                            <>
+                              <Col span={12}>
+                                <Form.Item label="Tutar">
+                                  <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="İşlem No">
+                                  <Input style={{ color: "black" }} value={iyzicoID} onChange={e => setTransactionNo(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                            </>
+                          )}
+                        </Row>
+
+                        <Row gutter={[24]} style={{ marginTop: 16 }}>
+                          <Col>
+                            <Button type="primary" onClick={handleMakeMoney}>
+                              İşlemi Kaydet
+                            </Button>
+                          </Col>
+                        </Row>
+                      </Form>
+                    </TabPane>
+
+                  </Tabs>
+                  <Modal
+                    title="Sürüş Fotoğrafı"
+                    open={isModalOpen}
+                    onCancel={() => setIsModalOpen(false)}
+                    footer={null}
+                    height="800px"
+                    width="fit-content"
+                  >
+                    {selectedImg ? (
+                      <img
+                        src={`data:image/png;base64,${selectedImg}`}
+                        alt="Base64 Görsel"
+                        style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+                      />
+                    ) : (
+                      <p>Görsel bulunamadı</p>
+                    )}
+                  </Modal>
+                  {/* Büyük Harita Modal */}
+                  <Modal
+                    open={mapVisible}
+                    title={<Title level={4}>Harita Konumu</Title>}
+                    onCancel={() => setMapVisible(false)}
+                    width={800}
+                    bodyStyle={{ height: "70vh", padding: 0 }}
+                    footer={<Button onClick={() => setMapVisible(false)}>Kapat</Button>}
+                    afterClose={() => {
+                      if (mapRef.current) {
+                        mapRef.current.remove();
+                        mapRef.current = null;
+                        markersRef.current = L.layerGroup();
+                        linesRef.current = L.layerGroup();
+                      }
+                    }}
+                  >
+                    <div id="map" style={{ height: "100%", width: "100%" }} />
+                  </Modal>
+                </Card>
+              ) : (
+                <Card style={{ marginTop: 20 }}>
+                  <Tabs defaultActiveKey="1">
+                    {/* Bilgiler Tab */}
+                    <TabPane tab="Bilgiler" key="1">
+                      <Form layout="vertical">
+                        <Row gutter={[16, 16]}>
+
+                          <Col span={6}>
+                            <Form.Item label="Kullanıcı Adı Soyadı">
+                              <Input value={userData.user?.name} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item label="TC Kimlik Numarası">
+                              <Input value={userData.tckno} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={12}>
+                            <Form.Item label="Toplam Hareket Adeti">
+                              <Input value={`${userData.wallet?.transactions.length || 0} adet`} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={6}>
+                            <Form.Item label="Kullanıcı Doğum Tarihi">
+                              <Input value={formatDateOnly(userData.birth_date)} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item label="Email Adresi">
+                              <Input value={userData.user?.email} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+
+                          {/* Uyruk - Şehir - Cinsiyet yan yana */}
+                          <Col span={12}>
+                            <Row gutter={[16, 16]}>
+                              <Col span={8}>
+                                <Form.Item label="Uyruk Bilgisi">
+                                  <Input value={userData.nation || "-"} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={8}>
+                                <Form.Item label="Şehir Bilgisi">
+                                  <Input value={userData.city || "-"} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={8}>
+                                <Form.Item label="Cinsiyet Bilgisi">
+                                  <Input value={userData.gender || "-"} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Col>
+                          <Col span={12}>
+                            <Row gutter={[16, 16]}>
+                              <Col span={12}>
+                                <Form.Item label="Cüzdan Miktarı">
+                                  <Input value={`${Number(userData.wallet?.balance).toFixed(2)}  ₺`} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+
+                              <Col span={12}>
+                                <Form.Item label="WeePuan Miktarı">
+                                  <Input value={`${Number(userData?.wallet?.score || 0).toFixed(2)} Wee Puan`} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Col>
+
+                          <Col span={12}>
+                            <Form.Item label="Kullanıcı Telefon Adı">
+                              <Input value={userData.OSBuildNumber || "-"} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item label="Kullanıcı Referans Kodu">
+                              <Input value={userData.referenceCode} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={6}>
+                            <Form.Item label="Takip Et Kazan Kampanyası">
+                              <Input value={userData.followSocial} disabled style={{ color: "black" }} />
+                            </Form.Item>
+                          </Col>
+
+                          <Col span={6}>
+                            <Form.Item label="Kullanıcı Durumu">
+                              <Select
+                                value={userPassiveType}
+                                onChange={(value) => setUserPassiveType(value)}
+                                style={{ minWidth: "150px" }}
+                                options={[
+                                  { value: 'NONE', label: 'NORMAL' },
+                                  { value: 'DELETED', label: 'SİLİNDİ' },
+                                  { value: 'BLOCKED', label: 'KARA LİSTE' },
+                                  { value: 'SUSPENDED', label: 'ASKIYA AL' },
+                                ]}
+                              >
+                              </Select>
+                            </Form.Item>
+                            <Button type="primary" onClick={() => handleIsActiveChange(userPassiveType, "user")}>
+                              Kaydet
+                            </Button>
+                          </Col>
+                          {
+                            userData?.wallet?.cards[0] ?
+                              <Col span={6}>
+                                <Form.Item label="Kart Durumu" >
+                                  <Select
+                                    //defaultValue={value}
+                                    value={cardIsActive}
+                                    onChange={(value) => setCardIsActive(value)}
+                                    style={{ minWidth: "150px" }}
+                                    options={[
+                                      { value: true, label: 'Güvenli' },
+                                      { value: false, label: 'Şüpheli' },
+                                    ]}
+                                  />
+                                </Form.Item>
+                                <Button type="primary" onClick={() => handleIsActiveChange(cardIsActive, "card")}>
+                                  Kaydet
+                                </Button>
+                              </Col>
+                              :
+                              <>
+                              </>
+                          }
+                        </Row>
+                      </Form>
+                    </TabPane>
+
+                    {/* Yüklemeler Tab */}
+                    <TabPane tab={`Yüklemeler (${uploads.length})`} key="2">
+                      <Row gutter={[24]} justify="space-between" align="middle">
+                        <Col span={12}>
+                          <Button
+                            type="primary"
+                            style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
+                            onClick={() => exportToExcel(excelDataUploads, excelFileNameCharges)}
+                          >
+                            Excel İndir
+                          </Button>
+                        </Col>
+
+                        <Col span={12}>
+                          <Form layout="vertical" justify="end" >
+                            <Row gutter={[24]} justify="end">
+                              <Col span={4}>
+                                <Form.Item label="Yükleme">
+                                  <Input value={counts["iyzico"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Form.Item label="Hediye">
+                                  <Input value={counts["hediye"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Form.Item label="Ceza">
+                                  <Input value={counts["ceza/fine"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Form.Item label="İyzico İade">
+                                  <Input value={counts["iyzico/iade"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Form.Item label="İade">
+                                  <Input value={counts["iade/return"]} disabled style={{ color: "black" }} />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </Form>
+                        </Col>
+                      </Row>
+
+
+                      <Table
+                        columns={uploadColumns}
+                        dataSource={uploads}
+                        rowKey={(record, index) => record.id || `row-${index}`}
+                        scroll={{ x: true }}
+                        pagination={{
+                          position: ["bottomCenter"],
+                          pageSizeOptions: ["5", "10", "20", "50"],
+                          size: paginationSize,
+                        }}
+
+                      />
+                    </TabPane>
+
+                    {/* Kiralamalar Tab */}
+                    <TabPane tab={`Kiralamalar (${rentals.length})`} key="3">
+                      <Button
+                        type="primary"
+                        style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
+                        onClick={() => exportToExcel(excelDataRentals, excelFileNameRentals)}
+                      >
+                        Excel İndir
+                      </Button>
+                      <Table
+                        columns={rentalColumns}
+                        dataSource={rentals}
+                        rowKey={(record, index) => record.id || `row-${index}`}
+                        scroll={{ x: true }}
+                        pagination={{
+                          position: ["bottomCenter"],
+                          pageSizeOptions: ["5", "10", "20", "50"],
+                          size: paginationSize,
+                        }}
+                      />
+                    </TabPane>
+
+                    {/* Kampanyalar Tab */}
+                    <TabPane tab={`Kampanyalar (${campaigns.length})`} key="4">
+                      <Button
+                        type="primary"
+                        style={{
+                          width: isMobile ? "100%" : "auto",
+                        }}
+                        onClick={() => exportToExcel(excelDataCampaigns, excelFileNameCampaigns)}
+                      >
+                        Excel İndir
+                      </Button>
+                      <Table
+                        columns={campaignColumns}
+                        dataSource={campaigns}
+                        rowKey={(record, index) => record.id || `row-${index}`}
+                        scroll={{ x: true }}
+                        pagination={{
+                          position: ["bottomCenter"],
+                          pageSizeOptions: ["5", "10", "20", "50"],
+                          size: paginationSize,
+                        }}
+                      />
+                    </TabPane>
+                    <TabPane tab={`Para İşlemleri`} key="5">
+                      <Form layout="vertical" labelAlign="left">
+                        <Row gutter={[24]}>
+                          <Col span={12}>
+                            <Form.Item label="Kullanıcı Adı Soyadı">
+                              <Input disabled style={{ color: "black" }} value={userData.user?.name} />
+                            </Form.Item>
+                          </Col>
+                          <Col span={12}>
+                            <Form.Item label="Kullanıcı GSM">
+                              <Input disabled style={{ color: "black" }} value={userData.gsm} />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+
+                        <Row gutter={[24]}>
+                          <Col span={12}>
+                            <Form.Item label="İşlem Türü">
+                              <Select
+                                value={transactionType}
+                                onChange={setTransactionType}
+                                style={{ minWidth: "150px" }}
+                                options={[
+                                  { value: '1', label: 'Hediye Ekle' },
+                                  { value: '2', label: 'Para İade' },
+                                  { value: '3', label: 'Ceza Ekle' },
+                                  { value: '4', label: 'İyzico Para İade' },
+                                  { value: '5', label: 'Wee Puan Ekle' },
+                                ]}
+                              />
+                            </Form.Item>
+                          </Col>
+
+                          {['1', '2', '5'].includes(transactionType) && (
+                            <Col span={12}>
+                              <Form.Item label="Tutar">
+                                <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                              </Form.Item>
+                            </Col>
+                          )}
+
+                          {transactionType === '3' && (
+                            <>
+                              <Col span={12}>
+                                <Form.Item label="Ceza Türü">
+                                  <Select
+                                    value={fineType}
+                                    onChange={setFineType}
+                                    style={{ minWidth: "150px" }}
+                                    options={[
+                                      { value: 'park', label: 'Park' },
+                                      { value: 'lock', label: 'Kilit' },
+                                      { value: 'photo', label: 'Fotoğraf' },
+                                      { value: 'damage', label: 'Cihaz Hasar' },
+                                      { value: 'stolenCard', label: 'Çalıntı Kart' },
+                                      { value: 'stolenDevice', label: 'Çalıntı Cihaz' },
+                                      { value: 'other', label: 'Diğer' },
+                                    ]}
+                                  />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="QR Kod">
+                                  <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="Tutar">
+                                  <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                            </>
+                          )}
+
+                          {transactionType === '4' && (
+                            <>
+                              <Col span={12}>
+                                <Form.Item label="Tutar">
+                                  <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item label="İşlem No">
+                                  <Input style={{ color: "black" }} value={iyzicoID} onChange={e => setTransactionNo(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                            </>
+                          )}
+                        </Row>
+
+                        <Row gutter={[24]} style={{ marginTop: 16 }}>
+                          <Col>
+                            <Button type="primary" onClick={handleMakeMoney}>
+                              İşlemi Kaydet
+                            </Button>
+                          </Col>
+                        </Row>
+                      </Form>
+                    </TabPane>
+
+                  </Tabs>
+                  <Modal
+                    title="Sürüş Fotoğrafı"
+                    open={isModalOpen}
+                    onCancel={() => setIsModalOpen(false)}
+                    footer={null}
+                    height="800px"
+                    width="fit-content"
+                  >
+                    {selectedImg ? (
+                      <img
+                        src={`data:image/png;base64,${selectedImg}`}
+                        alt="Base64 Görsel"
+                        style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+                      />
+                    ) : (
+                      <p>Görsel bulunamadı</p>
+                    )}
+                  </Modal>
+                  {/* Büyük Harita Modal */}
+                  <Modal
+                    open={mapVisible}
+                    title={<Title level={4}>Harita Konumu</Title>}
+                    onCancel={() => setMapVisible(false)}
+                    width={800}
+                    bodyStyle={{ height: "70vh", padding: 0 }}
+                    footer={<Button onClick={() => setMapVisible(false)}>Kapat</Button>}
+                    afterClose={() => {
+                      if (mapRef.current) {
+                        mapRef.current.remove();
+                        mapRef.current = null;
+                        markersRef.current = L.layerGroup();
+                        linesRef.current = L.layerGroup();
+                      }
+                    }}
+                  >
+                    <div id="map" style={{ height: "100%", width: "100%" }} />
+                  </Modal>
+                </Card>
+              )
+
+            )}
+          </div>
+
+          {/* Spin overlay */}
+          {loading && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(255,255,255,0.6)",
+                zIndex: 10,
+                borderRadius: "8px",
+              }}
+            >
+              <Spin size="large" />
+            </div>
+          )}
+        </div>
       )}
+
+
+
+
+
     </>
   );
 };
