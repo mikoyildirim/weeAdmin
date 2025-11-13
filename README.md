@@ -9,6 +9,8 @@ yetkilendirme
 az kullanılan cihazlar sayfası
 users sayfası search
 cihaz güncelleme sayfasına konum güncelleme işlemi eklenecek
+Destek kayıtlarında yetkisi olmayan hesap ile giriş yapıldıysa güncelle butonu olmayacak
+Kullanıcı bilgilerinde kullanıcı durumu ve kartr durumu değişltirildiğinde loading ve bilgilendirme veya sayfa güncelleme yapıalacak.
 
 responsive:
 aktif kiralamalar

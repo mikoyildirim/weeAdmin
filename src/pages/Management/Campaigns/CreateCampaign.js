@@ -14,6 +14,8 @@ import {
     Spin,
     Row,
     Col,
+    Modal,
+    message
 } from "antd";
 import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
@@ -24,9 +26,9 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const CreateCampaign = () => {
-    const [campaign, setCampaign] = useState(null);
     const [loading, setLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [form] = Form.useForm();
     const [conditions, setConditions] = useState([]);
@@ -49,45 +51,72 @@ const CreateCampaign = () => {
         setConditions(newConditions);
     };
 
+
+
+    const showModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleOk = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
+
+
     const handleFinish = async (values) => {
-        if (conditions.length === 0 || conditions.some((c) => !c.trim())) {
-            return Form.error({
-                title: "Eksik Bilgi",
-                content: "Lütfen en az bir geçerli katılım koşulu girin!",
-            });
+        const emptyFields = [];
+
+        // 🔹 Form alanlarını kontrol et
+        Object.entries(values).forEach(([key, value]) => {
+            if (!value || value === "" || value === null) {
+                emptyFields.push(key);
+            }
+        });
+
+        if (conditions.length === 0 || conditions.some(c => !c.trim()) || fileList.length === 0) {
+            showModal();
+            return;
         }
 
-        if (fileList.length === 0) {
-            return Form.error({
-                title: "Eksik Bilgi",
-                content: "Lütfen kampanya görseli yükleyin!",
-            });
-        }
-
+        // 🔹 Görseli Base64'e çevir
         let imageBase64 = null;
-
-        if (fileList.length > 0 && fileList[0].originFileObj) {
+        if (fileList[0]?.originFileObj) {
             const file = fileList[0].originFileObj;
             const reader = new FileReader();
-
             imageBase64 = await new Promise((resolve, reject) => {
                 reader.readAsDataURL(file);
                 reader.onload = () => resolve(reader.result);
                 reader.onerror = reject;
             });
         } else if (fileList[0]?.url) {
-            // Eğer eski bir görsel varsa (örneğin kampanyayı düzenliyorsan)
             imageBase64 = fileList[0].url;
         }
+
+        // 🔹 Gönderilecek veri
         const payload = {
             ...values,
             conditions,
             image: imageBase64,
-        }
+        };
+
         console.log("Kaydedilecek değerler:", payload);
-        // await axios.patch(`/campaigns/${id}`, payload)
-        // .then((res)=>console.log(res.data))
-        // .catch((err)=>console.log(err))
+        if (emptyFields.length > 0) {
+            console.log(emptyFields)
+            showModal()
+            setLoading(false)
+        } else {
+            setLoading(true);
+            await axios.post(`/campaigns`, payload)
+                .then((res) => console.log('başarıyla oluşturuldu'))
+                .catch((err) => console.log("Bir hata oluştu!", err))
+                .finally(() => setLoading(false))
+        }
+
+
     };
 
     if (loading)
@@ -282,6 +311,17 @@ const CreateCampaign = () => {
                     </Col>
                 </Row>
             </Form>
+            <>
+                <Modal
+                    title="Bütün alanlar doldurulmuş olmalıdır."
+                    closable={{ 'aria-label': 'Custom Close Button' }}
+                    open={isModalOpen}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                >
+                    <p>Kampanya Görseli veya Katılım Koşullarını kontrol ediniz.</p>
+                </Modal>
+            </>
         </Card>
     );
 };
