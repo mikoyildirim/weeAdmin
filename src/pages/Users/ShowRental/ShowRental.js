@@ -133,14 +133,14 @@ const ShowRental = () => {
               <Input disabled style={{ color: "black" }} />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={24}>
             <Form.Item label="Başlangıç Saati" name="startDate">
-              <Input type="datetime-local"  style={{ color: "black" }} onChange={handleDateChange} />
+              <Input type="datetime-local" style={{ color: "black" }} onChange={handleDateChange} />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={24}>
             <Form.Item label="Bitiş Saati" name="endDate">
-              <Input type="datetime-local"  style={{ color: "black" }} onChange={handleDateChange} />
+              <Input type="datetime-local" style={{ color: "black" }} onChange={handleDateChange} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -155,9 +155,16 @@ const ShowRental = () => {
           </Col>
         </Row>
 
-        <Button type="primary" htmlType="submit" disabled={isInvalidDateRange}>
-          Kaydet
-        </Button>
+        <Row justify="end" style={{ marginTop: 20 }}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            disabled={isInvalidDateRange}
+          >
+            Kaydet
+          </Button>
+        </Row>
+
         {isInvalidDateRange && (
           <div style={{ color: "red", marginTop: 8 }}>
             ⚠️ Bitiş tarihi başlangıç tarihinden önce olamaz!
