@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table, Modal } from "antd";
+import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table, Modal, Descriptions } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/exportToExcel";
@@ -649,8 +649,6 @@ const Users = () => {
             (b.version || b.rental?.version || b.ip || "").toString()
           ),
     },
-
-
     {
       title: "Harita",
       key: "map",
@@ -738,6 +736,7 @@ const Users = () => {
 
   return (
     <>
+
       <h1>Kullanıcı Bilgileri</h1>
 
       <Card title="Kullanıcı Arama">
@@ -746,7 +745,7 @@ const Users = () => {
             style={{
               ...(isMobile ? { width: '100%' } : {}),
             }}>
-            <Input placeholder="Telefon numarası ile ara..." style={{ width: '100%', maxWidth: 300, marginRight: 8 }} maxLength={15} />
+            <Input placeholder="Telefon numarası ile ara..." style={{ width: '100%', maxWidth: 400, marginRight: 8 }} maxLength={15} />
           </Form.Item>
           <Form.Item
             style={{
@@ -973,13 +972,12 @@ const Users = () => {
                         </Col>
                       </Row>
 
-
                       <Table
                         columns={[
-                          // sadece ilk 2 sütun görünsün
                           uploadColumns[0],
                           uploadColumns[1],
                         ]}
+                        size="small"
                         dataSource={uploads}
                         rowKey={(record, index) => record.id || `row-${index}`}
                         scroll={{ x: true }}
@@ -1001,12 +999,14 @@ const Users = () => {
                           ),
 
                           rowExpandable: (record) => true,
-                          // istersen burada "şu tip kayıtlar açılsın" diye filtre koyabilirsin
+                          expandRowByClick: true,
+
                         }}
                       />
                     </TabPane>
 
                     {/* Kiralamalar Tab */}
+
                     <TabPane tab={`Kiralamalar (${rentals.length})`} key="3">
                       <Button
                         type="primary"
@@ -1016,8 +1016,85 @@ const Users = () => {
                         Excel İndir
                       </Button>
                       <Table
-                        columns={rentalColumns}
+                        columns={[rentalColumns[0], rentalColumns[1]]}
                         dataSource={rentals}
+                        size="small"
+                        expandable={{
+                          expandedRowRender: (record) => (
+                            <Descriptions
+                              bordered
+                              size="small"
+                              column={1}
+                              style={{ margin: 10 }}
+                            >
+                              <Descriptions.Item label="Bitiş">
+                                {formatDateTime(record.rental?.end)}
+                              </Descriptions.Item>
+
+                              <Descriptions.Item label="Sonlandıran">
+                                {record.rental?.finishedUser?.name || "Kullanıcı"}
+                              </Descriptions.Item>
+
+                              <Descriptions.Item label="Süre">
+                                {(() => {
+                                  if (record.rental?.start && record.rental?.end) {
+                                    const s = new Date(record.rental.start);
+                                    const e = new Date(record.rental.end);
+                                    const diff = Math.floor((e - s) / 1000);
+                                    const h = Math.floor(diff / 3600);
+                                    const m = Math.floor((diff % 3600) / 60);
+                                    const sec = diff % 60;
+                                    return `${h}h ${m}m ${sec}s`;
+                                  }
+                                  return "-";
+                                })()}
+                              </Descriptions.Item>
+
+                              <Descriptions.Item label="Tutar">
+                                {record.amount != null
+                                  ? record.type === -3
+                                    ? `${Number(record.amount).toFixed(2)} WeePuan`
+                                    : record.type === -1
+                                      ? `${Number(record.amount).toFixed(2)} ₺`
+                                      : "-"
+                                  : "-"}
+                              </Descriptions.Item>
+
+                              <Descriptions.Item label="İşlem Versiyon">
+                                {record.version || record.rental?.version || record.ip || "-"}
+                              </Descriptions.Item>
+
+                              <Descriptions.Item label="Harita">
+                                <Button
+                                  type="primary"
+                                  icon={<GlobalOutlined />}
+                                  onClick={() => openMapModal(record.rental.avldatas)}
+                                />
+                              </Descriptions.Item>
+
+                              <Descriptions.Item label="Görsel">
+                                <Button
+                                  type="primary"
+                                  disabled={!record?.rental?.imageObj}
+                                  icon={<CameraFilled />}
+                                  onClick={() => {
+                                    showImage(record?.rental?.imageObj);
+                                    setIsModalOpen(true);
+                                  }}
+                                />
+                              </Descriptions.Item>
+
+                              <Descriptions.Item label="Sürüşü Düzenle">
+                                <Button type="primary" href={`users/showRental/${record.rental._id}`}>
+                                  Sürüş Düzenle
+                                </Button>
+                              </Descriptions.Item>
+                            </Descriptions>
+                          ),
+
+                          rowExpandable: (record) => true,
+                          expandRowByClick: true,
+                        }}
                         rowKey={(record, index) => record.id || `row-${index}`}
                         scroll={{ x: true }}
                         pagination={{
@@ -1050,6 +1127,8 @@ const Users = () => {
                           campaignColumns[1],
                         ]}
                         dataSource={campaigns}
+                        size="small"
+
                         rowKey={(record, index) => record.id || `row-${index}`}
                         scroll={{ x: true }}
                         pagination={{
@@ -1592,34 +1671,28 @@ const Users = () => {
 
             )}
           </div>
-
-          {/* Spin overlay */}
-          {loading && (
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "rgba(255,255,255,0.6)",
-                zIndex: 10,
-                borderRadius: "8px",
-              }}
-            >
-              <Spin size="large" />
-            </div>
-          )}
         </div>
       )}
 
-
-
-
-
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(255,255,255,0.6)",
+            zIndex: 10,
+            borderRadius: "8px",
+          }}
+        >
+          <Spin size="large" />
+        </div>
+      )}
     </>
   );
 };

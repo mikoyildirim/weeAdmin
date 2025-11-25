@@ -109,7 +109,12 @@ const MainLayout = () => {
     ],
   };
 
-  const siderWidth = collapsed ? 80 : 220;
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md; // mobile için true
+
+  const siderWidth = collapsed
+    ? (isMobile ? 0 : 80)   // mobile: tamamen kaybolur, desktop: daralır
+    : 220;
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -119,6 +124,7 @@ const MainLayout = () => {
         collapsed={collapsed}
         onCollapse={setCollapsed}
         width={220}
+        collapsedWidth={isMobile ? 0 : 80} 
         style={{
           background: "#001529",
           position: "fixed",
@@ -127,6 +133,7 @@ const MainLayout = () => {
           bottom: 0,
           height: "100vh",
           overflow: "auto",
+          transition: "all 0.2s ease",
         }}
       >
         <div
@@ -165,6 +172,7 @@ const MainLayout = () => {
             position: "fixed",
             top: 0,
             left: siderWidth,
+            transition: "left 0.2s",
             right: 0,
             height: 64,
             zIndex: 10,
