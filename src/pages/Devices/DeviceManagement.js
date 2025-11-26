@@ -103,9 +103,8 @@ const DevicesPage = () => {
         <Button
           type="link"
           target="_blank"
-          href={`https://www.google.com/maps/dir/?api=1&destination=${
-            record?.last_location?.location?.coordinates[1] || 0
-          },${record?.last_location?.location?.coordinates[0] || 0}&travelmode=driving`}
+          href={`https://www.google.com/maps/dir/?api=1&destination=${record?.last_location?.location?.coordinates[1] || 0
+            },${record?.last_location?.location?.coordinates[0] || 0}&travelmode=driving`}
         >
           Konuma Git
         </Button>
