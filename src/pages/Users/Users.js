@@ -60,7 +60,6 @@ const Users = () => {
 
 
   const [searchText, setSearchText] = useState("");
-  const [filteredUploads, setFilteredUploads] = useState(uploads);
 
 
   // Büyük harita Leaflet referansları
@@ -78,7 +77,7 @@ const Users = () => {
   const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1 || (t.type === -1 && !t.rental)) || [])
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
 
-
+  const [filteredUploads, setFilteredUploads] = useState(uploads);
 
   let rentals = (userData?.wallet?.transactions?.filter(t => t.rental) || []) // transaction içerisinde rental değeri dolu ise rentals tablosuna ekle
     .sort((a, b) => new Date(a.rental?.start) - new Date(b.rental?.start))
