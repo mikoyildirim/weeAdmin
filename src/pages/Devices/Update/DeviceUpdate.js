@@ -168,7 +168,7 @@ const DeviceUpdate = () => {
 
 
     return (
-        <Card title={`Cihaz Güncelle - ${id}`} style={{ maxWidth: 900, margin: "20px auto" }}>
+        <Card title={`Cihaz Güncelle - ${form.getFieldValue("qrlabel")}`} style={{ maxWidth: 900, margin: "20px auto" }}>
 
             <Spin spinning={loading} tip="Yükleniyor..." size="large" >
                 <Button style={{marginBottom:16}} type="primary" onClick={() => setLocationModalOpen(true)}>Cihaz Konumunu Güncelle</Button>

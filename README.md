@@ -8,8 +8,7 @@ yetkilendirme
 
 az kullanılan cihazlar sayfası
 users sayfası search
-cihaz güncelleme sayfasına konum güncelleme işlemi eklenecek
-Kullanıcı bilgilerinde kullanıcı durumu ve kartr durumu değişltirildiğinde loading ve bilgilendirme veya sayfa güncelleme yapıalacak.
+
 
 responsive:
 aktif kiralamalar
@@ -20,9 +19,7 @@ bildirim
 Yönetim işlemleri
 destek kayıtları
 borçlu kullanıcılar
-kullanıcılar
 cihaz yönetimi
-cihaz detayı 
 haritalar
 yeni poligon
 yükleme raporu

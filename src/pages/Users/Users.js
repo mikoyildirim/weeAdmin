@@ -58,6 +58,11 @@ const Users = () => {
   const [mapData, setMapData] = useState([]);
   const [geofences, setGeofences] = useState([]);
 
+
+  const [searchText, setSearchText] = useState("");
+  const [filteredUploads, setFilteredUploads] = useState(uploads);
+
+
   // Büyük harita Leaflet referansları
   const mapRef = useRef(null);
   const markersRef = useRef(L.layerGroup());
@@ -72,6 +77,8 @@ const Users = () => {
   // transactions filtresi + sıralama
   const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1 || (t.type === -1 && !t.rental)) || [])
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
+
+
 
   let rentals = (userData?.wallet?.transactions?.filter(t => t.rental) || []) // transaction içerisinde rental değeri dolu ise rentals tablosuna ekle
     .sort((a, b) => new Date(a.rental?.start) - new Date(b.rental?.start))
@@ -659,11 +666,8 @@ const Users = () => {
           openMapModal(r.rental.avldatas)
         }}
           icon={<GlobalOutlined />}
-
         />
       )
-
-
     },
     {
       title: "Görsel",
@@ -1425,7 +1429,7 @@ const Users = () => {
                     {/* Yüklemeler Tab */}
                     <TabPane tab={`Yüklemeler (${uploads.length})`} key="2">
                       <Row gutter={[24]} justify="space-between" align="middle">
-                        <Col span={12}>
+                        <Col span={8}>
                           <Button
                             type="primary"
                             style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
@@ -1454,7 +1458,7 @@ const Users = () => {
                                 </Form.Item>
                               </Col>
                               <Col span={4}>
-                                <Form.Item label="İyzico İade">
+                                <Form.Item label="İyz.İade">
                                   <Input value={counts["iyzico/iade"]} disabled style={{ color: "black" }} />
                                 </Form.Item>
                               </Col>
@@ -1466,12 +1470,33 @@ const Users = () => {
                             </Row>
                           </Form>
                         </Col>
+
+                        <Col span={24} style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                          <Input
+                            style={{ maxWidth: 250 }}
+                            placeholder="ara"
+                            value={searchText}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setSearchText(val);
+
+                              const filtered = uploads.filter(u =>
+                              // burada hangi alanlarda arama yapmak istediğine göre kontrol ekle
+                              (u.transaction_id?.toString().includes(val) ||
+                                u.payment_gateway?.toLowerCase().includes(val.toLowerCase()) ||
+                                u.fineType?.toLowerCase().includes(val.toLowerCase()))
+                              );
+
+                              setFilteredUploads(filtered);
+                            }}
+                          />
+                        </Col>
                       </Row>
 
 
                       <Table
                         columns={uploadColumns}
-                        dataSource={uploads}
+                        dataSource={filteredUploads}
                         rowKey={(record, index) => record.id || `row-${index}`}
                         scroll={{ x: true }}
                         pagination={{

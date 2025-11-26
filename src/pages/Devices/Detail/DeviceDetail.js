@@ -315,7 +315,7 @@ const DeviceDetail = () => {
                 ? {
                   expandedRowRender: (record) => (
                     <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
-                      <p><b>GSM:</b>
+                      <p><b>GSM: </b>
 
                         <Link onClick={() => navigate(`/panel/users?gsm=${encodeURIComponent(record.memberGsm)}`)}>
                           {record.memberGsm}
