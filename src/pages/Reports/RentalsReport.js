@@ -45,7 +45,7 @@ const RentalsReport = () => {
   const [paginationSize, setPaginationSize] = useState("medium");
   const [isMobile, setIsMobile] = useState(false);
 
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const locations = user?.permissions?.locations || [];
 
   const totalRentals = filteredData.reduce((acc, item) => acc + Number(item.total), 0);

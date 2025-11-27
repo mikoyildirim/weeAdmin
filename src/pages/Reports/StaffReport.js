@@ -34,7 +34,7 @@ const StaffReport = () => {
   const [paginationSize, setPaginationSize] = useState("medium");
   const [isMobile, setIsMobile] = useState(false);
 
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const locations = user?.permissions?.locations || [];
   const sortedData = [...filteredData].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Batarya Raporu.xlsx`;

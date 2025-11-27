@@ -53,7 +53,7 @@ const LostMap = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [polygons, setPolygons] = useState([]);
-  const userName = useSelector((state) => state.user.user?.name) || {};
+  const userName = useSelector((state) => state.auth.user?.name) || {};
 
   console.log(devices)
 

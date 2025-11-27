@@ -16,7 +16,7 @@ const CampaignsPage = () => {
   const [paginationSize, setPaginationSize] = useState("medium");
 
 
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const navigate = useNavigate()
 
   useEffect(() => {

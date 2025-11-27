@@ -24,7 +24,7 @@ L.Icon.Default.mergeOptions({
 const miniMapRefs = {};
 
 const Rentals = () => {
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const userPermissions = user?.permissions || {};
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(false);

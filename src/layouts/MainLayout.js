@@ -17,7 +17,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../store/userSlice";
+import { logout } from "../redux/slices/authSlice.js";
 
 const { Sider, Content, Header } = Layout;
 
@@ -25,7 +25,7 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const [collapsed, setCollapsed] = useState(false);
 
   const toggleCollapsed = () => setCollapsed(!collapsed);

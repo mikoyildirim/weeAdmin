@@ -33,7 +33,7 @@ const WeePuanReport = () => {
   const [searchText, setSearchText] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const locations = user?.permissions?.locations || [];
 
   // Toplamlar

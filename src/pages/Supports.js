@@ -20,7 +20,7 @@ const statusTr = {
 }
 
 const Supports = () => {
-  const userPermissions = useSelector((state) => state.user.user?.permissions) || {};
+  const userPermissions = useSelector((state) => state.auth.user?.permissions) || {};
   const [supports, setSupports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");

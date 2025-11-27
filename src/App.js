@@ -1,8 +1,6 @@
 // src/App.js
-import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { loadUserFromStorage } from "./store/userSlice";
+import { useSelector } from "react-redux";
 
 import MainLayout from "./layouts/MainLayout";
 import Login from "./pages/Login";
@@ -54,8 +52,8 @@ import Rentals from "./pages/Rentals";
 
 
 function App() {
-  const token = useSelector((state) => state.user.token);
-  const user = useSelector((state) => state.user.user);
+  const token = useSelector((state) => state.auth.accessToken);
+  const user = useSelector((state) => state.auth.user);
   return (
     <Router>
       <Routes>

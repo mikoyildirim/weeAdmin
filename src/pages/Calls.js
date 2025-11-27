@@ -21,22 +21,22 @@ const CallList = () => {
     const fetchCalls = async () => {
       setLoading(true);
       try {
-       const today = new Date();
-const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0);
-const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0);
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0);
+        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0);
 
-const startDate = formatDateDMYHi(startOfDay);
-const stopDate = formatDateDMYHi(endOfDay);
+        const startDate = formatDateDMYHi(startOfDay);
+        const stopDate = formatDateDMYHi(endOfDay);
 
-const payload = new URLSearchParams();
-payload.append("startdate", startDate);
-payload.append("stopdate", stopDate);
-payload.append("querytype", 2);
-payload.append("output", "json");
+        const payload = new URLSearchParams();
+        payload.append("startdate", startDate);
+        payload.append("stopdate", stopDate);
+        payload.append("querytype", 2);
+        payload.append("output", "json");
 
-const response = await axios.post("/calls/list", payload, {
-  headers: { "Content-Type": "application/x-www-form-urlencoded" },
-});
+        const response = await axios.post("/calls/list", payload, {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
 
         console.log("📥 Response:", response.data);
 

@@ -37,7 +37,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const Dashboard = () => {
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const userName = user?.name || user?.username || "Admin";
   const allowedLocations = user?.permissions?.locations || [];
 
