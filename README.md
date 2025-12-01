@@ -7,11 +7,9 @@ bildirimler test
 yetkilendirme
 
 az kullanılan cihazlar sayfası
-users sayfası search
-
+cihaz yönetimi ücret düzenlemesi eklenecek
 
 responsive:
-aktif kiralamalar
 süpheli işlemler
 personel yönetimi 
 personel güncelleme

@@ -1,6 +1,6 @@
 // src/pages/rentals.js
 import React, { useEffect, useState, useRef } from "react";
-import { Table, Button, Modal, Input, Typography, message, Card, Tooltip, Progress, Space } from "antd";
+import { Table, Button, Modal, Input, Typography, message, Card, Tooltip, Progress, Space, Descriptions } from "antd";
 import { useSelector } from "react-redux";
 // Axios yolunu projenize göre ayarlayın
 import axios from "../api/axios";
@@ -8,6 +8,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc';
+import { Link } from "react-router-dom";
 
 const { Title, Text } = Typography;
 dayjs.extend(utc);
@@ -24,6 +25,8 @@ L.Icon.Default.mergeOptions({
 const miniMapRefs = {};
 
 const Rentals = () => {
+  const [paginationSize, setPaginationSize] = useState("medium");
+  const [isMobile, setIsMobile] = useState(false);
   const user = useSelector((state) => state.auth.user);
   const userPermissions = user?.permissions || {};
   const [rentals, setRentals] = useState([]);
@@ -37,6 +40,18 @@ const Rentals = () => {
   const [mapVisible, setMapVisible] = useState(false);
   const [mapData, setMapData] = useState([]);
   const [geofences, setGeofences] = useState([]);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+
+  useEffect(() => {
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium");
+  }, [isMobile]);
 
   // Büyük harita Leaflet referansları
   const mapRef = useRef(null);
@@ -318,8 +333,10 @@ const Rentals = () => {
       dataIndex: ["member", "gsm"],
       key: "gsm",
       render: (gsm) => (
-        <Button type="link" href={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>
-          <span style={{ userSelect: "text" }}>{gsm}</span>
+        <Button type="link">
+          <Link to={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>
+            <span style={{ userSelect: "text" }}>{gsm}</span>
+          </Link>
         </Button>
       ),
       align: "center",
@@ -367,7 +384,7 @@ const Rentals = () => {
 
   if (userPermissions?.endRental) {
     columns.push({
-      title: "Sürüş Sonlandırma",
+      title: "Sonlandırma",
       key: "end",
       align: "center",
       render: (_, record) => (
@@ -387,18 +404,75 @@ const Rentals = () => {
   });
 
   return (
-    <Card style={{ borderRadius: 16, boxShadow: "0 8px 20px rgba(0,0,0,0.1)", padding: 24, margin: "20px 0" }}>
+    <Card style={{ borderRadius: 16, boxShadow: "0 8px 20px rgba(0,0,0,0.1)", padding: 12, margin: "20px 0" }}>
       <Title level={2}>Aktif Kiralamalar</Title>
 
-      <Table
-        dataSource={rentals}
-        columns={columns}
-        rowKey={(r) => r._id}
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-        rowClassName={(record, index) => (index % 2 === 0 ? "table-row-light" : "table-row-dark")}
-        scroll={{ x: "max-content" }}
-      />
+      {
+        !isMobile ? (
+          <Table
+            dataSource={rentals}
+            columns={columns}
+            rowKey={(r) => r._id}
+            loading={loading}
+            pagination={{ pageSize: 10, size: paginationSize }}
+            scroll={{ x: "max-content" }}
+            rowClassName={(record, index) => (index % 2 === 0 ? "table-row-light" : "table-row-dark")}
+          />
+        ) :
+          (
+            <Table
+              dataSource={rentals}
+              columns={[
+                columns[0],
+                columns[1],
+              ]}
+              rowKey={(r) => r._id}
+              loading={loading}
+              pagination={{ pageSize: 10, size: paginationSize }}
+              scroll={{ x: "max-content" }}
+              rowClassName={(record, index) => (index % 2 === 0 ? "table-row-light" : "table-row-dark")}
+              expandable={{
+                expandRowByClick: true,
+                rowExpandable: () => true,
+
+                expandedRowRender: (record) => {
+                  return (
+                    <Descriptions bordered size="small" column={1}>
+                      {columns.map((col) => {
+                        let value;
+
+                        if (col.render) {
+                          // render fonksiyonunu doğru şekilde çağır
+                          if (Array.isArray(col.dataIndex)) {
+                            // dataIndex array ise nested value al
+                            const data = col.dataIndex.reduce((acc, key) => acc?.[key], record);
+                            value = col.render(data, record);
+                          } else {
+                            value = col.render(record[col.dataIndex], record);
+                          }
+                        } else if (Array.isArray(col.dataIndex)) {
+                          // render yoksa nested value al
+                          value = col.dataIndex.reduce((acc, key) => acc?.[key], record);
+                        } else {
+                          value = record[col.dataIndex];
+                        }
+
+                        if (value === undefined || value === null || value === "") value = "-";
+
+                        return (
+                          <Descriptions.Item key={col.key} label={col.title}>
+                            {value}
+                          </Descriptions.Item>
+                        );
+                      })}
+                    </Descriptions>
+                  );
+                },
+              }}
+            />
+          )
+      }
+
 
       {/* Sürüş Sonlandırma Modal */}
       <Modal

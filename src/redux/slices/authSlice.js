@@ -4,7 +4,7 @@ const authSlice = createSlice({
     name: "user",
     initialState: {
         accessToken: null,
-        user: null, // persist edilmeyecek
+        user: null, // localStorage a kaydetmemek için persist edilmeyecek
     },
     reducers: {
         login(state, action) {
