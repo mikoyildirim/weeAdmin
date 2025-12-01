@@ -59,7 +59,9 @@ const Users = () => {
   const [geofences, setGeofences] = useState([]);
 
 
-  const [searchText, setSearchText] = useState("");
+  const [filteredUploads, setFilteredUploads] = useState([]);
+  const [filteredRentals, setFilteredRentals] = useState([]);
+  const [filteredCampaigns, setFilteredCampaigns] = useState([]);
 
 
   // Büyük harita Leaflet referansları
@@ -68,7 +70,7 @@ const Users = () => {
   const linesRef = useRef(L.layerGroup());
 
 
-  const excelFileNameCharges = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Yükleme Raporu.xlsx`;
+  const excelFileNameUploads = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Yükleme Raporu.xlsx`;
   const excelFileNameRentals = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kiralama Raporu.xlsx`;
   const excelFileNameCampaigns = `${dayjs().format("DD.MM.YYYY_HH.mm")}_${phone} Kampanya Raporu.xlsx`;
 
@@ -77,7 +79,6 @@ const Users = () => {
   const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1 || (t.type === -1 && !t.rental)) || [])
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
 
-  const [filteredUploads, setFilteredUploads] = useState(uploads);
 
   let rentals = (userData?.wallet?.transactions?.filter(t => t.rental) || []) // transaction içerisinde rental değeri dolu ise rentals tablosuna ekle
     .sort((a, b) => new Date(a.rental?.start) - new Date(b.rental?.start))
@@ -105,6 +106,12 @@ const Users = () => {
       console.log("Geofence alınamadı");
     }
   };
+
+  useEffect(() => {
+    setFilteredUploads(uploads);
+    setFilteredRentals(rentals);
+    setFilteredCampaigns(campaigns);
+  }, [userData]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -193,7 +200,6 @@ const Users = () => {
       console.error('showImage hatası:', error.message);
     }
   };
-
 
 
   const handleIsActiveChange = async (value, cardOrUser) => {
@@ -936,10 +942,28 @@ const Users = () => {
                           <Button
                             type="primary"
                             style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
-                            onClick={() => exportToExcel(excelDataUploads, excelFileNameCharges)}
+                            onClick={() => exportToExcel(excelDataUploads, excelFileNameUploads)}
                           >
                             Excel İndir
                           </Button>
+                        </Col>
+                        <Col span={24} style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                          <Input
+                            style={{ width: "100%" }}
+                            placeholder="ara"
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const filtered = uploads.filter(u =>
+                              (u.transaction_id?.toString().includes(val) ||
+                                u.payment_gateway?.toLowerCase().includes(val.toLowerCase()) ||
+                                u.fineType?.toLowerCase().includes(val.toLowerCase()) ||
+                                u.qrlabel?.toString().includes(val)
+                              )
+                              );
+
+                              setFilteredUploads(filtered);
+                            }}
+                          />
                         </Col>
 
                         <Col span={24}>
@@ -981,7 +1005,7 @@ const Users = () => {
                           uploadColumns[1],
                         ]}
                         size="small"
-                        dataSource={uploads}
+                        dataSource={filteredUploads}
                         rowKey={(record, index) => record.id || `row-${index}`}
                         scroll={{ x: true }}
                         pagination={{
@@ -1018,9 +1042,40 @@ const Users = () => {
                       >
                         Excel İndir
                       </Button>
+                      <Col span={24} style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                        <Input
+                          style={{ width:"100%"}}
+                          placeholder="Ara"
+                          onChange={(e) => {
+                            const val = e.target.value.toLowerCase();
+
+                            const filtered = rentals.filter((r) => {
+                              const qr = r.rental?.device?.qrlabel?.toLowerCase() || "";
+                              const start = formatDateTime(r.rental?.start).toLowerCase();
+                              const end = formatDateTime(r.rental?.end).toLowerCase();
+                              const finishedUser = r.rental?.finishedUser?.name?.toLowerCase() || "";
+                              const amount = r.amount?.toString().toLowerCase() || "";
+                              const version = (r.version || r.rental?.version || r.ip || "")
+                                .toString()
+                                .toLowerCase();
+
+                              return (
+                                qr.includes(val) ||
+                                start.includes(val) ||
+                                end.includes(val) ||
+                                finishedUser.includes(val) ||
+                                amount.includes(val) ||
+                                version.includes(val)
+                              );
+                            });
+
+                            setFilteredRentals(filtered);
+                          }}
+                        />
+                      </Col>
                       <Table
                         columns={[rentalColumns[0], rentalColumns[1]]}
-                        dataSource={rentals}
+                        dataSource={filteredRentals}
                         size="small"
                         expandable={{
                           expandedRowRender: (record) => (
@@ -1155,6 +1210,7 @@ const Users = () => {
                       />
                     </TabPane>
 
+                    {/* Para İşlemleri Tab */}
                     <TabPane tab={`Para İşlemleri`} key="5">
                       <Form layout="vertical" labelAlign="left">
 
@@ -1432,7 +1488,7 @@ const Users = () => {
                           <Button
                             type="primary"
                             style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
-                            onClick={() => exportToExcel(excelDataUploads, excelFileNameCharges)}
+                            onClick={() => exportToExcel(excelDataUploads, excelFileNameUploads)}
                           >
                             Excel İndir
                           </Button>
@@ -1474,16 +1530,14 @@ const Users = () => {
                           <Input
                             style={{ maxWidth: 250 }}
                             placeholder="ara"
-                            value={searchText}
                             onChange={(e) => {
                               const val = e.target.value;
-                              setSearchText(val);
-
                               const filtered = uploads.filter(u =>
-                              // burada hangi alanlarda arama yapmak istediğine göre kontrol ekle
                               (u.transaction_id?.toString().includes(val) ||
                                 u.payment_gateway?.toLowerCase().includes(val.toLowerCase()) ||
-                                u.fineType?.toLowerCase().includes(val.toLowerCase()))
+                                u.fineType?.toLowerCase().includes(val.toLowerCase()) ||
+                                u.qrlabel?.toString().includes(val)
+                              )
                               );
 
                               setFilteredUploads(filtered);
@@ -1509,16 +1563,53 @@ const Users = () => {
 
                     {/* Kiralamalar Tab */}
                     <TabPane tab={`Kiralamalar (${rentals.length})`} key="3">
-                      <Button
-                        type="primary"
-                        style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
-                        onClick={() => exportToExcel(excelDataRentals, excelFileNameRentals)}
-                      >
-                        Excel İndir
-                      </Button>
+                      <Row>
+                        <Col span={12}>
+                          <Button
+                            type="primary"
+                            style={{ marginBottom: 10, width: isMobile ? "100%" : "auto" }}
+                            onClick={() => exportToExcel(excelDataRentals, excelFileNameRentals)}
+                          >
+                            Excel İndir
+                          </Button>
+                        </Col>
+                        <Col span={12} style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                          <Input
+                            style={{ maxWidth: 250 }}
+                            placeholder="Ara"
+                            onChange={(e) => {
+                              const val = e.target.value.toLowerCase();
+
+                              const filtered = rentals.filter((r) => {
+                                const qr = r.rental?.device?.qrlabel?.toLowerCase() || "";
+                                const start = formatDateTime(r.rental?.start).toLowerCase();
+                                const end = formatDateTime(r.rental?.end).toLowerCase();
+                                const finishedUser = r.rental?.finishedUser?.name?.toLowerCase() || "";
+                                const amount = r.amount?.toString().toLowerCase() || "";
+                                const version = (r.version || r.rental?.version || r.ip || "")
+                                  .toString()
+                                  .toLowerCase();
+
+                                return (
+                                  qr.includes(val) ||
+                                  start.includes(val) ||
+                                  end.includes(val) ||
+                                  finishedUser.includes(val) ||
+                                  amount.includes(val) ||
+                                  version.includes(val)
+                                );
+                              });
+
+                              setFilteredRentals(filtered);
+                            }}
+                          />
+                        </Col>
+                      </Row>
+
+
                       <Table
                         columns={rentalColumns}
-                        dataSource={rentals}
+                        dataSource={filteredRentals}
                         rowKey={(record, index) => record.id || `row-${index}`}
                         scroll={{ x: true }}
                         pagination={{
