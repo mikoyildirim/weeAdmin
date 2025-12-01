@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Tag, Button, message, Card, Input, Space } from "antd";
 import axios from "../../api/axios"; // kendi axios instance yolunu kullan
+import { Link } from "react-router-dom";
 
 const DevicesPage = () => {
   const [devices, setDevices] = useState([]);
@@ -63,8 +64,10 @@ const DevicesPage = () => {
       dataIndex: "qrlabel",
       key: "qrlabel",
       render: (_, record) => (
-        <Button type="link" href={`/panel/devices/update/${record?._id}`}>
-          <span style={{ userSelect: "text" }}>{record?.qrlabel}</span>
+        <Button type="link" >
+          <Link to={`/panel/devices/update/${record?._id}`}>
+            <span style={{ userSelect: "text" }}>{record?.qrlabel}</span>
+          </Link>
         </Button>
       ),
     },
@@ -115,8 +118,10 @@ const DevicesPage = () => {
   return (
     <Card title="Tüm Cihazlar">
       <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" href="create">
-          Cihaz Oluştur
+        <Button type="primary">
+          <Link to={`/panel/devices/create`}>
+            Cihaz Oluştur
+          </Link>
         </Button>
         <Input
           placeholder="Cihaz ara..."

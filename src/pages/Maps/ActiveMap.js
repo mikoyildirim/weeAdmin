@@ -178,10 +178,9 @@ const ActiveMap = () => {
                       </a>
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <a rel="noreferrer"
-                        href={`/panel/devices/detail/${device.qrlabel}`}>
+                      <Link to={`/panel/devices/detail/${device.qrlabel}`}>
                         Son Kullanıcı
-                      </a>
+                      </Link>
                     </div>
                     <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
                       <Button size="small" onClick={() => handleRing(device.imei)}>Zil Çal</Button>

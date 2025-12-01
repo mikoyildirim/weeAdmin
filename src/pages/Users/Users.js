@@ -10,7 +10,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import Title from "antd/es/typography/Title";
 dayjs.extend(utc);
 dayjs.locale("tr");
@@ -570,8 +570,10 @@ const Users = () => {
       align: "center",
 
       render: (_, record) => (
-        <Button type="link" href={`/panel/devices/detail/${record?.rental?.device?.qrlabel}`}>
-          <span style={{ userSelect: "text" }}>{record?.rental?.device?.qrlabel || "-"}</span>
+        <Button type="link">
+          <Link to={`/panel/devices/detail/${record?.rental?.device?.qrlabel}`}>
+            <span style={{ userSelect: "text" }}>{record?.rental?.device?.qrlabel || "-"}</span>
+          </Link>
         </Button>
       ),
       sorter: (a, b) =>
@@ -697,10 +699,11 @@ const Users = () => {
       key: "editDriving",
       align: "center",
       render: (_, record) => (
-        <Button
-          type="primary"
-          href={`users/showRental/${record.rental._id}`}
-        >Sürüş Düzenle</Button>
+        <Button type="primary">
+          <Link to={`/panel/users/showRental/${record.rental._id}`}>
+            Sürüş Düzenle
+          </Link>
+        </Button>
       )
     },
   ];
@@ -1143,8 +1146,10 @@ const Users = () => {
                               </Descriptions.Item>
 
                               <Descriptions.Item label="Sürüşü Düzenle">
-                                <Button type="primary" href={`users/showRental/${record.rental._id}`}>
-                                  Sürüş Düzenle
+                                <Button type="primary">
+                                  <Link to={`/panel/users/showRental/${record.rental._id}`}>
+                                    Sürüş Düzenle
+                                  </Link>
                                 </Button>
                               </Descriptions.Item>
                             </Descriptions>
@@ -1179,7 +1184,7 @@ const Users = () => {
                       </Button>
                       <Col span={24} style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
                         <Input
-                          style={{ width:"100%" }}
+                          style={{ width: "100%" }}
                           placeholder="Ara"
                           onChange={(e) => {
                             const val = e.target.value.toLowerCase();

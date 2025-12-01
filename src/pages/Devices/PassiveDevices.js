@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import exportToExcel from "../../utils/exportToExcel";
 import utc from 'dayjs/plugin/utc';
+import { Link } from "react-router-dom";
 
 dayjs.extend(utc);
 dayjs.locale("tr");
@@ -109,9 +110,10 @@ const PassiveDevices = () => {
         <>
           <Button
             type="link"
-            href={`/panel/devices/detail/${record.qrlabel}`}
           >
-            <span style={{ userSelect: "text" }}>{record.qrlabel}</span>
+            <Link to={`/panel/devices/detail/${record.qrlabel}`}>
+              <span style={{ userSelect: "text" }}>{record.qrlabel}</span>
+            </Link>
           </Button>
         </>
       ),

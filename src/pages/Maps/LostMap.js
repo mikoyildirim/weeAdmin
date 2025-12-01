@@ -6,8 +6,8 @@ import "leaflet/dist/leaflet.css";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc';
-import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 dayjs.extend(utc);
 
@@ -150,10 +150,9 @@ const LostMap = () => {
                       </a>
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <a rel="noreferrer"
-                        href={`/panel/devices/detail/${device.qrlabel}`}>
+                      <Link to={`/panel/devices/detail/${device.qrlabel}`}>
                         Son Kullanıcı
-                      </a>
+                      </Link>
                     </div>
                     <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
                       <Button size="small" onClick={() => lostUpdate(device?.support_id)}>Cihaz Bulundu</Button>

@@ -6,6 +6,7 @@ import axios from "../../../api/axios";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet-draw";
+import { Link } from "react-router-dom";
 
 const Polygons = () => {
   const [geofences, setGeofences] = useState([]);
@@ -94,7 +95,11 @@ const Polygons = () => {
       key: "actions",
       render: (_, record) => (
         <>
-          <Button type="link" href={`/panel/maps/polygons/updatepolygon/${record._id}`}>Düzenle</Button>
+          <Button type="link" >
+            <Link to={`/panel/maps/polygons/updatepolygon/${record._id}`}>
+              Düzenle
+            </Link>
+          </Button>
           <>
             <Button type="link" danger onClick={() => showModal(record._id)}>
               Sil
@@ -121,8 +126,10 @@ const Polygons = () => {
   return (
     <Card title="Poligon Yönetimi">
       <Row style={{ marginBottom: 16, width: '100%', display: "flex", justifyContent: "space-between" }}>
-        <Button type="primary" href={`/panel/maps/polygons/createpolygon`}>
-          Yeni Poligon Ekle
+        <Button type="primary">
+          <Link to={`/panel/maps/polygons/createpolygon`}>
+            Yeni Poligon Ekle
+          </Link>
         </Button>
         <Input
           placeholder="Ara..."

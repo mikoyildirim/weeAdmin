@@ -3,7 +3,7 @@ import { Table, Tag, Button, Card, Input, Row, Col, Typography, Spin } from "ant
 import axios from "../../../api/axios";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
 
@@ -120,7 +120,11 @@ const CampaignsPage = () => {
           />
         </Col>
         <Col xs={24} sm={24} md={12} lg={8}>
-          <Button type="primary" href="/panel/management/campaigns/createCampaign" >Kampanya Oluştur</Button>
+          <Button type="primary">
+            <Link to={`/panel/management/campaigns/createCampaign`}>
+              Kampanya Oluştur
+            </Link>
+          </Button>
         </Col>
       </Row>
 
