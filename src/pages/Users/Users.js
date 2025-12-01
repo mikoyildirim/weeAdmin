@@ -1044,7 +1044,7 @@ const Users = () => {
                       </Button>
                       <Col span={24} style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
                         <Input
-                          style={{ width:"100%"}}
+                          style={{ width: "100%" }}
                           placeholder="Ara"
                           onChange={(e) => {
                             const val = e.target.value.toLowerCase();
@@ -1177,14 +1177,38 @@ const Users = () => {
                       >
                         Excel İndir
                       </Button>
+                      <Col span={24} style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                        <Input
+                          style={{ width:"100%" }}
+                          placeholder="Ara"
+                          onChange={(e) => {
+                            const val = e.target.value.toLowerCase();
 
+                            const filtered = campaigns.filter((r) => {
+                              const date = formatDateTime(r.date).toLowerCase();
+                              const transactionId = r.transaction_id?.toString().toLowerCase() || "";
+                              const amount = r.amount?.toString().toLowerCase() || "";
+                              const version = (r.version || r.ip || "").toString().toLowerCase();
+
+                              return (
+                                date.includes(val) ||
+                                transactionId.includes(val) ||
+                                amount.includes(val) ||
+                                version.includes(val)
+                              );
+                            });
+
+                            setFilteredCampaigns(filtered);
+                          }}
+                        />
+                      </Col>
                       <Table
                         columns={[
                           // sadece ilk 2 sütun görünsün
                           campaignColumns[0],
                           campaignColumns[1],
                         ]}
-                        dataSource={campaigns}
+                        dataSource={filteredCampaigns}
                         size="small"
 
                         rowKey={(record, index) => record.id || `row-${index}`}
@@ -1622,18 +1646,48 @@ const Users = () => {
 
                     {/* Kampanyalar Tab */}
                     <TabPane tab={`Kampanyalar (${campaigns.length})`} key="4">
-                      <Button
-                        type="primary"
-                        style={{
-                          width: isMobile ? "100%" : "auto",
-                        }}
-                        onClick={() => exportToExcel(excelDataCampaigns, excelFileNameCampaigns)}
-                      >
-                        Excel İndir
-                      </Button>
+                      <Row>
+                        <Col span={12}>
+                          <Button
+                            type="primary"
+                            style={{
+                              width: isMobile ? "100%" : "auto",
+                            }}
+                            onClick={() => exportToExcel(excelDataCampaigns, excelFileNameCampaigns)}
+                          >
+                            Excel İndir
+                          </Button>
+                        </Col>
+                        <Col span={12} style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                          <Input
+                            style={{ maxWidth: 250 }}
+                            placeholder="Ara"
+                            onChange={(e) => {
+                              const val = e.target.value.toLowerCase();
+
+                              const filtered = campaigns.filter((r) => {
+                                const date = formatDateTime(r.date).toLowerCase();
+                                const transactionId = r.transaction_id?.toString().toLowerCase() || "";
+                                const amount = r.amount?.toString().toLowerCase() || "";
+                                const version = (r.version || r.ip || "").toString().toLowerCase();
+
+                                return (
+                                  date.includes(val) ||
+                                  transactionId.includes(val) ||
+                                  amount.includes(val) ||
+                                  version.includes(val)
+                                );
+                              });
+
+                              setFilteredCampaigns(filtered);
+                            }}
+                          />
+                        </Col>
+                      </Row>
+
                       <Table
                         columns={campaignColumns}
-                        dataSource={campaigns}
+                        dataSource={filteredCampaigns}
                         rowKey={(record, index) => record.id || `row-${index}`}
                         scroll={{ x: true }}
                         pagination={{
