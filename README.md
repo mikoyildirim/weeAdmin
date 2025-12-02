@@ -2,7 +2,6 @@ dashboard sayfası
 kullanım sıklığı haritası
 scooter dağıtım önerisi
 az kullanılan cihazlar haritası ()
-kampanya create update
 bildirimler test
 yetkilendirme
 

@@ -20,12 +20,14 @@ import {
 import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "../../../api/axios";
+import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
 const CreateCampaign = () => {
+    const navigate = useNavigate()
     const [loading, setLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -72,6 +74,7 @@ const CreateCampaign = () => {
 
         // 🔹 Form alanlarını kontrol et
         Object.entries(values).forEach(([key, value]) => {
+            if (key === "percentage" || key === "amount") return;
             if (!value || value === "" || value === null) {
                 emptyFields.push(key);
             }
@@ -111,7 +114,7 @@ const CreateCampaign = () => {
         } else {
             setLoading(true);
             await axios.post(`/campaigns`, payload)
-                .then((res) => console.log('başarıyla oluşturuldu'))
+                .then((res) => navigate("/panel/management/campaigns/listCampaigns"))
                 .catch((err) => console.log("Bir hata oluştu!", err))
                 .finally(() => setLoading(false))
         }

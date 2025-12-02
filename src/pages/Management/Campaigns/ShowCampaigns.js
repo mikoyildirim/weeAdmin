@@ -18,13 +18,14 @@ import {
 import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "../../../api/axios";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
 const ShowCampaignsPage = () => {
+    const navigate = useNavigate()
     const [campaign, setCampaign] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
@@ -109,8 +110,11 @@ const ShowCampaignsPage = () => {
         }
         console.log("Kaydedilecek değerler:", payload);
         await axios.patch(`/campaigns/${id}`, payload)
-        .then((res)=>console.log(res.data))
-        .catch((err)=>console.log(err))
+            .then((res) => {
+                console.log(res.data)
+                navigate("/panel/management/campaigns/listCampaigns")
+            })
+            .catch((err) => console.log(err))
     };
 
     if (loading)

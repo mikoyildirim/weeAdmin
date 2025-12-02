@@ -120,11 +120,12 @@ const MainLayout = () => {
     <Layout style={{ minHeight: "100vh" }}>
       {/* SABİT SİDEBAR */}
       <Sider
+        trigger={null}
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
         width={220}
-        collapsedWidth={isMobile ? 0 : 80} 
+        collapsedWidth={isMobile ? 0 : 80}
         style={{
           background: "#001529",
           position: "fixed",
