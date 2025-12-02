@@ -1,13 +1,105 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Card, Input, Space } from "antd";
+import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber } from "antd";
 import axios from "../../api/axios"; // kendi axios instance yolunu kullan
 import { Link } from "react-router-dom";
+import { EditOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
 
+
+const { TabPane } = Tabs;
 const DevicesPage = () => {
   const [devices, setDevices] = useState([]);
   const [filteredDevices, setFilteredDevices] = useState([]);
+  const [prices, setPrices] = useState([]);
+  const [filteredPrices, setFilteredPrices] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [searchTextDevices, setSearchTextDevices] = useState("");
+  const [searchTextPrices, setSearchTextPrices] = useState("");
+  const [form] = Form.useForm();
+  const [openModal, setOpenModal] = useState(false);
+  const [editingPrice, setEditingPrice] = useState(null);
+  const user = useSelector((state) => state.auth.user);
+
+  // useEffect(() => {
+  //   if (openModal) {
+  //     form.setFieldsValue({
+  //       city: "",
+  //       startingFee: undefined,
+  //       perMinuteFee: undefined,
+  //       rate: undefined,
+  //     });
+  //   }
+  // }, [openModal, form]);
+
+  useEffect(() => {
+    if (openModal) {
+      if (editingPrice) {
+        form.setFieldsValue({
+          city: editingPrice.name,
+          startingFee: editingPrice.startPrice,
+          perMinuteFee: editingPrice.minutePrice,
+          rate: editingPrice.priceRate,
+        });
+      } else {
+        form.resetFields(); // yeni oluşturma
+      }
+    }
+  }, [openModal, editingPrice, form]);
+
+
+  const handleFinish = async (values) => {
+    try {
+      if (editingPrice) {
+        // console.log(editingPrice)
+        // console.log({
+        //   "name": values.city,
+        //   "startPrice": values.startingFee,
+        //   "minutePrice": values.perMinuteFee,
+        //   "priceRate": values.rate,
+        // })
+        // GÜNCELLEME İSTEĞİ
+        await axios.patch(`/prices/${editingPrice._id}`, {
+          name: values.city,
+          startPrice: values.startingFee,
+          minutePrice: values.perMinuteFee,
+          priceRate: values.rate,
+        });
+        message.success("Şehir fiyatı güncellendi.");
+      } else {
+        // YENİ OLUŞTURMA
+        await axios.post("/prices", {
+          tenant: user?.tenant || null,
+          name: values.city,
+          startPrice: values.startingFee,
+          minutePrice: values.perMinuteFee,
+          priceRate: values.rate,
+        });
+        // console.log({
+        //   "name": values.city,
+        //   "startPrice": values.startingFee,
+        //   "minutePrice": values.perMinuteFee,
+        //   "priceRate": values.rate,
+        // })
+
+        message.success("Yeni şehir fiyatı oluşturuldu.");
+      }
+
+      form.resetFields();
+      setEditingPrice(null);
+      setOpenModal(false);
+      fetchPrices(); // tabloyu yenile
+
+    } catch (error) {
+      message.error("Bir hata oluştu.");
+    }
+  };
+
+
+
+
+
+
+
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -22,18 +114,37 @@ const DevicesPage = () => {
     }
   };
 
+  const fetchPrices = async () => {
+    try {
+      const res = await axios.get("/prices");
+      setPrices(res.data || [])
+      setFilteredPrices(res.data || []);
+    } catch (err) {
+      message.error("Cihazlar yüklenirken hata oluştu!");
+    }
+  }
+
   useEffect(() => {
     fetchDevices();
+    fetchPrices()
   }, []);
 
   // Anlık filtreleme
   useEffect(() => {
     const filtered = devices.filter((d) => {
       const text = `${d.qrlabel} ${d.imei} ${d.serial_number} ${d.gsm} ${d.city} ${d.town}`.toLowerCase();
-      return text.includes(searchText.toLowerCase());
+      return text.includes(searchTextDevices.toLowerCase());
     });
     setFilteredDevices(filtered);
-  }, [searchText, devices]);
+  }, [searchTextDevices, devices]);
+
+  useEffect(() => {
+    const filtered = prices.filter((d) => {
+      const text = `${d.name} ${d.startPrice} ${d.minutePrice} ${d.priceRate}`.toLowerCase();
+      return text.includes(searchTextPrices.toLowerCase());
+    });
+    setFilteredPrices(filtered);
+  }, [searchTextPrices, prices]);
 
   const renderDangerStatus = (type) => {
     switch (type) {
@@ -58,9 +169,53 @@ const DevicesPage = () => {
     }
   };
 
-  const columns = [
+  const columnsPrices = [
+    {
+      title: "Şehir",
+      align: "center",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Başlangıç Ücreti",
+      align: "center",
+      dataIndex: "startPrice",
+      key: "startPrice",
+    },
+    {
+      title: "Dakika Ücreti",
+      align: "center",
+      dataIndex: "minutePrice",
+      key: "minutePrice",
+    },
+    {
+      title: "Oran",
+      align: "center",
+      dataIndex: "priceRate",
+      key: "priceRate",
+    },
+    {
+      title: "Düzenle",
+      align: "center",
+      render: (_, record) => (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <EditOutlined
+            style={{ cursor: "pointer", fontSize: 18 }}
+            onClick={() => {
+              setEditingPrice(record);
+              setOpenModal(true)
+            }
+            }
+          />
+        </div>
+      )
+    },
+  ]
+
+  const columnsDevices = [
     {
       title: "QR Label",
+      align: "center",
       dataIndex: "qrlabel",
       key: "qrlabel",
       render: (_, record) => (
@@ -71,13 +226,14 @@ const DevicesPage = () => {
         </Button>
       ),
     },
-    { title: "IMEI", dataIndex: "imei", key: "imei" },
-    { title: "Seri No", dataIndex: "serial_number", key: "serial_number" },
-    { title: "Key Secret", dataIndex: "key_secret", key: "key_secret" },
-    { title: "GSM", dataIndex: "gsm", key: "gsm" },
-    { title: "Batarya (%)", dataIndex: "battery", key: "battery" },
+    { title: "IMEI", align: "center", dataIndex: "imei", key: "imei" },
+    { title: "Seri No", align: "center", dataIndex: "serial_number", key: "serial_number" },
+    { title: "Key Secret", align: "center", dataIndex: "key_secret", key: "key_secret" },
+    { title: "GSM", align: "center", dataIndex: "gsm", key: "gsm" },
+    { title: "Batarya (%)", align: "center", dataIndex: "battery", key: "battery" },
     {
       title: "Şehir/İlçe",
+      align: "center",
       key: "location",
       render: (_, record) => (
         <>
@@ -87,20 +243,23 @@ const DevicesPage = () => {
         </>
       ),
     },
-    { title: "Durum", dataIndex: "status", key: "status" },
+    { title: "Durum", align: "center", dataIndex: "status", key: "status" },
     {
       title: "Son Görülme",
+      align: "center",
       dataIndex: "last_seen",
       key: "last_seen",
       render: (val) => (val ? new Date(val).toLocaleString() : ""),
     },
     {
       title: "Tehlike Durumu",
+      align: "center",
       key: "danger",
       render: (_, record) => renderDangerStatus(record?.danger?.type),
     },
     {
       title: "İşlemler",
+      align: "center",
       key: "actions",
       render: (_, record) => (
         <Button
@@ -116,30 +275,147 @@ const DevicesPage = () => {
   ];
 
   return (
-    <Card title="Tüm Cihazlar">
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="primary">
-          <Link to={`/panel/devices/create`}>
-            Cihaz Oluştur
-          </Link>
-        </Button>
-        <Input
-          placeholder="Cihaz ara..."
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          style={{ width: 300 }}
-        />
-      </Space>
+    <>
+      <h1>Cihaz Yönetimi</h1>
+      <Card >
+        <Tabs
+          defaultActiveKey="1"
+          tabBarGutter={16}
+          tabBarStyle={{
+            display: "flex",
+            flexWrap: window.innerWidth < 768 ? "wrap" : "nowrap",
+          }}
+        >
+          <TabPane tab="Cihazlar" key="1">
+            <Space style={{ marginBottom: 16 }}>
+              <Button type="primary">
+                <Link to={`/panel/devices/create`}>
+                  Cihaz Oluştur
+                </Link>
+              </Button>
+              <Input
+                placeholder="Cihaz ara..."
+                value={searchTextDevices}
+                onChange={(e) => setSearchTextDevices(e.target.value)}
+                allowClear
+                style={{ width: 300 }}
+              />
+            </Space>
+            <Table
+              columns={columnsDevices}
+              dataSource={filteredDevices}
+              loading={loading}
+              rowKey={(record) => record._id}
+              scroll={{ x: true }}
+            />
+          </TabPane>
 
-      <Table
-        columns={columns}
-        dataSource={filteredDevices}
-        loading={loading}
-        rowKey={(record) => record._id}
-        scroll={{ x: true }}
-      />
-    </Card>
+          <TabPane tab="Ücret Düzenleme" key="2">
+            <Space style={{ marginBottom: 16 }}>
+              <Button type="primary" onClick={() => { setOpenModal(true) }}>Şehir Oluştur</Button>
+              <Input
+                placeholder="Ücret Ara..."
+                value={searchTextPrices}
+                onChange={(e) => setSearchTextPrices(e.target.value)}
+                allowClear
+                style={{ width: 300 }}
+              />
+            </Space>
+            <Table
+              columns={columnsPrices}
+              dataSource={filteredPrices}
+              loading={loading}
+              rowKey={(record) => record._id}
+              scroll={{ x: true }}
+            />
+          </TabPane>
+
+          <TabPane tab="Cihaz Ücret Ataması" key="3">
+
+          </TabPane>
+        </Tabs>
+
+
+
+
+        <Modal
+          title={editingPrice ? "Şehir Fiyatını Düzenle" : "Yeni Şehir Fiyatı Oluştur"}
+          open={openModal}
+          onCancel={() => {
+            form.resetFields();
+            setEditingPrice(null);
+            setOpenModal(false);
+          }}
+          footer={[
+            <Button key="cancel" onClick={() => { setOpenModal(false) }}>
+              İptal
+            </Button>,
+            <Button key="submit" type="primary" onClick={() => form.submit()}>
+              {editingPrice ? "Düzenle" : "Oluştur"}
+
+            </Button>,
+          ]}
+          destroyOnClose
+        >
+          <Form form={form} layout="vertical" onFinish={handleFinish}>
+            {/* Şehir (Text Input) */}
+            <Form.Item
+              name="city"
+              label="Şehir"
+              rules={[{ required: true, message: "Lütfen şehir adını girin." }]}
+            >
+              <Input placeholder="Örn. İstanbul" />
+            </Form.Item>
+
+            {/* Başlangıç Ücreti */}
+            <Form.Item
+              name="startingFee"
+              label="Başlangıç Ücreti (₺)"
+              rules={[
+                { required: true, message: "Lütfen başlangıç ücretini girin." },
+                { type: "number", min: 0, message: "Geçerli bir sayı girin." },
+              ]}
+            >
+              <InputNumber style={{ width: "100%" }} min={0} step={0.5} />
+            </Form.Item>
+
+            {/* Dakika Ücreti */}
+            <Form.Item
+              name="perMinuteFee"
+              label="Dakika Ücreti (₺/dk)"
+              rules={[
+                { required: true, message: "Lütfen dakika ücretini girin." },
+                { type: "number", min: 0, message: "Geçerli bir sayı girin." },
+              ]}
+            >
+              <InputNumber style={{ width: "100%" }} min={0} step={0.1} />
+            </Form.Item>
+
+            {/* Oran */}
+            <Form.Item
+              name="rate"
+              label="Oran (%)"
+              rules={[
+                { required: true, message: "Lütfen oran girin." },
+                { type: "number", min: 0, max: 1000, message: "0-1000 arası oran girin." },
+              ]}
+            >
+              <InputNumber
+                style={{ width: "100%" }}
+                min={0}
+                max={1000}
+                step={1}
+                formatter={(v) => `${v}%`}
+                parser={(v) => v.replace("%", "")}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+      </Card>
+
+    </>
+
   );
 };
 

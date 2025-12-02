@@ -15,7 +15,6 @@ import {
     Row,
     Col,
     Modal,
-    message
 } from "antd";
 import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
@@ -106,7 +105,7 @@ const CreateCampaign = () => {
             image: imageBase64,
         };
 
-        console.log("Kaydedilecek değerler:", payload);
+        //console.log("Kaydedilecek değerler:", payload);
         if (emptyFields.length > 0) {
             console.log(emptyFields)
             showModal()
