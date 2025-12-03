@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber } from "antd";
+import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch } from "antd";
 import axios from "../../api/axios"; // kendi axios instance yolunu kullan
 import { Link } from "react-router-dom";
 import { EditOutlined } from "@ant-design/icons";
@@ -20,16 +20,63 @@ const DevicesPage = () => {
   const [editingPrice, setEditingPrice] = useState(null);
   const user = useSelector((state) => state.auth.user);
 
-  // useEffect(() => {
-  //   if (openModal) {
-  //     form.setFieldsValue({
-  //       city: "",
-  //       startingFee: undefined,
-  //       perMinuteFee: undefined,
-  //       rate: undefined,
-  //     });
-  //   }
-  // }, [openModal, form]);
+
+
+
+
+  const [qrList, setQrList] = useState([]);
+  const [cityValue, setCityValue] = useState("");
+  const [tableVisible, setTableVisible] = useState(true);
+  const [qrInput, setQrInput] = useState("");
+
+  const handleAddQR = () => {
+    if (!qrInput) return message.warning("QR boş olamaz.");
+
+    const newQR = {
+      qr: qrInput,
+    };
+
+    setQrList([...qrList, newQR]);
+    setQrInput("");
+  };
+
+  const handleRemoveQR = (index) => {
+    const updated = [...qrList];
+    updated.splice(index, 1);
+    setQrList(updated);
+  };
+
+  const handleSubmit = async () => {
+    console.log(cityValue.split("|")[0])
+    try {
+      await axios.patch("/devices/update/many", {
+        getField: "qrlabel",
+        setField: "priceObject",
+        getData: qrList.map((x) => x.qr),
+        setData: cityValue.split("|")[0],
+      })
+        .then((res) => {
+          console.log(res.data)
+        })
+        .catch((err) => {
+          console.log(err.data)
+        })
+        .finally(() => { })
+
+      setQrList([]);
+    } catch (error) {
+      message.error("Gönderim sırasında hata oluştu");
+    }
+  };
+
+
+
+
+
+
+
+
+
 
   useEffect(() => {
     if (openModal) {
@@ -87,19 +134,12 @@ const DevicesPage = () => {
       form.resetFields();
       setEditingPrice(null);
       setOpenModal(false);
-      fetchPrices(); // tabloyu yenile
-
+      fetchPrices(); // tabloları yenilemek için
+      fetchDevices()
     } catch (error) {
       message.error("Bir hata oluştu.");
     }
   };
-
-
-
-
-
-
-
 
   const fetchDevices = async () => {
     setLoading(true);
@@ -129,7 +169,7 @@ const DevicesPage = () => {
     fetchPrices()
   }, []);
 
-  // Anlık filtreleme
+  // Anlık filtreleme cihazlar
   useEffect(() => {
     const filtered = devices.filter((d) => {
       const text = `${d.qrlabel} ${d.imei} ${d.serial_number} ${d.gsm} ${d.city} ${d.town}`.toLowerCase();
@@ -138,6 +178,7 @@ const DevicesPage = () => {
     setFilteredDevices(filtered);
   }, [searchTextDevices, devices]);
 
+  // Anlık filtreleme cihazlar ücretler
   useEffect(() => {
     const filtered = prices.filter((d) => {
       const text = `${d.name} ${d.startPrice} ${d.minutePrice} ${d.priceRate}`.toLowerCase();
@@ -274,6 +315,30 @@ const DevicesPage = () => {
     },
   ];
 
+  const columnsDevicePriceAssignment = [
+    {
+      title: "#",
+      align: "center",
+      render: (_, __, index) => index + 1,
+      width: 50,
+    },
+    {
+      title: "QR",
+      dataIndex: "qr",
+      align: "center",
+    },
+    {
+      title: "Kaldır",
+      align: "center",
+      render: (_, __, index) => (
+        <Button danger size="small" onClick={() => handleRemoveQR(index)}>
+          Sil
+        </Button>
+      ),
+    },
+  ];
+
+
   return (
     <>
       <h1>Cihaz Yönetimi</h1>
@@ -331,12 +396,71 @@ const DevicesPage = () => {
           </TabPane>
 
           <TabPane tab="Cihaz Ücret Ataması" key="3">
+            <Form layout="vertical">
+              {/* Şehir Seçimi */}
+              <Form.Item label={<span> Şehir {<span style={{ color: "red" }}>(Cihazların ücreti burada seçili şehir olarak ayarlanmaktadır.)</span>}</span>}>
+                <Select
+                  value={cityValue}
+                  onChange={setCityValue}
+                  style={{ width: "100%" }}
+                >
+                  {prices.map((dp) => (
+                    <Select.Option
+                      key={dp._id}
+                      value={dp._id} // şehir seçme sırasında sadece id bilgisi gönderilir.
+                    >
+                      Şehir: {dp.name} - Başlangıç: {dp.startPrice}₺ - Dakika: {dp.minutePrice}₺
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
 
+              {/* QR Ekleme */}
+              <Form.Item label="QR">
+                <Input.Group compact>
+                  <Input
+                    value={qrInput}
+                    onChange={(e) => setQrInput(e.target.value)}
+                    style={{ width: "calc(100% - 70px)" }}
+                  />
+                  <Button type="primary" onClick={handleAddQR}>
+                    + Ekle
+                  </Button>
+                </Input.Group>
+              </Form.Item>
+
+              {/* Tablo Göster / Gizle */}
+              <div style={{ marginBottom: 10 }}>
+                <Switch
+                  checked={tableVisible}
+                  onChange={() => setTableVisible(!tableVisible)}
+                />{" "}
+                <span style={{ marginLeft: 8 }}>Göster / Gizle</span>
+              </div>
+
+              {/* QR Tablosu */}
+              {tableVisible && (
+                <Table
+                  bordered
+                  dataSource={qrList}
+                  columns={columnsDevicePriceAssignment}
+                  rowKey="qr"
+                  pagination={false}
+                />
+              )}
+
+              {/* Gönder */}
+              <Button
+                type="primary"
+                style={{ marginTop: 15 }}
+                onClick={handleSubmit}
+                disabled={qrList.length === 0}
+              >
+                Gönder
+              </Button>
+            </Form>
           </TabPane>
         </Tabs>
-
-
-
 
         <Modal
           title={editingPrice ? "Şehir Fiyatını Düzenle" : "Yeni Şehir Fiyatı Oluştur"}
@@ -394,10 +518,10 @@ const DevicesPage = () => {
             {/* Oran */}
             <Form.Item
               name="rate"
-              label="Oran (%)"
+              label="Oran (0-1 arası)"
               rules={[
                 { required: true, message: "Lütfen oran girin." },
-                { type: "number", min: 0, max: 1000, message: "0-1000 arası oran girin." },
+                { type: "number", min: 0, max: 1, message: "0-1 arası oran girin." },
               ]}
             >
               <InputNumber
@@ -405,8 +529,7 @@ const DevicesPage = () => {
                 min={0}
                 max={1000}
                 step={1}
-                formatter={(v) => `${v}%`}
-                parser={(v) => v.replace("%", "")}
+                formatter={(v) => `${v}`}
               />
             </Form.Item>
           </Form>

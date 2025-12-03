@@ -27,7 +27,7 @@ const { TextArea } = Input;
 
 const Notifications = () => {
   const [form] = Form.useForm();
-  const [notificationType, setNotificationType] = useState("global");
+  const [notificationType, setNotificationType] = useState("gsm");
   const [loading, setLoading] = useState(false);
   const [tableLoading, setTableLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -224,7 +224,7 @@ const Notifications = () => {
           layout="vertical"
           form={form}
           onFinish={onFinish}
-          initialValues={{ notificationType: "global" }}
+          initialValues={{ notificationType: "gsm" }}
         >
           <Row gutter={16}>
             <Col xs={24} md={8}>
