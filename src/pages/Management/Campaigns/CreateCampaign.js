@@ -44,8 +44,7 @@ const CreateCampaign = () => {
 
 
     const addCondition = () => setConditions([...conditions, ""]);
-    const removeCondition = (index) =>
-        setConditions(conditions.filter((_, i) => i !== index));
+    const removeCondition = (index) => setConditions(conditions.filter((_, i) => i !== index));
     const handleConditionChange = (index, value) => {
         const newConditions = [...conditions];
         newConditions[index] = value;

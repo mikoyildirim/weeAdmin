@@ -16,7 +16,6 @@ bildirim
 Yönetim işlemleri
 destek kayıtları
 borçlu kullanıcılar
-cihaz yönetimi
 haritalar
 yeni poligon
 yükleme raporu

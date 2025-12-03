@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch } from "antd";
+import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch} from "antd";
 import axios from "../../api/axios"; // kendi axios instance yolunu kullan
 import { Link } from "react-router-dom";
 import { EditOutlined } from "@ant-design/icons";
@@ -19,18 +19,14 @@ const DevicesPage = () => {
   const [openModal, setOpenModal] = useState(false);
   const [editingPrice, setEditingPrice] = useState(null);
   const user = useSelector((state) => state.auth.user);
-
-
-
-
-
   const [qrList, setQrList] = useState([]);
   const [cityValue, setCityValue] = useState("");
   const [tableVisible, setTableVisible] = useState(true);
   const [qrInput, setQrInput] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
-  const handleAddQR = () => {
-    if (!qrInput) return message.warning("QR boş olamaz.");
+  const handleAddQRToTable = () => {
+    if (!qrInput) return // qr olmadan tabloya bir şey eklemez
 
     const newQR = {
       qr: qrInput,
@@ -40,14 +36,13 @@ const DevicesPage = () => {
     setQrInput("");
   };
 
-  const handleRemoveQR = (index) => {
+  const handleRemoveQRFromTable = (index) => {
     const updated = [...qrList];
     updated.splice(index, 1);
     setQrList(updated);
   };
 
-  const handleSubmit = async () => {
-    console.log(cityValue.split("|")[0])
+  const handleSubmitDevicePriceUpdate = async () => {
     try {
       await axios.patch("/devices/update/many", {
         getField: "qrlabel",
@@ -55,13 +50,9 @@ const DevicesPage = () => {
         getData: qrList.map((x) => x.qr),
         setData: cityValue.split("|")[0],
       })
-        .then((res) => {
-          console.log(res.data)
+        .finally(() => {
+          fetchDevices() // şehirlerin ücret güncellenmesi tamamlandıktan sonra tüm cihazların tablosunun güncellemek için
         })
-        .catch((err) => {
-          console.log(err.data)
-        })
-        .finally(() => { })
 
       setQrList([]);
     } catch (error) {
@@ -69,32 +60,7 @@ const DevicesPage = () => {
     }
   };
 
-
-
-
-
-
-
-
-
-
-  useEffect(() => {
-    if (openModal) {
-      if (editingPrice) {
-        form.setFieldsValue({
-          city: editingPrice.name,
-          startingFee: editingPrice.startPrice,
-          perMinuteFee: editingPrice.minutePrice,
-          rate: editingPrice.priceRate,
-        });
-      } else {
-        form.resetFields(); // yeni oluşturma
-      }
-    }
-  }, [openModal, editingPrice, form]);
-
-
-  const handleFinish = async (values) => {
+  const handleSubmitCityPriceUpdate = async (values) => {
     try {
       if (editingPrice) {
         // console.log(editingPrice)
@@ -135,7 +101,6 @@ const DevicesPage = () => {
       setEditingPrice(null);
       setOpenModal(false);
       fetchPrices(); // tabloları yenilemek için
-      fetchDevices()
     } catch (error) {
       message.error("Bir hata oluştu.");
     }
@@ -164,10 +129,32 @@ const DevicesPage = () => {
     }
   }
 
+  useEffect(() => { // sayfanın boyutunu kontrol ederek isMobile ı değiştirir
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   useEffect(() => {
     fetchDevices();
     fetchPrices()
   }, []);
+
+  useEffect(() => {
+    if (openModal) {
+      if (editingPrice) {
+        form.setFieldsValue({
+          city: editingPrice.name,
+          startingFee: editingPrice.startPrice,
+          perMinuteFee: editingPrice.minutePrice,
+          rate: editingPrice.priceRate,
+        });
+      } else {
+        form.resetFields(); // yeni oluşturma
+      }
+    }
+  }, [openModal, editingPrice, form]);
 
   // Anlık filtreleme cihazlar
   useEffect(() => {
@@ -178,7 +165,7 @@ const DevicesPage = () => {
     setFilteredDevices(filtered);
   }, [searchTextDevices, devices]);
 
-  // Anlık filtreleme cihazlar ücretler
+  // Anlık filtreleme ücretler
   useEffect(() => {
     const filtered = prices.filter((d) => {
       const text = `${d.name} ${d.startPrice} ${d.minutePrice} ${d.priceRate}`.toLowerCase();
@@ -186,6 +173,46 @@ const DevicesPage = () => {
     });
     setFilteredPrices(filtered);
   }, [searchTextPrices, prices]);
+
+  const getMobileColumnsForPrices = (columns) => {
+    return columns.map((col, index) => ({
+      ...col,
+      responsive: index === 0 || index === 4 ? ["xs", "sm", "md", "lg"] : ["md"],
+    }));
+  };
+
+  const getMobileExpandableForPrices = (columns) => ({
+    expandedRowRender: (record) => (
+      <div style={{ paddingLeft: 10 }}>
+        {columns.slice(1, -1).map(col => ( // birinci ve sonuncu kolonları expand içerisine göstermiyor
+          <p key={col.key || col.dataIndex}>
+            <b>{col.title}:</b> {record[col.dataIndex]}
+          </p>
+        ))}
+      </div>
+    )
+  });
+
+  const getMobileColumnsForDevices = (columns) => {
+    return columns.filter(col => col.key === "qrlabel" || col.key === "actions");
+  };
+
+  const getMobileExpandableForDevices = (columns) => ({
+    expandedRowRender: (record) => (
+      <div style={{ paddingLeft: 10 }}>
+        {columns
+          .filter(col => col.key !== "qrlabel" && col.key !== "actions") // görünür kolonları çıkar
+          .map(col => (
+            <div key={col.key || col.dataIndex} style={{ marginBottom: 8 }}>
+              <b>{col.title}:</b>{" "}
+              {col.render
+                ? col.render(record[col.dataIndex], record)
+                : record[col.dataIndex]}
+            </div>
+          ))}
+      </div>
+    ),
+  });
 
   const renderDangerStatus = (type) => {
     switch (type) {
@@ -266,12 +293,13 @@ const DevicesPage = () => {
           </Link>
         </Button>
       ),
+      sorter: (a, b) => a.qrlabel?.localeCompare(b.qrlabel),
     },
     { title: "IMEI", align: "center", dataIndex: "imei", key: "imei" },
     { title: "Seri No", align: "center", dataIndex: "serial_number", key: "serial_number" },
     { title: "Key Secret", align: "center", dataIndex: "key_secret", key: "key_secret" },
-    { title: "GSM", align: "center", dataIndex: "gsm", key: "gsm" },
-    { title: "Batarya (%)", align: "center", dataIndex: "battery", key: "battery" },
+    { title: "GSM", align: "center", dataIndex: "gsm", key: "gsm", },
+    { title: "Batarya (%)", align: "center", dataIndex: "battery", key: "battery", sorter: (a, b) => (a.battery || 0) - (b.battery || 0), },
     {
       title: "Şehir/İlçe",
       align: "center",
@@ -283,20 +311,28 @@ const DevicesPage = () => {
           <Tag color="blue">{record?.priceObject?.name || "Yok"}</Tag>
         </>
       ),
+      sorter: (a, b) => `${a.city} ${a.town}`.localeCompare(`${b.city} ${b.town}`),
     },
-    { title: "Durum", align: "center", dataIndex: "status", key: "status" },
+    { title: "Durum", align: "center", dataIndex: "status", key: "status", sorter: (a, b) => a.status?.localeCompare(b.status), },
     {
       title: "Son Görülme",
       align: "center",
       dataIndex: "last_seen",
       key: "last_seen",
       render: (val) => (val ? new Date(val).toLocaleString() : ""),
+      sorter: (a, b) => {
+        const t1 = a.last_seen ? new Date(a.last_seen).getTime() : 0;
+        const t2 = b.last_seen ? new Date(b.last_seen).getTime() : 0;
+        return t1 - t2;
+      },
     },
     {
       title: "Tehlike Durumu",
       align: "center",
       key: "danger",
       render: (_, record) => renderDangerStatus(record?.danger?.type),
+      sorter: (a, b) =>
+        (a?.danger?.type || "").localeCompare(b?.danger?.type || ""),
     },
     {
       title: "İşlemler",
@@ -331,13 +367,12 @@ const DevicesPage = () => {
       title: "Kaldır",
       align: "center",
       render: (_, __, index) => (
-        <Button danger size="small" onClick={() => handleRemoveQR(index)}>
+        <Button danger size="small" onClick={() => handleRemoveQRFromTable(index)}>
           Sil
         </Button>
       ),
     },
   ];
-
 
   return (
     <>
@@ -352,42 +387,101 @@ const DevicesPage = () => {
           }}
         >
           <TabPane tab="Cihazlar" key="1">
-            <Space style={{ marginBottom: 16 }}>
-              <Button type="primary">
-                <Link to={`/panel/devices/create`}>
-                  Cihaz Oluştur
-                </Link>
-              </Button>
-              <Input
-                placeholder="Cihaz ara..."
-                value={searchTextDevices}
-                onChange={(e) => setSearchTextDevices(e.target.value)}
-                allowClear
-                style={{ width: 300 }}
-              />
-            </Space>
+
+
+            {!isMobile ? (
+              <Space style={{ marginBottom: 16 }}>
+                <Button type="primary">
+                  <Link to={`/panel/devices/create`}>
+                    Cihaz Oluştur
+                  </Link>
+                </Button>
+                <Input
+                  placeholder="Cihaz ara..."
+                  value={searchTextDevices}
+                  onChange={(e) => setSearchTextDevices(e.target.value)}
+                  allowClear
+                  style={{ width: 300 }}
+                />
+              </Space>
+            ) : (
+              <Space
+                direction="vertical"
+                style={{ width: "100%", marginBottom: 16 }}
+                size={16} // aradaki boşluk
+              >
+                <Button
+                  type="primary"
+                  style={{ width: "100%" }}
+                  onClick={() => setOpenModal(true)}
+                >
+                  <Link to={`/panel/devices/create`}>
+                    Cihaz Oluştur
+                  </Link>
+                </Button>
+                <Input
+                  placeholder="Cihaz ara..."
+                  value={searchTextDevices}
+                  onChange={(e) => setSearchTextDevices(e.target.value)}
+                  allowClear
+                  style={{ width: "100%" }}
+                />
+              </Space>
+            )}
             <Table
-              columns={columnsDevices}
+              columns={isMobile ? getMobileColumnsForDevices(columnsDevices) : columnsDevices}
+              expandable={isMobile ? getMobileExpandableForDevices(columnsDevices) : undefined}
               dataSource={filteredDevices}
               loading={loading}
               rowKey={(record) => record._id}
               scroll={{ x: true }}
+              pagination={{ size: isMobile ? "small" : "large" }}
             />
           </TabPane>
 
           <TabPane tab="Ücret Düzenleme" key="2">
-            <Space style={{ marginBottom: 16 }}>
-              <Button type="primary" onClick={() => { setOpenModal(true) }}>Şehir Oluştur</Button>
-              <Input
-                placeholder="Ücret Ara..."
-                value={searchTextPrices}
-                onChange={(e) => setSearchTextPrices(e.target.value)}
-                allowClear
-                style={{ width: 300 }}
-              />
-            </Space>
+
+            {!isMobile ? (
+              <Space style={{ marginBottom: 16 }}>
+                <Button type="primary" onClick={() => setOpenModal(true)}>
+                  Şehir Oluştur
+                </Button>
+                <Input
+                  placeholder="Ara..."
+                  value={searchTextPrices}
+                  onChange={(e) => setSearchTextPrices(e.target.value)}
+                  allowClear
+                  style={{ width: 300 }}
+                />
+              </Space>
+            ) : (
+              <Space
+                direction="vertical"
+                style={{ width: "100%", marginBottom: 16 }}
+                size={16} // aradaki boşluk
+              >
+                <Button
+                  type="primary"
+                  style={{ width: "100%" }}
+                  onClick={() => setOpenModal(true)}
+                >
+                  Şehir Oluştur
+                </Button>
+                <Input
+                  placeholder="Ara..."
+                  value={searchTextPrices}
+                  onChange={(e) => setSearchTextPrices(e.target.value)}
+                  allowClear
+                  style={{ width: "100%" }}
+                />
+              </Space>
+            )}
+
+
+
             <Table
-              columns={columnsPrices}
+              columns={isMobile ? getMobileColumnsForPrices(columnsPrices) : columnsPrices}
+              expandable={isMobile ? getMobileExpandableForPrices(columnsPrices) : undefined}
               dataSource={filteredPrices}
               loading={loading}
               rowKey={(record) => record._id}
@@ -423,7 +517,7 @@ const DevicesPage = () => {
                     onChange={(e) => setQrInput(e.target.value)}
                     style={{ width: "calc(100% - 70px)" }}
                   />
-                  <Button type="primary" onClick={handleAddQR}>
+                  <Button type="primary" onClick={handleAddQRToTable}>
                     + Ekle
                   </Button>
                 </Input.Group>
@@ -453,7 +547,7 @@ const DevicesPage = () => {
               <Button
                 type="primary"
                 style={{ marginTop: 15 }}
-                onClick={handleSubmit}
+                onClick={handleSubmitDevicePriceUpdate}
                 disabled={qrList.length === 0}
               >
                 Gönder
@@ -481,7 +575,7 @@ const DevicesPage = () => {
           ]}
           destroyOnClose
         >
-          <Form form={form} layout="vertical" onFinish={handleFinish}>
+          <Form form={form} layout="vertical" onFinish={handleSubmitCityPriceUpdate}>
             {/* Şehir (Text Input) */}
             <Form.Item
               name="city"
