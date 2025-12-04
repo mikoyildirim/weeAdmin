@@ -14,7 +14,14 @@ const PolygonCreate = () => {
   const drawnItemsRef = useRef(null);
   const [polygonData, setPolygonData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
 
   useEffect(() => {
@@ -98,9 +105,9 @@ const PolygonCreate = () => {
 
 
   return (
-    <div style={{ display: "flex", gap: "20px" }}>
+    <div style={{ display: "flex", gap: "20px", flexDirection: isMobile ? "column" : "row" }}>
       <div style={{ flex: 2 }}>
-        <div ref={mapRef} style={{ height: "80vh" }}></div>
+        <div ref={mapRef} style={{ height: "80vh", zIndex: 1 }}></div>
       </div>
 
       <div style={{ flex: 1 }}>
@@ -131,7 +138,7 @@ const PolygonCreate = () => {
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={loading} style={{ width: isMobile && "100%" }}>
                 Kaydet
               </Button>
             </Form.Item>

@@ -15,6 +15,14 @@ const Polygons = () => {
   const [selectedId, setSelectedId] = useState(null);;
   const [filteredGeofences, setFilteredGeofences] = useState([]);
   const [searchText, setSearchText] = useState(""); // <-- search state
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // API'den poligonları çek
   const fetchPolygons = async () => {
@@ -124,9 +132,10 @@ const Polygons = () => {
   ];
 
   return (
-    <Card title="Poligon Yönetimi">
-      <Row style={{ marginBottom: 16, width: '100%', display: "flex", justifyContent: "space-between" }}>
-        <Button type="primary">
+    <Card>
+      <h1>Poligon Yönetimi</h1>
+      <Row style={{ marginBottom: 16, width: '100%', display: "flex", justifyContent: "space-between", gap:"16px" }}>
+        <Button type="primary" style={{ width: isMobile && "100%" }}>
           <Link to={`/panel/maps/polygons/createpolygon`}>
             Yeni Poligon Ekle
           </Link>
@@ -136,16 +145,31 @@ const Polygons = () => {
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
-          style={{ width: "200px" }} // istersen genişliği full yapabilirsin
+          style={{ width: isMobile ? "100%" : "200px" }} // istersen genişliği full yapabilirsin
         />
       </Row>
-
+  
       <Table
-        columns={columns}
+        columns={isMobile ? [columns[0], columns[columns.length - 1]]: columns}
         dataSource={filteredGeofences}
         rowKey="_id"
         loading={loading}
+        
+        expandable={isMobile ? {
+            expandedRowRender: (record) => (
+              <div style={{ fontSize: 13 }}>
+                <p><b>İlçe Mernis Kodu:</b> {record.ilceMernisKodu}</p>
+                <p><b>Durum:</b> {record.status}</p>
+                <p><b>Poligon Tipi:</b> {record.type}</p>
+                <p><b>Yüzde:</b> {record.percentage}</p>
+                <p><b>Başlangıç Fiyatı:</b> {record.start_price}</p>
+                <p><b>Dakika Fiyatı:</b> {record.price}</p>
+              </div>
+            ), expandRowByClick: true
+          } : undefined}
       />
+ 
+      
     </Card>
   );
 };
