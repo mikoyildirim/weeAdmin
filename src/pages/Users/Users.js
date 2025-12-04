@@ -192,12 +192,12 @@ const Users = () => {
       const { key, url } = { ...imageObj }
       await axios.post('/rentals/showImage', { key, url })
         .then(res => {
-          console.log(res.data)
+          //console.log(res.data)
           setSelectedImg(res.data.image);
         })
-        .catch(err => console.log(err))
+        .catch()
     } catch (error) {
-      console.error('showImage hatası:', error.message);
+      //console.error('showImage hatası:', error.message);
     }
   };
 
@@ -208,15 +208,15 @@ const Users = () => {
       setCardIsActive(value);
       const walletId = userData.wallet._id; // wallet ID
       const payload = { isActive: cardIsActive }
-      console.log(userData.wallet.cards[0]._id)
+      //console.log(userData.wallet.cards[0]._id)
       await axios.post(`wallets/card/isActive/${walletId}`, payload,)
         .then(res => {
           setLoading(false)
-          console.log(res.data)
+          //console.log(res.data)
         })
         .catch(err => {
           setLoading(false)
-          console.log(err)
+          //console.log(err)
         })
     } else {
       setUserPassiveType(value)
@@ -228,11 +228,11 @@ const Users = () => {
       })
         .then(res => {
           setLoading(false)
-          console.log(res.data)
+          // console.log(res.data)
         })
         .catch(err => {
           setLoading(false)
-          console.log(err)
+          // console.log(err)
         })
     }
   };
@@ -266,7 +266,7 @@ const Users = () => {
       // İstersen kullanıcı detay sayfasına yönlendirebilirsin
       // navigate(`/searchmember?gsm=${userData.gsm}`);
     } catch (error) {
-      console.error(error);
+      //console.error(error);
       message.error('İşlem sırasında bir hata oluştu!');
     }
   };
@@ -669,7 +669,7 @@ const Users = () => {
       align: "center",
       render: (_, r) => (
         <Button type="primary" onClick={() => {
-          console.log(r.rental.avldatas)
+          // console.log(r.rental.avldatas)
           openMapModal(r.rental.avldatas)
         }}
           icon={<GlobalOutlined />}
@@ -685,7 +685,7 @@ const Users = () => {
           type="primary"
           disabled={!record?.rental?.imageObj}
           onClick={() => {
-            console.log("Clicked:", record);
+            // console.log("Clicked:", record);
             showImage(record?.rental?.imageObj);
             setIsModalOpen(true);
           }}

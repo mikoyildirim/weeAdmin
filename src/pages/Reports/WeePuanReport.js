@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Space,
   Table,
   DatePicker,
   Button,
@@ -101,48 +100,63 @@ const WeePuanReport = () => {
   }, [searchText, data]);
 
   const columns = [
-    { title: "Tarih", dataIndex: "date", key: "date", sorter: (a,b)=>new Date(a.date)-new Date(b.date), align:"center" },
-    { title: "Şehir", dataIndex: "city", key: "city", sorter: (a,b)=>a.city.localeCompare(b.city), align:"center" },
-    { title: "Toplam WeePuan", dataIndex: "total", key: "totalWeePuan", sorter: (a,b)=>a.total-b.total, align:"center",
-      render: (value) => new Intl.NumberFormat("tr-TR", {maximumFractionDigits:2}).format(value) + " WEEPUAN"
+    { title: "Tarih", dataIndex: "date", key: "date", sorter: (a, b) => new Date(a.date) - new Date(b.date), align: "center" },
+    { title: "Şehir", dataIndex: "city", key: "city", sorter: (a, b) => a.city.localeCompare(b.city), align: "center" },
+    {
+      title: "Toplam WeePuan", dataIndex: "total", key: "totalWeePuan", sorter: (a, b) => a.total - b.total, align: "center",
+      render: (value) => new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 }).format(value) + " WEEPUAN"
     },
-    { title: "TL Karşılığı", dataIndex: "total", key: "totalTL", sorter: (a,b)=>a.total-b.total, align:"center",
-      render: (value) => (new Intl.NumberFormat("tr-TR", {style:"currency",currency:"TRY", minimumFractionDigits:2}).format(value/10).replace("₺","").trim() + " ₺")
-    },
+    ...(!isMobile
+      ? [{
+        title: "TL Karşılığı",
+        dataIndex: "total",
+        key: "totalTL",
+        sorter: (a, b) => a.total - b.total,
+        align: "center",
+        render: (value) =>
+          new Intl.NumberFormat("tr-TR", {
+            style: "currency",
+            currency: "TRY",
+            minimumFractionDigits: 2
+          })
+            .format(value / 10)
+            .replace("₺", "")
+            .trim() + " ₺"
+      }]
+      : [])
   ];
 
   return (
     <div>
+      <h1>Wee Puan Raporu</h1>
       {/* Toplam Kartlar */}
-      <Row gutter={[16,16]} style={{ marginBottom:16 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={12}>
-          <Card style={{ textAlign:"center", background:"#fafafa" }}>
-            <p style={{ fontSize:24, margin:0 }}>{new Intl.NumberFormat("tr-TR").format(totalWeePuan)} WEEPUAN</p>
+          <Card style={{ textAlign: "center", background: "#fafafa" }}>
+            <p style={{ fontSize: 24, margin: 0 }}>{new Intl.NumberFormat("tr-TR").format(totalWeePuan)} WEEPUAN</p>
             <span>Toplam WeePuan</span>
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card style={{ textAlign:"center", background:"#fafafa" }}>
-            <p style={{ fontSize:24, margin:0 }}>{new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY"}).format(totalTL).replace("₺","").trim()} ₺</p>
+          <Card style={{ textAlign: "center", background: "#fafafa" }}>
+            <p style={{ fontSize: 24, margin: 0 }}>{new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(totalTL).replace("₺", "").trim()} ₺</p>
             <span>TL Karşılığı</span>
           </Card>
         </Col>
       </Row>
 
       {/* Filtre Card */}
-      <Card style={{ marginBottom:16 }}>
-        <Row gutter={[16,16]}>
+      <Card style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 16]}>
           <Col xs={24} md={8}>
-            <label>Tarih Aralığı</label>
+            <label>Tarih Aralığı</label> <br />
             <ConfigProvider locale={trTR}>
-              {isMobile ? (
-                <Space direction="vertical" size={12}>
-                  <DatePicker value={dates[0]} onChange={(val)=>setDates([val||dates[0], dates[1]])} style={{width:"100%"}} />
-                  <DatePicker value={dates[1]} onChange={(val)=>setDates([dates[0], val||dates[1]])} style={{width:"100%"}} />
-                </Space>
-              ) : (
-                <RangePicker value={dates} onChange={(val)=>setDates(val||dates)} format="YYYY-MM-DD" style={{width:"100%"}} />
-              )}
+              <RangePicker
+                value={dates}
+                onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
+                format="YYYY-MM-DD"
+                style={{ width: "100%" }}
+              />
             </ConfigProvider>
           </Col>
           <Col xs={24} md={8}>
@@ -150,26 +164,26 @@ const WeePuanReport = () => {
             <Select
               mode="multiple"
               allowClear
-              style={{width:"100%"}}
+              style={{ width: "100%" }}
               placeholder="Şehir seçiniz"
-              value={selectedCities}
+              value={selectedCities.filter((city) => city !== "BURSA" && city !== "ANTALYA")}
               onChange={setSelectedCities}
-              options={cities.map(c=>({label:c,value:c}))}
+              options={cities.map(c => ({ label: c, value: c }))}
             />
           </Col>
-          <Col xs={24} md={8} style={{ display:"flex", alignItems:"flex-end" }}>
-            <Button type="primary" onClick={fetchData} style={{width:"100%"}}>Filtrele</Button>
+          <Col xs={24} md={8} style={{ display: "flex", alignItems: "flex-end" }}>
+            <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
           </Col>
         </Row>
       </Card>
 
       {/* Arama & Excel */}
-      <Row gutter={[16,16]} style={{ marginBottom:12 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 12 }}>
         <Col xs={24} md={16}>
-          <Input placeholder="Ara..." value={searchText} onChange={(e)=>setSearchText(e.target.value)} />
+          <Input placeholder="Ara..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
         </Col>
-        <Col xs={24} md={8} style={{ textAlign:"right" }}>
-          <Button type="primary" onClick={()=>exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
+        <Col xs={24} md={8} style={{ textAlign: "right" }}>
+          <Button type="primary" onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
         </Col>
       </Row>
 
@@ -179,8 +193,30 @@ const WeePuanReport = () => {
           columns={columns}
           dataSource={filteredData}
           loading={loading}
-          pagination={{ position:["bottomCenter"], pageSizeOptions:["5","10","20","50"], size:paginationSize }}
-          rowKey={(record)=>`${record.date}-${record.city}-${record.total}`}
+          pagination={{ position: ["bottomCenter"], pageSizeOptions: ["5", "10", "20", "50"], size: paginationSize }}
+          rowKey={(record) => `${record.date}-${record.city}-${record.total}`}
+          expandable={
+            isMobile
+              ? {
+                expandedRowRender: (record) => (
+                  <div style={{ paddingLeft: 16 }}>
+                    <p>
+                      <b>TL Karşılığı:</b>{" "}
+                      {new Intl.NumberFormat("tr-TR", {
+                        style: "currency",
+                        currency: "TRY",
+                      })
+                        .format(record.total / 10)
+                        .replace("₺", "")
+                        .trim()}{" "}
+                      ₺
+                    </p>
+                  </div>
+                ),
+                expandRowByClick: true,  
+              }
+              : undefined
+          }
         />
       </Card>
     </div>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Space,
   Table,
   DatePicker,
   Button,
@@ -119,6 +118,7 @@ const StaffReport = () => {
 
   return (
     <div>
+      <h1>Batarya Değişim Raporu</h1>
       {/* Üst Kartlar */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={12}>
@@ -141,19 +141,17 @@ const StaffReport = () => {
           <Col xs={24} md={8}>
             <label>Tarih Aralığı</label>
             <ConfigProvider locale={trTR}>
-              {isMobile ? (
-                <Space direction="vertical" size={12}>
-                  <DatePicker value={dates[0]} onChange={(val) => setDates([val || dates[0], dates[1]])} style={{ width: "100%" }} />
-                  <DatePicker value={dates[1]} onChange={(val) => setDates([dates[0], val || dates[1]])} style={{ width: "100%" }} />
-                </Space>
-              ) : (
-                <RangePicker value={dates} onChange={(val) => setDates(val || dates)} format="YYYY-MM-DD" style={{ width: "100%" }} />
-              )}
+              <RangePicker
+                value={dates}
+                onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
+                format="YYYY-MM-DD"
+                style={{ width: "100%" }}
+              />
             </ConfigProvider>
           </Col>
           <Col xs={24} md={8}>
             <label>Şehir Seçiniz</label>
-            <Select mode="multiple" value={selectedCities} onChange={setSelectedCities} style={{ width: "100%" }} options={cities.map((c) => ({ label: c, value: c }))} />
+            <Select mode="multiple" value={selectedCities.filter((city) => city !== "BURSA" && city !== "ANTALYA")} onChange={setSelectedCities} style={{ width: "100%" }} options={cities.map((c) => ({ label: c, value: c }))} />
           </Col>
           <Col xs={24} md={8} style={{ display: "flex", alignItems: "flex-end" }}>
             <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
@@ -193,16 +191,18 @@ const StaffReport = () => {
           columns={isMobile ? columns.slice(0, 2) : columns}
           dataSource={filteredData}
           loading={loading}
-          pagination={{ position: ["bottomCenter"], pageSizeOptions: ["5","10","20","50"], size: paginationSize }}
+          pagination={{ position: ["bottomCenter"], pageSizeOptions: ["5", "10", "20", "50"], size: paginationSize }}
           rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`}
-          expandable={isMobile ? { expandedRowRender: (record) => (
-            <div style={{ fontSize: 13 }}>
-              <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
-              <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
-              <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
-              <p><b>Şehir:</b> {record.city}</p>
-            </div>
-          ), expandRowByClick: true } : undefined}
+          expandable={isMobile ? {
+            expandedRowRender: (record) => (
+              <div style={{ fontSize: 13 }}>
+                <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
+                <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
+                <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
+                <p><b>Şehir:</b> {record.city}</p>
+              </div>
+            ), expandRowByClick: true
+          } : undefined}
         />
       </Card>
     </div>

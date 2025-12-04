@@ -21,6 +21,8 @@ const statusTr = {
 
 const Supports = () => {
   const userPermissions = useSelector((state) => state.auth.user?.permissions) || {};
+  const userEmail = useSelector((state) => state.auth.user?.email) || {};
+
   const [supports, setSupports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -37,7 +39,7 @@ const Supports = () => {
     setLoading(true);
     try {
       const res = await axios.get("/supports/find/listWithGroup");
-      console.log(res.data)
+
 
       setSupports(res.data || []);
       setFilteredSupports(res.data || []);
@@ -55,12 +57,12 @@ const Supports = () => {
   };
 
   const handleModalUpdate = async () => {
-    console.log(selectedSupport)
+ 
     try {
       await axios.post("/supports/" + selectedSupport._id, {
         status: selectedSupport.status,
         note: selectedSupport.note,
-      }).then(res => console.log(res.data))
+      }).then(res => console.log("Güncelleme başarılı."))
         .catch(err => console.log("Güncelleme başarısız!", err))
       setModalVisible(false);
       fetchSupports();
@@ -156,7 +158,7 @@ const Supports = () => {
   ];
 
 
-  if (userPermissions.updateSupport) {
+  if (userPermissions.updateSupport && userEmail!=="info@weescooter.com.tr") {
     columns.push({
       title: "İşlem",
       key: "action",
@@ -183,9 +185,6 @@ const Supports = () => {
 
       <Tabs type="card" tabBarGutter={8}>
         {filteredSupports.map((category) => (
-
-
-
           <TabPane tab={category.title} key={category.title}>
             <Table
               dataSource={category.supports}
@@ -218,7 +217,6 @@ const Supports = () => {
             onChange={(value) => {
 
               setSelectedSupport({ ...selectedSupport, status: value })
-              console.log(selectedSupport)
             }}
             style={{ minWidth: "150px" }}
             options={[

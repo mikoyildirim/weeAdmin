@@ -6,7 +6,6 @@ bildirimler test
 yetkilendirme
 
 az kullanılan cihazlar sayfası
-cihaz yönetimi ücret düzenlemesi eklenecek
 
 responsive:
 süpheli işlemler
@@ -18,5 +17,5 @@ destek kayıtları
 borçlu kullanıcılar
 haritalar
 yeni poligon
-yükleme raporu
-wee puan raporu
+
+

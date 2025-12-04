@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Space,
   Table,
   DatePicker,
   Button,
@@ -84,53 +83,52 @@ const TransactionsReport = () => {
   }, [searchText, data]);
 
   const columns = [
-    { title: "Tarih", dataIndex: "date", key: "date", sorter: (a,b) => new Date(a.date)-new Date(b.date), align:"center", render: val => dayjs(val).format("YYYY-MM-DD") },
-    { title: "Ödeme Yöntemi", dataIndex: "payment_gateway", key: "payment_gateway", align:"center" },
-    { title: "İşlem Numarası", dataIndex: "transaction_id", key: "transaction_id", sorter: (a,b) => a.transaction_id - b.transaction_id, align:"center" },
-    { title: "Yükleme Tutarı", dataIndex: "amount", key: "amount", sorter: (a,b) => a.amount - b.amount, align:"center", render: val => formatTL(val) },
+    { title: "Tarih", dataIndex: "date", key: "date", sorter: (a, b) => new Date(a.date) - new Date(b.date), align: "center", render: val => dayjs(val).format("YYYY-MM-DD") },
+    // { title: "Ödeme Yöntemi", dataIndex: "payment_gateway", key: "payment_gateway", align: "center" },
+    { title: "İşlem Numarası", dataIndex: "transaction_id", key: "transaction_id", sorter: (a, b) => a.transaction_id - b.transaction_id, align: "center" },
+    { title: "Yükleme Tutarı", dataIndex: "amount", key: "amount", sorter: (a, b) => a.amount - b.amount, align: "center", render: val => formatTL(val) },
   ];
 
   return (
     <div>
+      <h1>Yükleme Raporu</h1>
       {/* Üst Kart */}
-      <Row gutter={[16,16]} style={{ marginBottom: 16 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={24}>
-          <Card style={{ textAlign:"center", background:"#fafafa" }}>
-            <p style={{ fontSize:28, margin:0, fontWeight:"bold" }}>{formatTL(totalAmount)}</p>
+          <Card style={{ textAlign: "center", background: "#fafafa" }}>
+            <p style={{ fontSize: 28, margin: 0, fontWeight: "bold" }}>{formatTL(totalAmount)}</p>
             <span>Toplam Yükleme</span>
           </Card>
         </Col>
       </Row>
 
       {/* Filtre Card */}
-      <Card style={{ marginBottom:16 }}>
-        <Row gutter={[16,16]}>
+      <Card style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <label>Tarih Aralığı</label>
             <ConfigProvider locale={trTR}>
-              {isMobile ? (
-                <Space direction="vertical" size={12}>
-                  <DatePicker value={dates[0]} onChange={(val)=>setDates([val||dates[0], dates[1]])} style={{width:"100%"}} />
-                  <DatePicker value={dates[1]} onChange={(val)=>setDates([dates[0], val||dates[1]])} style={{width:"100%"}} />
-                </Space>
-              ) : (
-                <RangePicker value={dates} onChange={(val)=>setDates(val||dates)} format="YYYY-MM-DD" style={{width:"100%"}} />
-              )}
+              <RangePicker
+                value={dates}
+                onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
+                format="YYYY-MM-DD"
+                style={{ width: "100%" }}
+              />
             </ConfigProvider>
           </Col>
-          <Col xs={24} md={12} style={{ display:"flex", alignItems:"flex-end" }}>
-            <Button type="primary" onClick={fetchData} style={{width:"100%"}}>Filtrele</Button>
+          <Col xs={24} md={12} style={{ display: "flex", alignItems: "flex-end" }}>
+            <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
           </Col>
         </Row>
       </Card>
 
       {/* Arama & Excel */}
-      <Row gutter={[16,16]} style={{ marginBottom:12 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 12 }}>
         <Col xs={24} md={12}>
-          <Input placeholder="Ara..." value={searchText} onChange={(e)=>setSearchText(e.target.value)} />
+          <Input placeholder="Ara..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
         </Col>
-        <Col xs={24} md={12} style={{ textAlign:"right" }}>
-          <Button type="primary" onClick={()=>exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
+        <Col xs={24} md={12} style={{ textAlign: "right" }}>
+          <Button type="primary" onClick={() => exportToExcel(sortedData, excelFileName)}>Excel İndir</Button>
         </Col>
       </Row>
 
@@ -140,8 +138,8 @@ const TransactionsReport = () => {
           columns={columns}
           dataSource={filteredData}
           loading={loading}
-          pagination={{ position:["bottomCenter"], pageSizeOptions:["5","10","20","50"], size:paginationSize }}
-          rowKey={(record)=>`${record.date}-${record.transaction_id}-${record.amount}-${record.payment_gateway}`}
+          pagination={{ position: ["bottomCenter"], pageSizeOptions: ["5", "10", "20", "50"], size: paginationSize }}
+          rowKey={(record) => `${record.date}-${record.transaction_id}-${record.amount}-${record.payment_gateway}`}
         />
       </Card>
     </div>

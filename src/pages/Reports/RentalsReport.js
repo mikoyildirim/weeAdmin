@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Space,
   Table,
   DatePicker,
   Button,
@@ -128,6 +127,7 @@ const RentalsReport = () => {
 
   return (
     <div>
+      <h1>Kiralama Raporu</h1>
       {/* Toplam Kart */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={8}>
@@ -159,7 +159,7 @@ const RentalsReport = () => {
                   allowClear
                   style={{ width: "100%" }}
                   placeholder="Şehir seçiniz"
-                  value={selectedCities}
+                  value={selectedCities.filter((city)=>city!=="BURSA" && city!=="ANTALYA")}
                   onChange={setSelectedCities}
                   options={cities.map((c) => ({ label: c, value: c }))}
                 />
