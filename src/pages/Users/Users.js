@@ -840,17 +840,17 @@ const Users = () => {
                           <Col span={24}>
                             <Row gutter={[16, 16]}>
                               <Col span={8}>
-                                <Form.Item label="Uyruk Bilgisi">
+                                <Form.Item label="Uyruk">
                                   <Input value={userData.nation || "-"} disabled style={{ color: "black" }} />
                                 </Form.Item>
                               </Col>
                               <Col span={8}>
-                                <Form.Item label="Şehir Bilgisi">
+                                <Form.Item label="Şehir">
                                   <Input value={userData.city || "-"} disabled style={{ color: "black" }} />
                                 </Form.Item>
                               </Col>
                               <Col span={8}>
-                                <Form.Item label="Cinsiyet Bilgisi">
+                                <Form.Item label="Cinsiyet">
                                   <Input value={userData.gender || "-"} disabled style={{ color: "black" }} />
                                 </Form.Item>
                               </Col>

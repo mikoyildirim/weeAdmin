@@ -14,8 +14,3 @@ personel güncelleme
 bildirim 
 Yönetim işlemleri
 destek kayıtları
-borçlu kullanıcılar
-haritalar
-yeni poligon
-
-

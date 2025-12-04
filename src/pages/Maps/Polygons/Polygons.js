@@ -154,7 +154,6 @@ const Polygons = () => {
         dataSource={filteredGeofences}
         rowKey="_id"
         loading={loading}
-        
         expandable={isMobile ? {
             expandedRowRender: (record) => (
               <div style={{ fontSize: 13 }}>

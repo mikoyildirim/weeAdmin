@@ -17,6 +17,14 @@ const NegativeBalancePage = () => {
   const [overallTotal, setOverallTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -24,7 +32,7 @@ const NegativeBalancePage = () => {
 
     try {
       const { data } = await axios.get("/wallets/balance/negativeBalance");
-      console.log("[API Yanıtı]", data);
+      //console.log("[API Yanıtı]", data);
 
       setNegativeBalance(data);
       setFilteredData(data);
@@ -116,7 +124,7 @@ const NegativeBalancePage = () => {
       dataIndex: "balance",
       align: "center",
       render: (val) => `${val}₺`,
-      sorter: (a, b) => a.balance - b.balance,
+      sorter: (a, b) => Math.abs(Number(a.balance.replace(",",".")) || 0) - Math.abs(Number(b.balance.replace(",",".")) || 0),
     },
   ];
 
@@ -182,16 +190,28 @@ const NegativeBalancePage = () => {
       </Row>
 
       {/* Tablo */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey={(record) => record._id || record.gsm}
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          bordered
-        />
-      </Card>
+      <Table
+        columns={isMobile ? columns.filter((_, index) => index !== 2) : columns}
+        dataSource={filteredData}
+        rowKey={(record) => record._id || record.gsm}
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+        bordered
+        expandable={isMobile ? {
+          expandedRowRender: (record) => (
+            <div style={{ fontSize: 13 }}>
+              <p><b>Tel: </b> {record.gsm ? (
+                <Link to={`/panel/users?gsm=${encodeURIComponent(record.gsm)}`}>{record.gsm}</Link>
+              ) : (
+                "-"
+              )
+              }
+              </p>
+            </div>
+          ),
+          expandRowByClick: true
+        } : undefined}
+      />
     </div>
   );
 };

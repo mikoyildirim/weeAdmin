@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch} from "antd";
+import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch } from "antd";
 import axios from "../../api/axios"; // kendi axios instance yolunu kullan
 import { Link } from "react-router-dom";
 import { EditOutlined } from "@ant-design/icons";
@@ -190,7 +190,8 @@ const DevicesPage = () => {
           </p>
         ))}
       </div>
-    )
+    ),
+    expandRowByClick: true,
   });
 
   const getMobileColumnsForDevices = (columns) => {
