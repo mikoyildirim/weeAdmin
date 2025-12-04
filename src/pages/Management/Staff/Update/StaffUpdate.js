@@ -19,15 +19,18 @@ const StaffUpdate = () => {
     const [loading, setLoading] = useState(false);
     const [staff, setStaff] = useState(null);
     const [permissions, setPermissions] = useState({});
-
     const [formBilgiler] = Form.useForm();
     const [formYetkiler] = Form.useForm();
-
-
     const [formSonlandirma] = Form.useForm();
     const [staffDone, setStaffDone] = useState([]);
+    const [isMobile, setIsMobile] = useState(false);
 
-
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 991);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     const permissionLabels = {
         showHeatMap: "Isı Haritası Görüntüleme",
@@ -331,13 +334,34 @@ const StaffUpdate = () => {
                     {/* Bilgiler */}
                     <TabPane tab="Bilgiler" key="1">
                         <Form form={formBilgiler} layout="vertical" onFinish={updateBilgiler}>
-                            <Form.Item label="Kullanıcı Durumu" name="status">
-                                <Radio.Group>
-                                    <Radio value="NONE">Aktif</Radio>
-                                    <Radio value="DELETED">Pasif</Radio>
-                                </Radio.Group>
-                            </Form.Item>
-                            <Button type="primary" htmlType="submit">Güncelle</Button>
+                            {
+                                isMobile ?
+                                    (
+                                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                                            <Form.Item label="Kullanıcı Durumu" name="status">
+                                                <Radio.Group>
+                                                    <Radio value="NONE">Aktif</Radio>
+                                                    <Radio value="DELETED">Pasif</Radio>
+                                                </Radio.Group>
+                                            </Form.Item>
+                                            <Button style={{ marginLeft: 16, width:"max-content" }} type="primary" htmlType="submit">Durum Güncelle</Button>
+
+                                        </div>
+                                    )
+                                    :
+                                    (
+                                        <>
+                                            <Form.Item label="Kullanıcı Durumu" name="status">
+                                                <Radio.Group>
+                                                    <Radio value="NONE">Aktif</Radio>
+                                                    <Radio value="DELETED">Pasif</Radio>
+                                                </Radio.Group>
+                                            </Form.Item>
+                                            <Button type="primary" htmlType="submit" style={{marginBottom:16}}>Durum Güncelle</Button>
+                                        </>
+                                    )
+                            }
+
 
                             <Form.Item label="İsim" name="staffName" rules={[{ required: true, message: "İsim giriniz!" }]}>
                                 <Input />
@@ -363,7 +387,7 @@ const StaffUpdate = () => {
                             </Form.Item>
 
                             <Form.Item>
-                                <Button type="primary" htmlType="submit">Güncelle</Button>
+                                <Button type="primary" htmlType="submit" style={{width:isMobile&&"100%"}}>Güncelle</Button>
                             </Form.Item>
                         </Form>
                     </TabPane>
@@ -396,7 +420,7 @@ const StaffUpdate = () => {
                             rowKey="_id"
                             columns={columnsSupports}
                             dataSource={staff?.staffWallet?.supports || []}
-                            pagination={{ pageSize: 5 }}
+                            pagination={{ pageSize: 5 ,size:isMobile&&"small"}}
                             scroll={{ x: true }}
                         />
                     </TabPane>
@@ -417,7 +441,7 @@ const StaffUpdate = () => {
                     </TabPane>
                 </Tabs>
             </Card>
-        </Spin>
+        </Spin >
     );
 };
 

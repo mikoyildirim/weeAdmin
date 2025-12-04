@@ -120,7 +120,7 @@ const CampaignsPage = () => {
           />
         </Col>
         <Col xs={24} sm={24} md={12} lg={8}>
-          <Button type="primary">
+          <Button type="primary" style={{width:isMobile&&"100%"}}>
             <Link to={`/panel/management/campaigns/createCampaign`}>
               Kampanya Oluştur
             </Link>

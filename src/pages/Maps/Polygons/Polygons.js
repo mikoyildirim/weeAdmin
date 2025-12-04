@@ -91,7 +91,16 @@ const Polygons = () => {
   };
 
   const columns = [
-    { title: "İsim", dataIndex: "name", key: "name" },
+    {
+      title: "İsim", dataIndex: "name", key: "name",
+      onCell: () => ({
+        style: {
+          maxWidth: "200px",
+          whiteSpace: "normal",      // satır kırılmasını sağlar
+          wordBreak: "break-word",   // uzun kelimeleri aşağı kırar
+        }
+      }),
+    },
     { title: "İlçe Mernis Kodu", dataIndex: "ilceMernisKodu", key: "ilceMernisKodu" },
     { title: "Durum", dataIndex: "status", key: "status" },
     { title: "Poligon Tipi", dataIndex: "type", key: "type" },
@@ -134,7 +143,7 @@ const Polygons = () => {
   return (
     <Card>
       <h1>Poligon Yönetimi</h1>
-      <Row style={{ marginBottom: 16, width: '100%', display: "flex", justifyContent: "space-between", gap:"16px" }}>
+      <Row style={{ marginBottom: 16, width: '100%', display: "flex", justifyContent: "space-between", gap: "16px" }}>
         <Button type="primary" style={{ width: isMobile && "100%" }}>
           <Link to={`/panel/maps/polygons/createpolygon`}>
             Yeni Poligon Ekle
@@ -148,27 +157,27 @@ const Polygons = () => {
           style={{ width: isMobile ? "100%" : "200px" }} // istersen genişliği full yapabilirsin
         />
       </Row>
-  
+
       <Table
-        columns={isMobile ? [columns[0], columns[columns.length - 1]]: columns}
+        columns={isMobile ? [columns[0], columns[columns.length - 1]] : columns}
         dataSource={filteredGeofences}
         rowKey="_id"
         loading={loading}
         expandable={isMobile ? {
-            expandedRowRender: (record) => (
-              <div style={{ fontSize: 13 }}>
-                <p><b>İlçe Mernis Kodu:</b> {record.ilceMernisKodu}</p>
-                <p><b>Durum:</b> {record.status}</p>
-                <p><b>Poligon Tipi:</b> {record.type}</p>
-                <p><b>Yüzde:</b> {record.percentage}</p>
-                <p><b>Başlangıç Fiyatı:</b> {record.start_price}</p>
-                <p><b>Dakika Fiyatı:</b> {record.price}</p>
-              </div>
-            ), expandRowByClick: true
-          } : undefined}
+          expandedRowRender: (record) => (
+            <div style={{ fontSize: 13 }}>
+              <p><b>İlçe Mernis Kodu:</b> {record.ilceMernisKodu}</p>
+              <p><b>Durum:</b> {record.status}</p>
+              <p><b>Poligon Tipi:</b> {record.type}</p>
+              <p><b>Yüzde:</b> {record.percentage}</p>
+              <p><b>Başlangıç Fiyatı:</b> {record.start_price}</p>
+              <p><b>Dakika Fiyatı:</b> {record.price}</p>
+            </div>
+          ), expandRowByClick: true
+        } : undefined}
       />
- 
-      
+
+
     </Card>
   );
 };

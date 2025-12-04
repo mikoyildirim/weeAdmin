@@ -1019,12 +1019,12 @@ const Users = () => {
                         expandable={{
                           expandedRowRender: (record) => (
                             <div style={{ padding: 16, background: "#fafafa" }}>
-                              <p><strong>Yükleme ID:</strong> {record.transaction_id}</p>
-                              <p><strong>Ceza Türü:</strong> {record.fineType}</p>
-                              <p><strong>QR:</strong> {record.qrlabel}</p>
-                              <p><strong>Tutar:</strong> {record.amount}</p>
-                              <p><strong>İşlem Versiyon:</strong> {record.version}</p>
-                              <p><strong>Durum:</strong> {record.status}</p>
+                              <p><strong>Yükleme ID:</strong> {record.transaction_id || "-"}</p>
+                              <p><strong>Ceza Türü:</strong> {record.fineType || "-"}</p>
+                              <p><strong>QR:</strong> {record.qrlabel || "-"}</p>
+                              <p><strong>Tutar:</strong> {record.amount || "-"}</p>
+                              <p><strong>İşlem Versiyon:</strong> {record.version || "-"}</p>
+                              <p><strong>Durum:</strong> {record.status || "-"}</p>
                             </div>
                           ),
 

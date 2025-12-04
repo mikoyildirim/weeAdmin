@@ -7,10 +7,11 @@ yetkilendirme
 
 az kullanılan cihazlar sayfası
 
+search inpıtları tabloların hemen üstüne alma işi
+mobilde sidebar dışına dokunma ile sidebarın kapanması
+sayfalara sayfa güncelleme butonu eklenmesi (modüler component olarak yapılacak)
+
 responsive:
 süpheli işlemler
-personel yönetimi 
-personel güncelleme
 bildirim 
 Yönetim işlemleri
-destek kayıtları
