@@ -33,9 +33,17 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [searchText, setSearchText] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
   const excelFileName = `${dayjs().utc().format("YYYY-MM-DD")} Bildirimler.xlsx`;
 
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 991);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Bildirimleri çek
   const fetchNotifications = async () => {
@@ -314,6 +322,7 @@ const Notifications = () => {
                 htmlType="submit"
                 icon={<SendOutlined />}
                 loading={loading}
+                style={{width: isMobile && "100%"}}
               >
                 Bildirim Gönder
               </Button>
@@ -338,8 +347,8 @@ const Notifications = () => {
           />
         }
       >
-        <Col xs={24} md={12} style={{ textAlign: "left",marginBottom:16 }}>
-          <Button type="primary" icon={<FileExcelOutlined />}
+        <Col xs={24} md={12} style={{ textAlign: "left", marginBottom: 16 }}>
+          <Button type="primary" style={{width:isMobile&&"100%"}} icon={<FileExcelOutlined />}
             onClick={() => {
               const sortedNotifications = [...filteredNotifications].sort((a, b) => dayjs(b.created_date).valueOf() - dayjs(a.created_date).valueOf())
               exportToExcel(sortedNotifications, excelFileName)
@@ -347,11 +356,32 @@ const Notifications = () => {
             }>Excel İndir</Button>
         </Col>
         <Table
-          columns={columns}
+          columns={isMobile ? [columns[0], columns[2]] : columns}
           dataSource={filteredNotifications}
           rowKey={(record) => record._id || Math.random()}
           loading={tableLoading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10, size: isMobile&&"small" }}
+          expandable={isMobile ? {
+            expandedRowRender: record => (
+              <div style={{ fontSize: 13, lineHeight: 1.6 }}>
+                <p><b>Bildirim Tipi: </b> {record.notificationType}</p>
+                <p><b>Başarılı: </b> {record.successedCount}</p>
+                <p><b>Başarısız: </b> {record.failedCount}</p>
+                <p><b>Başlık: </b> {record.title}</p>
+                <p><b>Mesaj: </b> {record.body}</p>
+              </div>
+            ),
+            expandRowByClick: true
+
+          }
+            : undefined
+          }
+
+          onRow={(record, index) => ({ // tabloya zebra görünümü ekler
+            style: {
+              backgroundColor: index % 2 === 0 ? "#fafafa" : "#ffffff",
+            },
+          })}
         />
       </Card>
     </div>
