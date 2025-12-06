@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table, Modal, Descriptions } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
-import exportToExcel from "../../utils/exportToExcel";
+import exportToExcel from "../../utils/methods/exportToExcel";
 import utc from 'dayjs/plugin/utc';
 import { GlobalOutlined, CameraFilled } from "@ant-design/icons"; // üst kısma ekle
 

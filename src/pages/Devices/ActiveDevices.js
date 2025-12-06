@@ -3,7 +3,7 @@ import { Table, Tag, Button, Card, Input, Row, Col } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
-import exportToExcel from "../../utils/exportToExcel";
+import exportToExcel from "../../utils/methods/exportToExcel";
 import utc from 'dayjs/plugin/utc';
 import { Link } from "react-router-dom";
 

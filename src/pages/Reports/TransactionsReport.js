@@ -14,8 +14,10 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import trTR from "antd/es/locale/tr_TR";
 import "dayjs/locale/tr";
-import exportToExcel from "../../utils/exportToExcel";
-import formatTL from "../../utils/formatTL";
+import exportToExcel from "../../utils/methods/exportToExcel";
+import formatTL from "../../utils/methods/formatTL";
+import "../../utils/styles/rangePickerMobile.css"
+
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;

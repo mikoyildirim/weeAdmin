@@ -16,7 +16,7 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import utc from 'dayjs/plugin/utc';
-import exportToExcel from "../../utils/exportToExcel";
+import exportToExcel from "../../utils/methods/exportToExcel";
 
 dayjs.extend(utc);
 dayjs.locale("tr");

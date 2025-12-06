@@ -16,7 +16,8 @@ import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import trTR from "antd/es/locale/tr_TR";
 import "dayjs/locale/tr";
-import exportToExcel from "../../utils/exportToExcel";
+import exportToExcel from "../../utils/methods/exportToExcel";
+import "../../utils/styles/rangePickerMobile.css"
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;

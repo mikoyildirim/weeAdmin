@@ -17,8 +17,8 @@ import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import trTR from "antd/es/locale/tr_TR";
 import "dayjs/locale/tr";
-import exportToExcel from "../../utils/exportToExcel";
-import formatTL from "../../utils/formatTL";
+import exportToExcel from "../../utils/methods/exportToExcel";
+import formatTL from "../../utils/methods/formatTL";
 import {
   BarChart,
   Bar,
@@ -29,6 +29,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import "../../utils/styles/rangePickerMobile.css"
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;
@@ -50,6 +51,10 @@ const RentalsReport = () => {
   const totalRentals = filteredData.reduce((acc, item) => acc + Number(item.total), 0);
   const sortedData = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`;
+
+
+
+
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 991);
@@ -144,12 +149,17 @@ const RentalsReport = () => {
               <Col xs={24} md={12}>
                 <label>Tarih Aralığı</label>
                 <ConfigProvider locale={trTR}>
+
+
+
                   <RangePicker
                     value={dates}
                     onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
                     format="YYYY-MM-DD"
                     style={{ width: "100%" }}
                   />
+
+
                 </ConfigProvider>
               </Col>
               <Col xs={24} md={12}>
@@ -159,7 +169,7 @@ const RentalsReport = () => {
                   allowClear
                   style={{ width: "100%" }}
                   placeholder="Şehir seçiniz"
-                  value={selectedCities.filter((city)=>city!=="BURSA" && city!=="ANTALYA")}
+                  value={selectedCities.filter((city) => city !== "BURSA" && city !== "ANTALYA")}
                   onChange={setSelectedCities}
                   options={cities.map((c) => ({ label: c, value: c }))}
                 />
