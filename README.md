@@ -9,7 +9,6 @@ az kullanılan cihazlar sayfası
 date inputlar da otomatik tre atma
 
 search inputları tabloların hemen üstüne alma işi
-mobilde sidebar dışına dokunma ile sidebarın kapanması
 sayfalara sayfa güncelleme butonu eklenmesi (modüler component olarak yapılacak)
 son 10 kullanıcı sayfasına fotoğrafın yanına haritayı ekleme
 sayfalarda işlemler sonucunda bilgilendirme modalları

@@ -93,7 +93,12 @@ const MainLayout = () => {
     { key: "/panel/rentals", icon: <FileTextOutlined />, label: "Aktif Kiralamalar" },
   ];
 
-  const handleMenuClick = ({ key }) => navigate(key);
+  const handleMenuClick = ({ key }) => {
+    navigate(key);
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  };
 
   const userMenu = {
     items: [
@@ -135,6 +140,7 @@ const MainLayout = () => {
           height: "100vh",
           overflow: "auto",
           transition: "all 0.2s ease",
+          zIndex: 100,
         }}
       >
         <div
@@ -161,6 +167,20 @@ const MainLayout = () => {
       </Sider>
 
       <Layout style={{ marginLeft: siderWidth, transition: "margin-left 0.2s" }}>
+        {isMobile && !collapsed && (
+          <div
+            onClick={() => setCollapsed(true)}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0,0,0,0.3)",
+              zIndex: 9,
+            }}
+          />
+        )}
         {/* SABİT HEADER */}
         <Header
           style={{
