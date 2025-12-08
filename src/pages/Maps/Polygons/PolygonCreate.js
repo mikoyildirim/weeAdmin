@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet-draw";
 import axios from "../../../api/axios"; // doğru yolu kontrol et
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const { Option } = Select;
 
@@ -14,15 +15,7 @@ const PolygonCreate = () => {
   const drawnItemsRef = useRef(null);
   const [polygonData, setPolygonData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
+  const isMobile = useIsMobile(991);
 
   useEffect(() => {
     // Map oluştur

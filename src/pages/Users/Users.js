@@ -12,6 +12,7 @@ import "leaflet/dist/leaflet.css";
 
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import Title from "antd/es/typography/Title";
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 dayjs.extend(utc);
 dayjs.locale("tr");
 
@@ -40,8 +41,8 @@ const Users = () => {
   const [searched, setSearched] = useState(false);
   const [userPassiveType, setUserPassiveType] = useState("");
   const [cardIsActive, setCardIsActive] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState("medium");
+  const isMobile = useIsMobile(991);
 
 
   const [transactionType, setTransactionType] = useState('5');
@@ -124,18 +125,11 @@ const Users = () => {
       form.setFieldsValue({ phone })
     }
     fetchGeofences();
-  }, [phone, location.search]); // ✅ phone değişince çalışır
+  }, [phone, location.search]); // phone değişince çalışır
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");
   }, [isMobile]);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // Formatlar
   const formatDateTime = (date) => {
@@ -240,6 +234,7 @@ const Users = () => {
 
   const handleMakeMoney = async () => {
     try {
+      setLoading(true)
       const dateHourSecond = dayjs().format("HH:mm:ss")
       const date = dayjs().format("YYYY-MM-DD")
       let payload = { gsm: userData.gsm, amount };
@@ -247,12 +242,14 @@ const Users = () => {
       if (transactionType === '3') {
         payload = { ...payload, qrlabel: qrCode, fineType };
         await axios.post('/transactions/addFine', payload);
+        setLoading(false)
       } else {
         payload = { ...payload, type: transactionType, dateHourSecond, date };
         if (iyzicoID) payload.iyzicoID = iyzicoID;
-        await axios.post('/transactions/addTransactionPanel', payload);
+        const res = await axios.post('/transactions/addTransactionPanel', payload);
+        console.log(res)
+        setLoading(false)
       }
-
 
       message.success('İşlem başarıyla kaydedildi!');
       // İşlem sonrası formu sıfırla
@@ -263,8 +260,6 @@ const Users = () => {
       setTransactionType('5');
       searchUser()
 
-      // İstersen kullanıcı detay sayfasına yönlendirebilirsin
-      // navigate(`/searchmember?gsm=${userData.gsm}`);
     } catch (error) {
       //console.error(error);
       message.error('İşlem sırasında bir hata oluştu!');
@@ -420,9 +415,6 @@ const Users = () => {
       });
     };
   }, [rentals]);
-
-
-
 
 
   const values = ["iyzico", "hediye", "ceza/fine", "iyzico/iade", "iade/return"];

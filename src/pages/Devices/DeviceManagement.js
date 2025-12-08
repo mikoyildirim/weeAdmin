@@ -4,6 +4,7 @@ import axios from "../../api/axios"; // kendi axios instance yolunu kullan
 import { Link } from "react-router-dom";
 import { EditOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 
 const { TabPane } = Tabs;
@@ -23,7 +24,7 @@ const DevicesPage = () => {
   const [cityValue, setCityValue] = useState("");
   const [tableVisible, setTableVisible] = useState(true);
   const [qrInput, setQrInput] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(991);
 
   const handleAddQRToTable = () => {
     if (!qrInput) return // qr olmadan tabloya bir şey eklemez
@@ -128,13 +129,6 @@ const DevicesPage = () => {
       message.error("Cihazlar yüklenirken hata oluştu!");
     }
   }
-
-  useEffect(() => { // sayfanın boyutunu kontrol ederek isMobile ı değiştirir
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     fetchDevices();

@@ -30,6 +30,7 @@ import {
   Legend,
 } from "recharts";
 import "../../utils/styles/rangePickerMobile.css"
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;
@@ -43,7 +44,7 @@ const RentalsReport = () => {
   const [selectedCities, setSelectedCities] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [paginationSize, setPaginationSize] = useState("medium");
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(991);
 
   const user = useSelector((state) => state.auth.user);
   const locations = user?.permissions?.locations || [];
@@ -51,17 +52,6 @@ const RentalsReport = () => {
   const totalRentals = filteredData.reduce((acc, item) => acc + Number(item.total), 0);
   const sortedData = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Kiralama Raporu.xlsx`;
-
-
-
-
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");

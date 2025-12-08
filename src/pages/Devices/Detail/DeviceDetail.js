@@ -4,6 +4,7 @@ import { Card, Tabs, Form, Input, Row, Col, Table, Typography, Spin, Button, Mod
 import axios from "../../../api/axios";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import { useIsMobile } from '../../../utils/customHooks/useIsMobile';
 
 dayjs.extend(utc);
 
@@ -14,10 +15,10 @@ const DeviceDetail = () => {
   const [lastTenUser, setLastTenUser] = useState([]);
   const [lastUser, setLastUser] = useState({});
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [tableData, setTableData] = useState([]);
+  const isMobile = useIsMobile(991);
 
   // modal için seçili resim
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -120,13 +121,7 @@ const DeviceDetail = () => {
     setFilteredUsers(filtered);
   }, [searchText, tableData]);
 
-  // ekranın genişliğine göre mobil olup olmadığını belirle
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+
 
   // sayfa yüklenince dataları getir
   useEffect(() => {

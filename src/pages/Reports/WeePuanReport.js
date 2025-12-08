@@ -18,6 +18,7 @@ import trTR from "antd/es/locale/tr_TR";
 import "dayjs/locale/tr";
 import exportToExcel from "../../utils/methods/exportToExcel";
 import "../../utils/styles/rangePickerMobile.css"
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;
@@ -31,7 +32,7 @@ const WeePuanReport = () => {
   const [selectedCities, setSelectedCities] = useState([]);
   const [paginationSize, setPaginationSize] = useState("medium");
   const [searchText, setSearchText] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(991);
 
   const user = useSelector((state) => state.auth.user);
   const locations = user?.permissions?.locations || [];
@@ -42,14 +43,6 @@ const WeePuanReport = () => {
 
   const sortedData = [...filteredData].sort((a, b) => new Date(a.date) - new Date(b.date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Wee Puan Raporu.xlsx`;
-
-  // Mobile check
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");

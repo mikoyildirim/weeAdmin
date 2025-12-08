@@ -4,6 +4,7 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 dayjs.locale("tr");
 const { Title } = Typography;
@@ -17,14 +18,7 @@ const NegativeBalancePage = () => {
   const [overallTotal, setOverallTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isMobile = useIsMobile(991);
 
   const fetchData = async () => {
     setLoading(true);

@@ -19,6 +19,7 @@ import {
 } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import axios from "../../api/axios"; // Axios instance
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 const { TabPane } = Tabs;
 const { Title } = Typography;
@@ -42,15 +43,8 @@ const ManagementPage = () => {
   const [isPopupModalVisible, setIsPopupModalVisible] = useState(false);
   const [editingPopup, setEditingPopup] = useState(null);
   const [popupForm] = Form.useForm();
+  const isMobile = useIsMobile(991);
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => { // ekran genişliği kontrolü
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // Veri çekme
   useEffect(() => {
@@ -466,7 +460,7 @@ const ManagementPage = () => {
               columns={priceSetsColumns}
             />
           </Card>
-          <Button type="primary" onClick={handlePriceSetsSubmit} style={{ marginTop: 16, padding:16, width: isMobile && "100%" }}>
+          <Button type="primary" onClick={handlePriceSetsSubmit} style={{ marginTop: 16, padding: 16, width: isMobile && "100%" }}>
             Yükleme Tutarlarını Kaydet
           </Button>
         </TabPane>

@@ -20,6 +20,7 @@ import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "../../../api/axios";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -28,20 +29,12 @@ const { Option } = Select;
 const CreateCampaign = () => {
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [form] = Form.useForm();
     const [conditions, setConditions] = useState([]);
     const [fileList, setFileList] = useState([]);
-
-    useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 991);
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
-    }, []);
-
+    const isMobile = useIsMobile(991);
 
     const addCondition = () => setConditions([...conditions, ""]);
     const removeCondition = (index) => setConditions(conditions.filter((_, i) => i !== index));

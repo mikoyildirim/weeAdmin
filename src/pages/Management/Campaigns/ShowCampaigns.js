@@ -19,6 +19,7 @@ import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "../../../api/axios";
 import { useNavigate, useParams } from "react-router-dom";
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -28,19 +29,12 @@ const ShowCampaignsPage = () => {
     const navigate = useNavigate()
     const [campaign, setCampaign] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isMobile, setIsMobile] = useState(false);
     const { id } = useParams();
 
     const [form] = Form.useForm();
     const [conditions, setConditions] = useState([]);
     const [fileList, setFileList] = useState([]);
-
-    useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 991);
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
-    }, []);
+    const isMobile = useIsMobile(991);
 
     useEffect(() => {
         fetchCampaign();
@@ -200,9 +194,9 @@ const ShowCampaignsPage = () => {
                                             onChange={(e) =>
                                                 handleConditionChange(index, e.target.value)
                                             }
-                                            style={{ width: "85%", marginRight: 8 }}
+                                            style={{ width: isMobile?"80%":"85%", marginRight: 8 }}
                                         />
-                                        <Button danger onClick={() => removeCondition(index)}>
+                                        <Button danger onClick={() => removeCondition(index)} style={{flex:isMobile&&"1",}} >
                                             Sil
                                         </Button>
                                     </List.Item>

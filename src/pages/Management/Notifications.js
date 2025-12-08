@@ -17,6 +17,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import utc from 'dayjs/plugin/utc';
 import exportToExcel from "../../utils/methods/exportToExcel";
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 dayjs.extend(utc);
 dayjs.locale("tr");
@@ -33,17 +34,10 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [searchText, setSearchText] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(991);
 
   const excelFileName = `${dayjs().utc().format("YYYY-MM-DD")} Bildirimler.xlsx`;
 
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // Bildirimleri çek
   const fetchNotifications = async () => {
@@ -322,7 +316,7 @@ const Notifications = () => {
                 htmlType="submit"
                 icon={<SendOutlined />}
                 loading={loading}
-                style={{width: isMobile && "100%"}}
+                style={{ width: isMobile && "100%" }}
               >
                 Bildirim Gönder
               </Button>
@@ -333,7 +327,7 @@ const Notifications = () => {
 
       <Divider />
 
-      {/* 🔹 Bildirim Geçmişi + Arama Alanı */}
+      {/* Bildirim Geçmişi + Arama Alanı */}
       <Card
         title={<b>Bildirim Geçmişi</b>}
         extra={
@@ -343,12 +337,12 @@ const Notifications = () => {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            style={{ width: 300 }}
+            style={{ width: isMobile ? "100%" :300 }}
           />
         }
       >
         <Col xs={24} md={12} style={{ textAlign: "left", marginBottom: 16 }}>
-          <Button type="primary" style={{width:isMobile&&"100%"}} icon={<FileExcelOutlined />}
+          <Button type="primary" style={{ width: isMobile && "100%" }} icon={<FileExcelOutlined />}
             onClick={() => {
               const sortedNotifications = [...filteredNotifications].sort((a, b) => dayjs(b.created_date).valueOf() - dayjs(a.created_date).valueOf())
               exportToExcel(sortedNotifications, excelFileName)
@@ -360,7 +354,7 @@ const Notifications = () => {
           dataSource={filteredNotifications}
           rowKey={(record) => record._id || Math.random()}
           loading={tableLoading}
-          pagination={{ pageSize: 10, size: isMobile&&"small" }}
+          pagination={{ pageSize: 10, size: isMobile && "small" }}
           expandable={isMobile ? {
             expandedRowRender: record => (
               <div style={{ fontSize: 13, lineHeight: 1.6 }}>

@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet-draw";
 import axios from "../../../api/axios";
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const { Option } = Select;
 
@@ -15,19 +16,14 @@ const PolygonUpdate = () => {
     const [polygonData, setPolygonData] = useState();
     const { id } = useParams();
     const { TextArea } = Input;
-    const [isMobile, setIsMobile] = useState(false);
+
 
     const [polygon, setPolygon] = useState(null);
     const [loading, setLoading] = useState(true);
     const [geofences, setGeofences] = useState([]);
     const [selectedCity, setSelectedCity] = useState()
+    const isMobile = useIsMobile(991);
 
-    useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 991);
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
-    }, []);
 
 
     const fetchPolygons = async () => {
@@ -222,7 +218,7 @@ const PolygonUpdate = () => {
                         </Form.Item>
 
                         <Form.Item>
-                            <Button type="primary" htmlType="submit" style={{width: isMobile && "100%"}}>
+                            <Button type="primary" htmlType="submit" style={{ width: isMobile && "100%" }}>
                                 Kaydet
                             </Button>
                         </Form.Item>

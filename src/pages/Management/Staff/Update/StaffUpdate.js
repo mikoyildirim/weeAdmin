@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import utc from 'dayjs/plugin/utc';
 import { Link } from "react-router-dom";
+import { useIsMobile } from "../../../../utils/customHooks/useIsMobile";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -23,14 +24,7 @@ const StaffUpdate = () => {
     const [formYetkiler] = Form.useForm();
     const [formSonlandirma] = Form.useForm();
     const [staffDone, setStaffDone] = useState([]);
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 991);
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
-    }, []);
+    const isMobile = useIsMobile(991);
 
     const permissionLabels = {
         showHeatMap: "Isı Haritası Görüntüleme",
@@ -344,7 +338,7 @@ const StaffUpdate = () => {
                                                     <Radio value="DELETED">Pasif</Radio>
                                                 </Radio.Group>
                                             </Form.Item>
-                                            <Button style={{ marginLeft: 16, width:"max-content" }} type="primary" htmlType="submit">Durum Güncelle</Button>
+                                            <Button style={{ marginLeft: 16, width: "max-content" }} type="primary" htmlType="submit">Durum Güncelle</Button>
 
                                         </div>
                                     )
@@ -357,7 +351,7 @@ const StaffUpdate = () => {
                                                     <Radio value="DELETED">Pasif</Radio>
                                                 </Radio.Group>
                                             </Form.Item>
-                                            <Button type="primary" htmlType="submit" style={{marginBottom:16}}>Durum Güncelle</Button>
+                                            <Button type="primary" htmlType="submit" style={{ marginBottom: 16 }}>Durum Güncelle</Button>
                                         </>
                                     )
                             }
@@ -387,7 +381,7 @@ const StaffUpdate = () => {
                             </Form.Item>
 
                             <Form.Item>
-                                <Button type="primary" htmlType="submit" style={{width:isMobile&&"100%"}}>Güncelle</Button>
+                                <Button type="primary" htmlType="submit" style={{ width: isMobile && "100%" }}>Güncelle</Button>
                             </Form.Item>
                         </Form>
                     </TabPane>
@@ -420,7 +414,7 @@ const StaffUpdate = () => {
                             rowKey="_id"
                             columns={columnsSupports}
                             dataSource={staff?.staffWallet?.supports || []}
-                            pagination={{ pageSize: 5 ,size:isMobile&&"small"}}
+                            pagination={{ pageSize: 5, size: isMobile && "small" }}
                             scroll={{ x: true }}
                         />
                     </TabPane>

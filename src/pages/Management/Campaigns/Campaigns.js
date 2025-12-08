@@ -4,6 +4,7 @@ import axios from "../../../api/axios";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const { Title } = Typography;
 
@@ -12,19 +13,12 @@ const CampaignsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [filteredCampaigns, setFilteredCampaigns] = useState([]);
-  const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState("medium");
+  const isMobile = useIsMobile(991);
 
 
   const user = useSelector((state) => state.auth.user);
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     fetchCampaigns();

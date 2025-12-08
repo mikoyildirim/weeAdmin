@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet-draw";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const Polygons = () => {
   const [geofences, setGeofences] = useState([]);
@@ -15,14 +16,8 @@ const Polygons = () => {
   const [selectedId, setSelectedId] = useState(null);;
   const [filteredGeofences, setFilteredGeofences] = useState([]);
   const [searchText, setSearchText] = useState(""); // <-- search state
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(991);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // API'den poligonları çek
   const fetchPolygons = async () => {

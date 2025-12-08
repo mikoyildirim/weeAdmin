@@ -6,7 +6,6 @@ yetkilendirme
 
 az kullanılan cihazlar sayfası
 
-date inputlar da otomatik tre atma
 
 search inputları tabloların hemen üstüne alma işi
 sayfalara sayfa güncelleme butonu eklenmesi (modüler component olarak yapılacak)
@@ -14,6 +13,7 @@ son 10 kullanıcı sayfasına fotoğrafın yanına haritayı ekleme
 sayfalarda işlemler sonucunda bilgilendirme modalları
 isMobile ı modüler yapmak
 users sayfasında para işlemleri gerçekleşince modal ile bilgilendirme
+polygons sayfasında harita silme butonuna emin misiniz modalı eklenecek
 
 responsive:
 süpheli işlemler

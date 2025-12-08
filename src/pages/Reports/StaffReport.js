@@ -19,6 +19,7 @@ import "dayjs/locale/tr";
 import exportToExcel from "../../utils/methods/exportToExcel";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import "../../utils/styles/rangePickerMobile.css"
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;
@@ -32,7 +33,7 @@ const StaffReport = () => {
   const [selectedCities, setSelectedCities] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [paginationSize, setPaginationSize] = useState("medium");
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(991);
 
   const user = useSelector((state) => state.auth.user);
   const locations = user?.permissions?.locations || [];
@@ -41,14 +42,6 @@ const StaffReport = () => {
 
   const totalChanges = filteredData.length;
   const avgNewBattery = filteredData.length > 0 ? (filteredData.reduce((acc, item) => acc + item.newBattery, 0) / filteredData.length).toFixed(1) : 0;
-
-  // Mobile check
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");

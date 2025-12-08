@@ -9,6 +9,7 @@ import "leaflet/dist/leaflet.css";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc';
 import { Link } from "react-router-dom";
+import { useIsMobile } from "../utils/customHooks/useIsMobile";
 
 const { Title, Text } = Typography;
 dayjs.extend(utc);
@@ -26,7 +27,6 @@ const miniMapRefs = {};
 
 const Rentals = () => {
   const [paginationSize, setPaginationSize] = useState("medium");
-  const [isMobile, setIsMobile] = useState(false);
   const user = useSelector((state) => state.auth.user);
   const userPermissions = user?.permissions || {};
   const [rentals, setRentals] = useState([]);
@@ -40,13 +40,7 @@ const Rentals = () => {
   const [mapVisible, setMapVisible] = useState(false);
   const [mapData, setMapData] = useState([]);
   const [geofences, setGeofences] = useState([]);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isMobile = useIsMobile(991);
 
 
   useEffect(() => {
