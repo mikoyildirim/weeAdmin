@@ -9,11 +9,13 @@ import {
   Col,
   Input,
   message,
+  Flex,
 } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import "../../utils/styles/rangePickerMobile.css"
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;
@@ -29,6 +31,7 @@ const FraudCheck = () => {
     dayjs().subtract(7, "day"),
     dayjs(),
   ]);
+  const isMobile = useIsMobile(991);
 
   const fetchTransactions = async () => {
     const startDate = selectedDates[0].format("YYYY-MM-DD");
@@ -219,10 +222,9 @@ const FraudCheck = () => {
               <RangePicker
                 value={selectedDates}
                 onChange={(val) => setSelectedDates(val || [])}
-                style={{ width: 250 }}
+                style={{ width: isMobile ? "95%" : 250, margin:isMobile&&"auto" }}
                 allowEmpty={[false, false]}
               />
-
               <Col xs={24} sm={12} md={4}>
                 <Button type="primary" htmlType="submit" block>
                   Filtrele
