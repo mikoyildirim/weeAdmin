@@ -15,7 +15,7 @@ import { UserOutlined, TabletOutlined } from "@ant-design/icons";
 import axios from "../api/axios";
 import { useSelector } from "react-redux";
 import {
-  BarChart, // ComposedChart yerine BarChart'a geri dönüldü
+  BarChart,
   Bar,
   XAxis,
   YAxis,

@@ -7,28 +7,40 @@ import {
   Form,
   Row,
   Col,
+  Input,
   message,
 } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
+import "../../utils/styles/rangePickerMobile.css"
 
 dayjs.locale("tr");
+const { RangePicker } = DatePicker;
+const { Search } = Input;
 
 const FraudCheck = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(null); // Hata veya başarı mesajı
+  const [status, setStatus] = useState(null);
+  const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
+  const [selectedDates, setSelectedDates] = useState([
+    dayjs().subtract(7, "day"),
+    dayjs(),
+  ]);
 
-  // API'den fraud listesi çekme
-  const fetchTransactions = async (params = {}) => {
+  const fetchTransactions = async () => {
+    const startDate = selectedDates[0].format("YYYY-MM-DD");
+    const endDate = selectedDates[1].format("YYYY-MM-DD");
+
     setLoading(true);
     try {
       let url = "transactions/list/fraud";
-      if (params.startDate && params.endDate) {
-        url += `?filterStart=${params.startDate}&filterEnd=${params.endDate}`;
+      if (startDate && endDate) {
+        url += `?filterStart=${startDate}&filterEnd=${endDate}`;
       }
+
       const res = await axios.get(url);
       setTransactions(res.data || []);
     } catch (err) {
@@ -39,7 +51,6 @@ const FraudCheck = () => {
     }
   };
 
-  // Kontrol et -> GET ile id gönderiliyor
   const checkTransaction = async (id) => {
     setLoading(true);
     setStatus(null);
@@ -49,73 +60,55 @@ const FraudCheck = () => {
       if (res.data?.success) {
         message.success(res.data.message || "İşlem başarıyla kontrol edildi!");
 
-        // API’den dönen güncel transaction verisi ile tabloyu güncelle
         if (res.data.transaction) {
           setTransactions((prev) =>
             prev.map((tx) => (tx._id === id ? res.data.transaction : tx))
           );
         } else {
-          // Eğer sadece fraudCheck true dönerse eski mantık
           setTransactions((prev) =>
             prev.map((tx) =>
               tx._id === id ? { ...tx, fraudCheck: true } : tx
             )
           );
         }
-
-        setStatus({ success: true, message: res.data.message });
       } else {
-        setStatus({
-          success: false,
-          message: res.data.message || "Beklenmeyen durum",
-        });
+        setStatus({ success: false, message: res.data.message });
       }
     } catch (error) {
-      if (error.response) {
-        console.error("API Hatası:", error.response.data);
-        setStatus({
-          success: false,
-          message: error.response.data.message || "Hata oluştu",
-          data: error.response.data,
-        });
-      } else if (error.request) {
-        console.error("Cevap Yok:", error.request);
-        setStatus({ success: false, message: "API cevap vermedi" });
-      } else {
-        console.error("Axios Hatası:", error.message);
-        setStatus({ success: false, message: error.message });
-      }
+      setStatus({
+        success: false,
+        message: error.response?.data?.message || "Hata oluştu",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // İlk açılışta son 7 gün ile yükle + tarihleri doldur
   useEffect(() => {
-    const start = dayjs().subtract(7, "day");
-    const end = dayjs();
-    form.setFieldsValue({
-      startDate: start,
-      endDate: end,
-    });
-    fetchTransactions({
-      startDate: start.format("YYYY-MM-DD"),
-      endDate: end.format("YYYY-MM-DD"),
-    });
-  }, [form]);
+    fetchTransactions();
+  }, [selectedDates]);
 
-  // Filtreleme submit
-  const onFinish = (values) => {
-    if (!values.startDate || !values.endDate) {
-      return message.warning("Başlangıç ve bitiş tarihi seçin!");
-    }
-    if (values.startDate.isAfter(values.endDate)) {
-      return message.error("Başlangıç tarihi bitişten büyük olamaz!");
-    }
-    const startDate = values.startDate.format("YYYY-MM-DD");
-    const endDate = values.endDate.add(1, "day").format("YYYY-MM-DD");
-    fetchTransactions({ startDate, endDate });
-  };
+  const onFinish = () => fetchTransactions();
+
+  const filteredTransactions = transactions.filter((item) => {
+    const text = searchText.toLowerCase();
+
+    return (
+      item.transaction_id?.toLowerCase().includes(text) ||
+      item.member?.gsm?.toLowerCase().includes(text) ||
+      `${item.member?.first_name || ""} ${item.member?.last_name || ""}`
+        .toLowerCase()
+        .includes(text) ||
+      item.OSBuildNumber?.toLowerCase().includes(text) ||
+      item.wallet?.version?.toLowerCase().includes(text) ||
+      String(item.amount || "")
+        .toLowerCase()
+        .includes(text) ||
+      dayjs(item.created_date).format("YYYY/MM/DD HH:mm")
+        .toLowerCase()
+        .includes(text)
+    );
+  });
 
   const columns = [
     {
@@ -124,17 +117,26 @@ const FraudCheck = () => {
       align: "center",
       render: (val) =>
         val ? dayjs(val).format("YYYY/MM/DD HH:mm:ss") : "-",
+      sorter: (a, b) =>
+        dayjs(a.created_date).unix() - dayjs(b.created_date).unix(),
     },
     {
       title: "GSM",
       dataIndex: ["member", "gsm"],
       align: "center",
       render: (val) => val || "Yok",
+      sorter: (a, b) => {
+        const v1 = a.member?.gsm || "";
+        const v2 = b.member?.gsm || "";
+        return v1.localeCompare(v2);
+      },
     },
     {
       title: "İyzico ID",
       dataIndex: "transaction_id",
       align: "center",
+      sorter: (a, b) =>
+        (a.transaction_id || "").localeCompare(b.transaction_id || ""),
     },
     {
       title: "Ad Soyad",
@@ -143,6 +145,15 @@ const FraudCheck = () => {
         row.member
           ? `${row.member.first_name} ${row.member.last_name}`
           : "-",
+      sorter: (a, b) => {
+        const v1 = a.member
+          ? `${a.member.first_name} ${a.member.last_name}`
+          : "";
+        const v2 = b.member
+          ? `${b.member.first_name} ${b.member.last_name}`
+          : "";
+        return v1.localeCompare(v2);
+      },
     },
     {
       title: "Ödeme Miktarı",
@@ -151,27 +162,33 @@ const FraudCheck = () => {
       render: (val) =>
         val
           ? `${Number(val).toLocaleString("tr-TR", {
-              minimumFractionDigits: 2,
-            })} ₺`
+            minimumFractionDigits: 2,
+          })} ₺`
           : "-",
+      sorter: (a, b) => Number(a.amount) - Number(b.amount),
     },
     {
       title: "Telefon Adı",
       dataIndex: "OSBuildNumber",
       align: "center",
       render: (val) => val || "Yok",
+      sorter: (a, b) =>
+        (a.OSBuildNumber || "").localeCompare(b.OSBuildNumber || ""),
     },
     {
       title: "Versiyon",
       dataIndex: ["wallet", "version"],
       align: "center",
       render: (val) => (val ? val : "eski sürüm"),
+      sorter: (a, b) =>
+        (a.wallet?.version || "").localeCompare(b.wallet?.version || ""),
     },
     {
       title: "Durum",
       dataIndex: "fraudCheck",
       align: "center",
       render: (val) => (val ? "✅ Kontrol edildi" : "⏳ Bekliyor"),
+      sorter: (a, b) => Number(a.fraudCheck) - Number(b.fraudCheck),
     },
     {
       title: "İşlem",
@@ -189,51 +206,54 @@ const FraudCheck = () => {
   ];
 
   return (
-    <div>
-      <Card title="Filtreleme" className="mb-4">
-        <Form form={form} layout="vertical" onFinish={onFinish}>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item label="Başlangıç Tarihi" name="startDate">
-                <DatePicker format="YYYY-MM-DD" className="w-full" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item label="Bitiş Tarihi" name="endDate">
-                <DatePicker format="YYYY-MM-DD" className="w-full" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={4} className="flex items-end">
-              <Button type="primary" htmlType="submit" block>
-                Filtrele
-              </Button>
-            </Col>
-          </Row>
-        </Form>
-      </Card>
+    <>
 
-      <Card title="Şüpheli İşlemler">
-        <Table
-          rowKey="_id"
-          dataSource={transactions}
-          columns={columns}
-          loading={loading}
-          bordered
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: "max-content" }}
-        />
-        {status && (
-          <div style={{ marginTop: "1rem" }}>
-            <p style={{ color: status.success ? "green" : "red" }}>
-              {status.message}
-            </p>
-            {!status.success && status.data && (
-              <pre>{JSON.stringify(status.data, null, 2)}</pre>
-            )}
-          </div>
-        )}
-      </Card>
-    </div>
+      <h1>
+        Şüpheli İşlemler
+      </h1>
+      <div>
+
+        <Card title="Filtreleme" className="mb-4">
+          <Form form={form} layout="vertical" onFinish={onFinish}>
+            <Row gutter={[16, 16]}>
+              <RangePicker
+                value={selectedDates}
+                onChange={(val) => setSelectedDates(val || [])}
+                style={{ width: 250 }}
+                allowEmpty={[false, false]}
+              />
+
+              <Col xs={24} sm={12} md={4}>
+                <Button type="primary" htmlType="submit" block>
+                  Filtrele
+                </Button>
+              </Col>
+            </Row>
+          </Form>
+        </Card>
+
+        <Card
+          extra={
+            <Search
+              placeholder="Ara (GSM, ad soyad, ID...)"
+              allowClear
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ width: 250 }}
+            />
+          }
+        >
+          <Table
+            rowKey="_id"
+            dataSource={filteredTransactions}
+            columns={columns}
+            loading={loading}
+            bordered
+            pagination={{ pageSize: 10 }}
+            scroll={{ x: "max-content" }}
+          />
+        </Card>
+      </div>
+    </>
   );
 };
 
