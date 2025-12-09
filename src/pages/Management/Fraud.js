@@ -222,7 +222,7 @@ const FraudCheck = () => {
               <RangePicker
                 value={selectedDates}
                 onChange={(val) => setSelectedDates(val || [])}
-                style={{ width: isMobile ? "95%" : 250, margin:isMobile&&"auto" }}
+                style={{ width: isMobile ? "95%" : 250, margin: isMobile && "auto" }}
                 allowEmpty={[false, false]}
               />
               <Col xs={24} sm={12} md={4}>
@@ -235,13 +235,19 @@ const FraudCheck = () => {
         </Card>
 
         <Card
-          extra={
-            <Search
-              placeholder="Ara (GSM, ad soyad, ID...)"
-              allowClear
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 250 }}
-            />
+          title={
+            <div style={{
+              width: isMobile ? "100%" : 250,
+              display: isMobile ? "block" : "flex",
+              justifyContent: "flex-end",
+            }}>
+              <Search
+                placeholder="Ara (GSM, ad soyad, ID...)"
+                allowClear
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: "100%" }}
+              />
+            </div>
           }
         >
           <Table
