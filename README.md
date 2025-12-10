@@ -9,11 +9,9 @@ az kullanılan cihazlar sayfası
 
 search inputları tabloların hemen üstüne alma işi
 sayfalara sayfa güncelleme butonu eklenmesi (modüler component olarak yapılacak)
-son 10 kullanıcı sayfasına fotoğrafın yanına haritayı ekleme
 sayfalarda işlemler sonucunda bilgilendirme modalları
 users sayfasında para işlemleri gerçekleşince modal ile bilgilendirme
 cihaz yönetimine güvene al butonu eklenecek
-users sayfasında kiralamalar tabında tabloda işlem versiyonda panel yazması gerekenlerde panel yazmıyor
 
 USERS İYZİCO/İADE işlem gerçekleşiyor ama backend response dönmüyor.
 backend konsola bunu basıyor:

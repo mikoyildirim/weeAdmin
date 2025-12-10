@@ -90,14 +90,14 @@ const DeviceDetail = () => {
 
             return { ...item, base64Img: imgRes.data.image };
           } catch (err) {
-            console.error("Görsel alınırken hata oluştu", err);
+            //console.error("Görsel alınırken hata oluştu");
             return { ...item, base64Img: null };
           }
         })
       );
       setLastTenUser(usersWithImages);
     } catch (err) {
-      console.error("/devices/findLastTenUser alınırken hata oluştu", err);
+      //console.error("/devices/findLastTenUser alınırken hata oluştu");
       setLastTenUser([]);
     } finally {
       setLoading(false);
@@ -121,7 +121,7 @@ const DeviceDetail = () => {
       );
       setLastUser(res.data);
     } catch (err) {
-      console.error("/devices/findLastUser alınırken hata oluştu", err);
+      //console.error("/devices/findLastUser alınırken hata oluştu", err);
       setLastUser({});
     }
   };

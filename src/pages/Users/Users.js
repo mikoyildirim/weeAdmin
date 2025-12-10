@@ -473,7 +473,7 @@ const Users = () => {
             ? `${Number(d.amount).toFixed(2)} WeePuan`
             : `${Number(d.amount).toFixed(2)} ₺`
           : "-",
-      "İşlem Versiyon": d.version || d.rental?.version || "-",
+      "İşlem Versiyon": d.rental?.version || d.version || "-", // öncelikle rental içerisindeki version alınıyor
     };
   });
 
@@ -649,15 +649,7 @@ const Users = () => {
       title: "İşlem Versiyon",
       key: "version",
       align: "center",
-      render: (_, record) =>
-        record.version || record.rental?.version || record.ip || "-",
-      sorter: (a, b) =>
-        (a.version ||
-          a.rental?.version ||
-          a.ip ||
-          "").toString().localeCompare(
-            (b.version || b.rental?.version || b.ip || "").toString()
-          ),
+      render: (_, record) => record.rental?.version || record.version || record.ip || "-",
     },
     {
       title: "Harita",
