@@ -1,6 +1,6 @@
 // src/pages/Maps/Polygons.js
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, message, Card, Row, Input } from "antd";
+import { Table, Button, Modal, message, Card, Row, Input, Tag } from "antd";
 import axios from "../../../api/axios";
 
 import "leaflet/dist/leaflet.css";
@@ -88,6 +88,7 @@ const Polygons = () => {
   const columns = [
     {
       title: "İsim", dataIndex: "name", key: "name",
+      sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
       onCell: () => ({
         style: {
           maxWidth: "200px",
@@ -97,8 +98,28 @@ const Polygons = () => {
       }),
     },
     { title: "İlçe Mernis Kodu", dataIndex: "ilceMernisKodu", key: "ilceMernisKodu" },
-    { title: "Durum", dataIndex: "status", key: "status" },
-    { title: "Poligon Tipi", dataIndex: "type", key: "type" },
+    {
+      title: "Durum", dataIndex: "status", key: "status",
+      sorter: (a, b) => (a.status || "").localeCompare(b.status || ""),
+      render: (_, record) => {
+        const statusColors = {
+          ACTIVE: "green",
+          PASSIVE: "red",
+        };
+        return <Tag color={statusColors[record.status] || "default"}>{record.status}</Tag>;
+      },
+    },
+    {
+      title: "Poligon Tipi", dataIndex: "type", key: "type",
+      sorter: (a, b) => (a.type || "").localeCompare(b.type || ""),
+      render: (_, record) => {
+        const statusColors = {
+          ALLOW: "green",
+          DENY: "red",
+        };
+        return <Tag color={statusColors[record.type] || "default"}>{record.type}</Tag>;
+      },
+    },
     { title: "Yüzde", dataIndex: "percentage", key: "percentage" },
     { title: "Başlangıç Fiyatı", dataIndex: "start_price", key: "start_price" },
     { title: "Dakika Fiyatı", dataIndex: "price", key: "price" },
@@ -158,18 +179,43 @@ const Polygons = () => {
         dataSource={filteredGeofences}
         rowKey="_id"
         loading={loading}
-        expandable={isMobile ? {
-          expandedRowRender: (record) => (
-            <div style={{ fontSize: 13 }}>
-              <p><b>İlçe Mernis Kodu:</b> {record.ilceMernisKodu}</p>
-              <p><b>Durum:</b> {record.status}</p>
-              <p><b>Poligon Tipi:</b> {record.type}</p>
-              <p><b>Yüzde:</b> {record.percentage}</p>
-              <p><b>Başlangıç Fiyatı:</b> {record.start_price}</p>
-              <p><b>Dakika Fiyatı:</b> {record.price}</p>
-            </div>
-          ), expandRowByClick: true
-        } : undefined}
+        expandable={
+          isMobile
+            ? {
+              expandedRowRender: (record) => {
+                const statusColors = {
+                  ALLOW: "green",
+                  DENY: "red",
+                  ACTIVE: "green",
+                  PASSIVE: "red",
+                };
+
+                return (
+                  <div style={{ fontSize: 13 }}>
+                    <p><b>İlçe Mernis Kodu:</b> {record.ilceMernisKodu}</p>
+                    <p>
+                      <b>Durum:</b>{" "}
+                      <Tag color={statusColors[record.status] || "default"}>
+                        {record.status}
+                      </Tag>
+                    </p>
+                    <p>
+                      <b>Poligon Tipi:</b>{" "}
+                      <Tag color={statusColors[record.type] || "default"}>
+                        {record.type}
+                      </Tag>
+                    </p>
+                    <p><b>Yüzde:</b> {record.percentage}</p>
+                    <p><b>Başlangıç Fiyatı:</b> {record.start_price}</p>
+                    <p><b>Dakika Fiyatı:</b> {record.price}</p>
+                  </div>
+                );
+              },
+              expandRowByClick: true,
+            }
+            : undefined
+        }
+
       />
 
 
