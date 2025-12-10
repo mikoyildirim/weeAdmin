@@ -40,11 +40,30 @@ const ManagementPage = () => {
   const [tenantForm] = Form.useForm();
 
   // Popup modal states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPopupModalVisible, setIsPopupModalVisible] = useState(false);
   const [editingPopup, setEditingPopup] = useState(null);
   const [popupForm] = Form.useForm();
   const isMobile = useIsMobile(991);
+  const [selectedPrice, setSelectedPrice] = useState()
 
+
+  const showModal = (i) => {
+    setSelectedPrice(i)
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleOk = () => {
+    removePriceSet(selectedPrice)
+    setIsDeleteModalOpen(false);
+    setSelectedPrice(null)
+  };
+
+  const handleCancel = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedPrice(null)
+
+  };
 
   // Veri çekme
   useEffect(() => {
@@ -288,12 +307,28 @@ const ManagementPage = () => {
       width: 80,
       align: 'center',
       render: (v, record, i) => (
-        <Button
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => removePriceSet(i)}
-          size="small"
-        />
+        <>
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => {
+              showModal(i)
+            }}
+            size="small"
+          />
+          <Modal
+            title="Emin misiniz?"
+            open={isDeleteModalOpen}
+            onOk={handleOk}
+            onCancel={handleCancel}
+            okText="Evet"
+            cancelText="Hayır"
+            okButtonProps={{ danger: true }}
+          >
+            Bu işlemi geri alamazsınız. {<h4 style={{color:"red"}}> Silme işleminden sonra kaydetme işlemini de yapınız.</h4>}
+          </Modal>
+        </>
+
       ),
     },
   ]

@@ -108,7 +108,7 @@ const Users = () => {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // sayfa yüklendiğinde kullanıcı verisi dolduğunda tablardaki tabloların verilerini doldurma işlemi
     setFilteredUploads(uploads);
     setFilteredRentals(rentals);
     setFilteredCampaigns(campaigns);
@@ -234,21 +234,25 @@ const Users = () => {
 
   const handleMakeMoney = async () => {
     try {
-      setLoading(true)
+      //setLoading(true)
       const dateHourSecond = dayjs().format("HH:mm:ss")
       const date = dayjs().format("YYYY-MM-DD")
       let payload = { gsm: userData.gsm, amount };
 
       if (transactionType === '3') {
         payload = { ...payload, qrlabel: qrCode, fineType };
-        await axios.post('/transactions/addFine', payload);
-        setLoading(false)
+        console.log("para işlemi yapılıyor...", `\ntransactionType: ${transactionType} \npayload: ${payload.toString} \nendpoint: /transactions/addFine`)
+        const res = await axios.post('/transactions/addFine', payload);
+        console.log(res)
+        //setLoading(false)
       } else {
         payload = { ...payload, type: transactionType, dateHourSecond, date };
         if (iyzicoID) payload.iyzicoID = iyzicoID;
+
+        console.log("para işlemi yapılıyor...", `\ntransactionType: ${transactionType} \npayload: ${JSON.stringify(payload)} \nendpoint: /transactions/addTransactionPanel`)
         const res = await axios.post('/transactions/addTransactionPanel', payload);
         console.log(res)
-        setLoading(false)
+        //setLoading(false)
       }
 
       message.success('İşlem başarıyla kaydedildi!');

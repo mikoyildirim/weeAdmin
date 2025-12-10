@@ -1,6 +1,6 @@
 // src/pages/Maps/Polygons.js
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, message, Card, Col, Row, Input } from "antd";
+import { Table, Button, Modal, message, Card, Row, Input } from "antd";
 import axios from "../../../api/axios";
 
 import "leaflet/dist/leaflet.css";
