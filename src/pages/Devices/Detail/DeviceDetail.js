@@ -306,6 +306,7 @@ const DeviceDetail = () => {
   useEffect(() => {
     fetchLastUser();
     fetchLastTenUser();
+    fetchGeofences()
   }, [qrlabel]);
 
   // lastTenUser güncellenince tabloya doldur

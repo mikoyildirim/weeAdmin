@@ -130,6 +130,17 @@ const DevicesPage = () => {
     }
   }
 
+  const fetchDangerType = async (qrlabel) => {
+    console.log(qrlabel)
+    try {
+      await axios.post(`devices/update/danger`, {
+        qrlabel: qrlabel,
+        dangerType: "SAFE", // dangerType = SAFE
+      });
+      fetchDevices() // işlem yapıldıktan sonra tabloyu yenilemek için tekrardan bütün cihazlar çekilir.
+    } catch (e) { console.log(e.message) }
+  }
+
   useEffect(() => {
     fetchDevices();
     fetchPrices()
@@ -328,6 +339,12 @@ const DevicesPage = () => {
       render: (_, record) => renderDangerStatus(record?.danger?.type),
       sorter: (a, b) =>
         (a?.danger?.type || "").localeCompare(b?.danger?.type || ""),
+    },
+    {
+      title: "Durum Güncelle",
+      align: "center",
+      key: "updateDangerType",
+      render: (_, record) => (<Button type="primary" onClick={() => { fetchDangerType(record.qrlabel) }} >Güvenliye Al</Button>)
     },
     {
       title: "İşlemler",
