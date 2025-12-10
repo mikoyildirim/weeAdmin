@@ -10,12 +10,16 @@ import {
   Col,
   Typography,
   Divider,
-  Space,
 } from "antd";
-import { SendOutlined, ReloadOutlined } from "@ant-design/icons";
-import axios from "../../api/axios"; // kendi axios instance
+import { SendOutlined, ReloadOutlined, SearchOutlined, FileExcelOutlined } from "@ant-design/icons";
+import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
+import utc from 'dayjs/plugin/utc';
+import exportToExcel from "../../utils/methods/exportToExcel";
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
+
+dayjs.extend(utc);
 dayjs.locale("tr");
 
 const { Title, Text } = Typography;
@@ -24,10 +28,16 @@ const { TextArea } = Input;
 
 const Notifications = () => {
   const [form] = Form.useForm();
-  const [notificationType, setNotificationType] = useState("global");
+  const [notificationType, setNotificationType] = useState("gsm");
   const [loading, setLoading] = useState(false);
   const [tableLoading, setTableLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [filteredNotifications, setFilteredNotifications] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const isMobile = useIsMobile(991);
+
+  const excelFileName = `${dayjs().utc().format("YYYY-MM-DD")} Bildirimler.xlsx`;
+
 
   // Bildirimleri çek
   const fetchNotifications = async () => {
@@ -37,6 +47,7 @@ const Notifications = () => {
       const { data } = await axios.get("/notifications/list");
       console.log("✅ [FETCH SUCCESS]", data);
       setNotifications(data || []);
+      setFilteredNotifications(data || []);
     } catch (error) {
       console.error("❌ [FETCH ERROR]", error);
     } finally {
@@ -47,6 +58,34 @@ const Notifications = () => {
   useEffect(() => {
     fetchNotifications();
   }, []);
+
+  // 🔍 Anlık arama
+  useEffect(() => {
+    if (!searchText.trim()) {
+      setFilteredNotifications(notifications);
+      return;
+    }
+
+    const lower = searchText.toLowerCase();
+
+    const filtered = notifications.filter((n) => {
+      const title = n.title?.toLowerCase() || "";
+      const body = n.body?.toLowerCase() || "";
+      const type = n.notificationType?.toLowerCase() || "";
+      const dateFormatted = n.created_date
+        ? dayjs(n.created_date).format("YYYY.MM.DD HH:mm:ss").toLowerCase()
+        : "";
+
+      return (
+        title.includes(lower) ||
+        body.includes(lower) ||
+        type.includes(lower) ||
+        dateFormatted.includes(lower)
+      );
+    });
+
+    setFilteredNotifications(filtered);
+  }, [searchText, notifications]);
 
   // Bildirim gönderme
   const onFinish = async (values) => {
@@ -97,8 +136,10 @@ const Notifications = () => {
       key: "created_date",
       align: "center",
       width: 180,
+      sorter: (a, b) => a.created_date.localeCompare(b.created_date),
+      defaultSortOrder: "descend",
       render: (val) =>
-        val ? dayjs(val).format("YYYY.MM.DD HH:mm:ss") : "-",
+        val ? dayjs.utc(val).format("YYYY.MM.DD HH:mm:ss") : "-",
     },
     {
       title: "Bildirim Tipi",
@@ -130,7 +171,6 @@ const Notifications = () => {
         <TextArea
           value={val}
           readOnly
-          autoSize
           style={{ backgroundColor: "#fafafa" }}
         />
       ),
@@ -144,7 +184,6 @@ const Notifications = () => {
         <TextArea
           value={val}
           readOnly
-          autoSize
           style={{ backgroundColor: "#fafafa" }}
         />
       ),
@@ -169,6 +208,7 @@ const Notifications = () => {
         </Text>
       </Card>
 
+      {/* 🔸 Bildirim Gönderme Formu */}
       <Card
         title={<b>Bildirim Gönder</b>}
         extra={
@@ -186,7 +226,7 @@ const Notifications = () => {
           layout="vertical"
           form={form}
           onFinish={onFinish}
-          initialValues={{ notificationType: "global" }}
+          initialValues={{ notificationType: "gsm" }}
         >
           <Row gutter={16}>
             <Col xs={24} md={8}>
@@ -250,7 +290,7 @@ const Notifications = () => {
               </Form.Item>
             </Col>
 
-            <Col xs={24} md={12}>
+            <Col xs={24}>
               <Form.Item
                 name="title"
                 label="Başlık"
@@ -260,7 +300,7 @@ const Notifications = () => {
               </Form.Item>
             </Col>
 
-            <Col xs={24} md={12}>
+            <Col xs={24}>
               <Form.Item
                 name="message"
                 label="Mesaj"
@@ -276,6 +316,7 @@ const Notifications = () => {
                 htmlType="submit"
                 icon={<SendOutlined />}
                 loading={loading}
+                style={{ width: isMobile && "100%" }}
               >
                 Bildirim Gönder
               </Button>
@@ -286,13 +327,55 @@ const Notifications = () => {
 
       <Divider />
 
-      <Card title={<b>Bildirim Geçmişi</b>}>
+      {/* Bildirim Geçmişi + Arama Alanı */}
+      <Card
+        title={<b>Bildirim Geçmişi</b>}
+        extra={
+          <Input
+            prefix={<SearchOutlined />}
+            placeholder="Başlık, mesaj veya tip ara..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            style={{ width: isMobile ? "100%" :300 }}
+          />
+        }
+      >
+        <Col xs={24} md={12} style={{ textAlign: "left", marginBottom: 16 }}>
+          <Button type="primary" style={{ width: isMobile && "100%" }} icon={<FileExcelOutlined />}
+            onClick={() => {
+              const sortedNotifications = [...filteredNotifications].sort((a, b) => dayjs(b.created_date).valueOf() - dayjs(a.created_date).valueOf())
+              exportToExcel(sortedNotifications, excelFileName)
+            }
+            }>Excel İndir</Button>
+        </Col>
         <Table
-          columns={columns}
-          dataSource={notifications}
+          columns={isMobile ? [columns[0], columns[2]] : columns}
+          dataSource={filteredNotifications}
           rowKey={(record) => record._id || Math.random()}
           loading={tableLoading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10, size: isMobile && "small" }}
+          expandable={isMobile ? {
+            expandedRowRender: record => (
+              <div style={{ fontSize: 13, lineHeight: 1.6 }}>
+                <p><b>Bildirim Tipi: </b> {record.notificationType}</p>
+                <p><b>Başarılı: </b> {record.successedCount}</p>
+                <p><b>Başarısız: </b> {record.failedCount}</p>
+                <p><b>Başlık: </b> {record.title}</p>
+                <p><b>Mesaj: </b> {record.body}</p>
+              </div>
+            ),
+            expandRowByClick: true
+
+          }
+            : undefined
+          }
+
+          onRow={(record, index) => ({ // tabloya zebra görünümü ekler
+            style: {
+              backgroundColor: index % 2 === 0 ? "#fafafa" : "#ffffff",
+            },
+          })}
         />
       </Card>
     </div>

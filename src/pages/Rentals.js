@@ -1,6 +1,6 @@
 // src/pages/rentals.js
 import React, { useEffect, useState, useRef } from "react";
-import { Table, Button, Modal, Input, Typography, message, Card, Tooltip, Progress, Space } from "antd";
+import { Table, Button, Modal, Input, Typography, message, Card, Tooltip, Progress, Space, Descriptions } from "antd";
 import { useSelector } from "react-redux";
 // Axios yolunu projenize göre ayarlayın
 import axios from "../api/axios";
@@ -8,6 +8,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc';
+import { Link } from "react-router-dom";
+import { useIsMobile } from "../utils/customHooks/useIsMobile";
 
 const { Title, Text } = Typography;
 dayjs.extend(utc);
@@ -24,7 +26,8 @@ L.Icon.Default.mergeOptions({
 const miniMapRefs = {};
 
 const Rentals = () => {
-  const user = useSelector((state) => state.user.user);
+  const [paginationSize, setPaginationSize] = useState("medium");
+  const user = useSelector((state) => state.auth.user);
   const userPermissions = user?.permissions || {};
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -37,6 +40,12 @@ const Rentals = () => {
   const [mapVisible, setMapVisible] = useState(false);
   const [mapData, setMapData] = useState([]);
   const [geofences, setGeofences] = useState([]);
+  const isMobile = useIsMobile(991);
+
+
+  useEffect(() => {
+    isMobile ? setPaginationSize("small") : setPaginationSize("medium");
+  }, [isMobile]);
 
   // Büyük harita Leaflet referansları
   const mapRef = useRef(null);
@@ -108,8 +117,8 @@ const Rentals = () => {
         rentalID: selectedRental._id,
         duration: duration * 60,
         total: parseFloat(total),
-      }).then(res=>console.log(res.data))
-      .catch(err=>console.log(err));
+      }).then(res => console.log(res.data))
+        .catch(err => console.log(err));
       message.success("Sürüş başarıyla sonlandırıldı!");
       setEndModalVisible(false);
       fetchRentals();
@@ -123,7 +132,6 @@ const Rentals = () => {
     setMapVisible(true);
   };
 
-  // Büyük Harita Modalının Yönetimi
   useEffect(() => {
     if (mapVisible && mapData.length > 0) {
       const initialPoint = mapData.at(-1);
@@ -134,7 +142,10 @@ const Rentals = () => {
         linesRef.current.clearLayers();
       } else {
         const map = L.map("map").setView([initialPoint.lat, initialPoint.lng], 17);
-        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, minZoom: 12 }).addTo(map);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          minZoom: 12,
+        }).addTo(map);
         markersRef.current.addTo(map);
         linesRef.current.addTo(map);
         mapRef.current = map;
@@ -148,28 +159,66 @@ const Rentals = () => {
       L.marker([mapData[0].lat, mapData[0].lng]).addTo(markers);
       L.polyline(pointList, { color: "red", weight: 3, opacity: 0.5 }).addTo(lines);
 
+      // 1️⃣ Dünya sınırı
+      const worldCoords = [
+        [90, -180],
+        [90, 180],
+        [-90, 180],
+        [-90, -180],
+      ];
+
+      // 2️⃣ ALLOW bölgelerini delik olarak topla
+      const allowHoles = [];
+
       geofences.forEach((area) =>
         area.locations.forEach((loc) => {
           const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
-          let color = "grey";
-          let fillOpacity = 0.3;
-
-          if (loc.type === "DENY") {
-            color = "red";
-            fillOpacity = 0.4;
-          } else if (loc.type === "SpeedLimitedZone") {
-            color = "yellow";
-            fillOpacity = 0.4;
+          if (loc.type === "ALLOW") {
+            allowHoles.push(coords);
           }
+        })
+      );
 
-          if (loc.type === "DENY" || loc.type === "SpeedLimitedZone") {
-            L.polygon(coords, { color, fillColor: color, fillOpacity }).addTo(map);
+      // 3️⃣ Gri katmanı çiz (dış sınır + delikler)
+      L.polygon([worldCoords, ...allowHoles], {
+        color: "grey",
+        fillColor: "grey",
+        fillOpacity: 0.4,
+        stroke: false,
+      }).addTo(map);
+
+      // 🔹 ALLOW bölgelerinin kenarlarını ayrı çiz
+      allowHoles.forEach((holeCoords) => {
+        L.polyline(holeCoords, {
+          color: "#748181ff",     // kenar rengi (örnek: açık mavi)
+          weight: 2,            // kalınlık
+          opacity: 1,           // çizginin opaklığı
+        }).addTo(map);
+      });
+
+      // 4️⃣ Diğer bölgeleri (DENY, SpeedLimitedZone) ayrı çiz
+      geofences.forEach((area) =>
+        area.locations.forEach((loc) => {
+          const coords = loc.polygon.coordinates[0].map((c) => [c[1], c[0]]);
+          if (loc.type === "DENY") {
+            L.polygon(coords, {
+              color: "red",
+              fillColor: "red",
+              fillOpacity: 0.4,
+            }).addTo(map);
+          } else if (loc.type === "SpeedLimitedZone") {
+            L.polygon(coords, {
+              color: "yellow",
+              fillColor: "yellow",
+              fillOpacity: 0.4,
+            }).addTo(map);
           }
         })
       );
 
       setTimeout(() => map.invalidateSize(), 0);
     }
+
   }, [mapVisible, mapData, geofences]);
 
   // Mini Haritaların Yönetimi (Hata Engelleme ve Önizleme)
@@ -261,8 +310,8 @@ const Rentals = () => {
       key: "qr",
       align: "center",
       render: (_, r) => (
-        <Button type="primary" onClick={() => openMapModal(r.avldatas)}>
-          {r.device.qrlabel}
+        <Button type="link" onClick={() => openMapModal(r.avldatas)}>
+          <span style={{ userSelect: "text" }}>{r.device.qrlabel}</span>
         </Button>
       ),
     },
@@ -278,8 +327,10 @@ const Rentals = () => {
       dataIndex: ["member", "gsm"],
       key: "gsm",
       render: (gsm) => (
-        <Button type="link" href={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>
-          {gsm}
+        <Button type="link">
+          <Link to={`/panel/users?gsm=${encodeURIComponent(gsm)}`}>
+            <span style={{ userSelect: "text" }}>{gsm}</span>
+          </Link>
         </Button>
       ),
       align: "center",
@@ -295,7 +346,7 @@ const Rentals = () => {
         else if (b <= 50) color = "orange";
         return (
           <Tooltip title={`${b || 0}% Batarya`}>
-            <p style={{margin:0}}>{b || 0}%</p>
+            <p style={{ margin: 0 }}>{b || 0}%</p>
             <Progress percent={b || 0} size="small" strokeColor={color} showInfo={false} />
           </Tooltip>
         );
@@ -327,7 +378,7 @@ const Rentals = () => {
 
   if (userPermissions?.endRental) {
     columns.push({
-      title: "Sürüş Sonlandırma",
+      title: "Sonlandırma",
       key: "end",
       align: "center",
       render: (_, record) => (
@@ -347,18 +398,75 @@ const Rentals = () => {
   });
 
   return (
-    <Card style={{ borderRadius: 16, boxShadow: "0 8px 20px rgba(0,0,0,0.1)", padding: 24, margin: "20px 0" }}>
+    <Card style={{ borderRadius: 16, boxShadow: "0 8px 20px rgba(0,0,0,0.1)", padding: 12, margin: "20px 0" }}>
       <Title level={2}>Aktif Kiralamalar</Title>
 
-      <Table
-        dataSource={rentals}
-        columns={columns}
-        rowKey={(r) => r._id}
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-        rowClassName={(record, index) => (index % 2 === 0 ? "table-row-light" : "table-row-dark")}
-        scroll={{ x: "max-content" }}
-      />
+      {
+        !isMobile ? (
+          <Table
+            dataSource={rentals}
+            columns={columns}
+            rowKey={(r) => r._id}
+            loading={loading}
+            pagination={{ pageSize: 10, size: paginationSize }}
+            scroll={{ x: "max-content" }}
+            rowClassName={(record, index) => (index % 2 === 0 ? "table-row-light" : "table-row-dark")}
+          />
+        ) :
+          (
+            <Table
+              dataSource={rentals}
+              columns={[
+                columns[0],
+                columns[1],
+              ]}
+              rowKey={(r) => r._id}
+              loading={loading}
+              pagination={{ pageSize: 10, size: paginationSize }}
+              scroll={{ x: "max-content" }}
+              rowClassName={(record, index) => (index % 2 === 0 ? "table-row-light" : "table-row-dark")}
+              expandable={{
+                expandRowByClick: true,
+                rowExpandable: () => true,
+
+                expandedRowRender: (record) => {
+                  return (
+                    <Descriptions bordered size="small" column={1}>
+                      {columns.map((col) => {
+                        let value;
+
+                        if (col.render) {
+                          // render fonksiyonunu doğru şekilde çağır
+                          if (Array.isArray(col.dataIndex)) {
+                            // dataIndex array ise nested value al
+                            const data = col.dataIndex.reduce((acc, key) => acc?.[key], record);
+                            value = col.render(data, record);
+                          } else {
+                            value = col.render(record[col.dataIndex], record);
+                          }
+                        } else if (Array.isArray(col.dataIndex)) {
+                          // render yoksa nested value al
+                          value = col.dataIndex.reduce((acc, key) => acc?.[key], record);
+                        } else {
+                          value = record[col.dataIndex];
+                        }
+
+                        if (value === undefined || value === null || value === "") value = "-";
+
+                        return (
+                          <Descriptions.Item key={col.key} label={col.title}>
+                            {value}
+                          </Descriptions.Item>
+                        );
+                      })}
+                    </Descriptions>
+                  );
+                },
+              }}
+            />
+          )
+      }
+
 
       {/* Sürüş Sonlandırma Modal */}
       <Modal

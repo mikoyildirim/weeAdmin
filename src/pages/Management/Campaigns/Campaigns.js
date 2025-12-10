@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Table, Tag, Button, Card, Input, Row, Col, Typography, Spin } from "antd";
 import axios from "../../../api/axios";
 import dayjs from "dayjs";
+import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const { Title } = Typography;
 
@@ -10,15 +13,12 @@ const CampaignsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [filteredCampaigns, setFilteredCampaigns] = useState([]);
-  const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState("medium");
+  const isMobile = useIsMobile(991);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+
+  const user = useSelector((state) => state.auth.user);
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchCampaigns();
@@ -34,15 +34,17 @@ const CampaignsPage = () => {
       return;
     }
     const lowerSearch = searchText.toLowerCase();
-    const filtered = campaigns.filter(c => 
+    const filtered = campaigns.filter(c =>
       c.campaignName.toLowerCase().includes(lowerSearch) ||
       (c.campaignType ?? "").toLowerCase().includes(lowerSearch) ||
       c.discountType.toLowerCase().includes(lowerSearch) ||
       c.status.toLowerCase().includes(lowerSearch)
     );
     setFilteredCampaigns(filtered);
+    console.log(filtered)
   }, [searchText, campaigns]);
 
+  console.log(campaigns)
   const fetchCampaigns = async () => {
     setLoading(true);
     try {
@@ -58,25 +60,40 @@ const CampaignsPage = () => {
     }
   };
 
+
   const columns = [
     { title: "Öncelik", dataIndex: "priority", key: "priority", align: "center" },
-    { title: "Kampanya Adı", dataIndex: "campaignName", key: "campaignName", align: "center" },
-    { 
+    {
+      title: "Kampanya Adı", dataIndex: "campaignName", key: "campaignName", align: "center",
+      render: (text, record) => (
+        user.permissions.showCampaign ?
+          (
+            <Button
+              type="link"
+              onClick={() => navigate(`/panel/management/campaigns/showCampaigns/${record._id}`)}
+            >{text}</Button>
+          ) :
+          (
+            <p>{text}</p>
+          )
+      )
+    },
+    {
       title: "Tür", dataIndex: "campaignType", key: "campaignType", align: "center",
       render: (type) => type || "Kampanya Türü Yok"
     },
     { title: "İndirim Tipi", dataIndex: "discountType", key: "discountType", align: "center" },
     { title: "Miktar", dataIndex: "amount", key: "amount", align: "center" },
     { title: "Yüzde", dataIndex: "percentage", key: "percentage", align: "center" },
-    { 
+    {
       title: "Başlangıç", dataIndex: "startDate", key: "startDate", align: "center",
       render: date => dayjs(date).format("YYYY/MM/DD HH:mm")
     },
-    { 
+    {
       title: "Bitiş", dataIndex: "endDate", key: "endDate", align: "center",
       render: date => dayjs(date).format("YYYY/MM/DD HH:mm")
     },
-    { 
+    {
       title: "Durum", dataIndex: "status", key: "status", align: "center",
       render: status => <Tag color={status === "ACTIVE" ? "green" : "red"}>{status === "ACTIVE" ? "Aktif" : "Pasif"}</Tag>
     }
@@ -95,6 +112,13 @@ const CampaignsPage = () => {
             onChange={e => setSearchText(e.target.value)}
             style={{ width: "100%" }}
           />
+        </Col>
+        <Col xs={24} sm={24} md={12} lg={8}>
+          <Button type="primary" style={{width:isMobile&&"100%"}}>
+            <Link to={`/panel/management/campaigns/createCampaign`}>
+              Kampanya Oluştur
+            </Link>
+          </Button>
         </Col>
       </Row>
 

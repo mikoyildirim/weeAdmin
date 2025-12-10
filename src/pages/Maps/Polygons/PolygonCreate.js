@@ -1,11 +1,13 @@
 // src/pages/Maps/Polygons/PolygonCreate.js
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, } from "react";
 import { Button, Form, Input, Select, Spin } from "antd";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet-draw";
 import axios from "../../../api/axios"; // doğru yolu kontrol et
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
+import { useNavigate } from "react-router-dom";
 
 const { Option } = Select;
 
@@ -14,7 +16,8 @@ const PolygonCreate = () => {
   const drawnItemsRef = useRef(null);
   const [polygonData, setPolygonData] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const isMobile = useIsMobile(991);
+  const navigation = useNavigate()
 
 
   useEffect(() => {
@@ -75,7 +78,7 @@ const PolygonCreate = () => {
     }
     try {
       console.log(polygonData)
-      await axios.post("/geofences/updatelocation/62b2d0760ece1d36e58a20dd", {
+      await axios.post("/geofences/createlocation/62b2d0760ece1d36e58a20dd", {
         ...values,
         polygon: polygonData,
         brand: "WeeScooter",
@@ -89,6 +92,7 @@ const PolygonCreate = () => {
       // .then((res) => console.log(res.data))
       setLoading(false);
       alert("Poligon başarıyla oluşturuldu!");
+      navigation("/panel/maps/polygons")
     } catch (err) {
       console.error(err);
       setLoading(false);
@@ -98,9 +102,9 @@ const PolygonCreate = () => {
 
 
   return (
-    <div style={{ display: "flex", gap: "20px" }}>
+    <div style={{ display: "flex", gap: "20px", flexDirection: isMobile ? "column" : "row" }}>
       <div style={{ flex: 2 }}>
-        <div ref={mapRef} style={{ height: "80vh" }}></div>
+        <div ref={mapRef} style={{ height: "80vh", zIndex: 1 }}></div>
       </div>
 
       <div style={{ flex: 1 }}>
@@ -131,7 +135,7 @@ const PolygonCreate = () => {
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={loading} style={{ width: isMobile && "100%" }}>
                 Kaydet
               </Button>
             </Form.Item>

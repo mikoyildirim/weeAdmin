@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "../../api/axios";
+import { Link } from "react-router-dom";
 
 // Leaflet default icon fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -102,12 +103,7 @@ const PassiveMap = () => {
       d.last_location.location.coordinates[1] != null
   );
 
-  const center = devicesWithLocation.length
-    ? [
-      parseFloat(devicesWithLocation[0].last_location.location.coordinates[1]),
-      parseFloat(devicesWithLocation[0].last_location.location.coordinates[0]),
-    ]
-    : [39.75, 37.02]; // Sivas fallback
+  const center = [39.75, 37.02]; // Sivas fallback
 
   // Dünya poligonu (gri arkaplan)
   const worldPolygon = [
@@ -124,7 +120,7 @@ const PassiveMap = () => {
           <Spin size="large" tip="Harita yükleniyor..." />
         </div>
       ) : (
-        <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
+        <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%", zIndex: 1 }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
@@ -139,7 +135,7 @@ const PassiveMap = () => {
                 <Popup minWidth={200}>
                   <div style={{ lineHeight: 1.5 }}>
                     <div><strong>IMEI:</strong> {device.imei || "-"}</div>
-                    <div><strong>QRCODE:</strong> {device.qrlabel || "-"}</div>
+                    <div><strong>QRCODE:</strong> {device.qrlabel ? <Link to={`/panel/devices/update/${encodeURIComponent(device._id)}`}>{device.qrlabel}</Link> : "-"} </div>
                     <div><strong>BATARYA:</strong> %{device.battery ?? "-"}</div>
                     <div><strong>DURUM:</strong> {device.status ?? "-"}</div>
                     <div style={{ marginTop: 6 }}>
@@ -149,10 +145,9 @@ const PassiveMap = () => {
                       </a>
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <a rel="noreferrer"
-                        href={`/panel/devices/detail/${device.qrlabel}`}>
+                      <Link to={`/panel/devices/detail/${device.qrlabel}`}>
                         Son Kullanıcı
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </Popup>

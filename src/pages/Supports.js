@@ -20,12 +20,16 @@ const statusTr = {
 }
 
 const Supports = () => {
-  const userPermissions = useSelector((state) => state.user.user?.permissions) || {};
+  const userPermissions = useSelector((state) => state.auth.user?.permissions) || {};
+  const userEmail = useSelector((state) => state.auth.user?.email) || {};
+
   const [supports, setSupports] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [gsm, setGsm] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSupport, setSelectedSupport] = useState({});
+  const [filteredSupports, setFilteredSupports] = useState([]);
+
 
   useEffect(() => {
     fetchSupports();
@@ -35,9 +39,10 @@ const Supports = () => {
     setLoading(true);
     try {
       const res = await axios.get("/supports/find/listWithGroup");
-      console.log(res.data)
+
 
       setSupports(res.data || []);
+      setFilteredSupports(res.data || []);
     } catch (err) {
       message.error("Destek kayıtları alınamadı!");
     } finally {
@@ -45,16 +50,6 @@ const Supports = () => {
     }
   };
 
-  const searchWithGsm = async (e) => {
-    e.preventDefault();
-    if (!gsm) return;
-    try {
-      const res = await axios.post("/supports/find/findWithGsm", { gsm });
-      setSupports(res.data || []);
-    } catch (err) {
-      message.error("Kayıt bulunamadı!");
-    }
-  };
 
   const openModal = (support) => {
     setSelectedSupport(support);
@@ -62,17 +57,35 @@ const Supports = () => {
   };
 
   const handleModalUpdate = async () => {
+ 
     try {
       await axios.post("/supports/" + selectedSupport._id, {
         status: selectedSupport.status,
         note: selectedSupport.note,
-      }).then()
-      .catch(err=>console.log(err))
+      }).then(res => console.log("Güncelleme başarılı."))
+        .catch(err => console.log("Güncelleme başarısız!", err))
       setModalVisible(false);
       fetchSupports();
     } catch (err) {
-      message.error("Güncelleme başarısız!");
+      console.log("Güncelleme başarısız!", err);
     }
+  };
+
+  const handleSearch = (value) => {
+    setSearchText(value);
+    if (!value) {
+      setFilteredSupports(supports);
+      return;
+    }
+    const filtered = supports
+      .map((category) => ({
+        ...category,
+        supports: category.supports.filter((s) =>
+          s.member?.gsm?.includes(value) || s?.qr?.includes(value)
+        ),
+      }))
+      .filter(category => category.supports.length > 0); // Boş kategorileri kaldır
+    setFilteredSupports(filtered);
   };
 
 
@@ -84,6 +97,8 @@ const Supports = () => {
       key: "created_date",
       align: "center",
       render: (d) => dayjs.utc(d).format("DD.MM.YYYY HH:mm:ss"),
+      sorter: (a, b) => dayjs(a.created_date).valueOf() - dayjs(b.created_date).valueOf(),
+      defaultSortOrder: "descend",
     },
     {
       title: "GSM",
@@ -143,7 +158,7 @@ const Supports = () => {
   ];
 
 
-  if (userPermissions.updateSupport) {
+  if (userPermissions.updateSupport && userEmail!=="info@weescooter.com.tr") {
     columns.push({
       title: "İşlem",
       key: "action",
@@ -161,23 +176,15 @@ const Supports = () => {
       style={{ borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
       bodyStyle={{ padding: 16 }}
     >
-      <form onSubmit={searchWithGsm} style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        <Input
-          placeholder="Cep Telefonu"
-          value={gsm}
-          onChange={(e) => setGsm(e.target.value)}
-          style={{ minWidth: 180 }}
-        />
-        <Button type="primary" htmlType="submit">
-          Ara
-        </Button>
-      </form>
+      <Input
+        placeholder="GSM ya da QR"
+        value={searchText}
+        onChange={(e) => handleSearch(e.target.value)}
+        style={{ minWidth: 180, marginBottom: 16 }}
+      />
 
       <Tabs type="card" tabBarGutter={8}>
-        {supports.map((category) => (
-
-
-
+        {filteredSupports.map((category) => (
           <TabPane tab={category.title} key={category.title}>
             <Table
               dataSource={category.supports}
@@ -207,7 +214,10 @@ const Supports = () => {
         <Form.Item label="Durum: ">
           <Select
             value={selectedSupport.status || ""}
-            onChange={(value) => setSelectedSupport({ ...selectedSupport, status: value })}
+            onChange={(value) => {
+
+              setSelectedSupport({ ...selectedSupport, status: value })
+            }}
             style={{ minWidth: "150px" }}
             options={[
               { value: 'ACTIVE', label: 'AKTİF' },

@@ -5,7 +5,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "leaflet-draw";
-import axios from "../../../api/axios"; // doğru yolu kontrol et
+import axios from "../../../api/axios";
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const { Option } = Select;
 
@@ -16,12 +17,15 @@ const PolygonUpdate = () => {
     const { id } = useParams();
     const { TextArea } = Input;
 
+
     const [polygon, setPolygon] = useState(null);
     const [loading, setLoading] = useState(true);
     const [geofences, setGeofences] = useState([]);
     const [selectedCity, setSelectedCity] = useState()
+    const isMobile = useIsMobile(991);
 
-    // API'den poligonları çek
+
+
     const fetchPolygons = async () => {
         setLoading(true);
         try {
@@ -156,7 +160,7 @@ const PolygonUpdate = () => {
                 start: new Date().toISOString(),
                 end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
             })
-            .then((res) => console.log(res.data))
+                .then((res) => console.log(res.data))
             setLoading(false);
             alert("Poligon başarıyla oluşturuldu!");
         } catch (err) {
@@ -178,9 +182,9 @@ const PolygonUpdate = () => {
         <Spin spinning={loading} tip="Poligonlar yükleniyor...">
 
 
-            <div style={{ display: "flex", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: "20px" }}>
                 <div style={{ flex: 2 }}>
-                    <div ref={mapRef} style={{ height: "80vh" }}></div>
+                    <div ref={mapRef} style={{ height: "80vh", zIndex: 1 }}></div>
                 </div>
 
                 <div style={{ flex: 1 }}>
@@ -214,7 +218,7 @@ const PolygonUpdate = () => {
                         </Form.Item>
 
                         <Form.Item>
-                            <Button type="primary" htmlType="submit">
+                            <Button type="primary" htmlType="submit" style={{ width: isMobile && "100%" }}>
                                 Kaydet
                             </Button>
                         </Form.Item>

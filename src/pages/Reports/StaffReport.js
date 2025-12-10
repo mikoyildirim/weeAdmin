@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Space,
   Table,
   DatePicker,
   Button,
@@ -17,8 +16,10 @@ import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import trTR from "antd/es/locale/tr_TR";
 import "dayjs/locale/tr";
-import exportToExcel from "../../utils/exportToExcel";
+import exportToExcel from "../../utils/methods/exportToExcel";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import "../../utils/styles/rangePickerMobile.css"
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;
@@ -32,23 +33,15 @@ const StaffReport = () => {
   const [selectedCities, setSelectedCities] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [paginationSize, setPaginationSize] = useState("medium");
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(991);
 
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const locations = user?.permissions?.locations || [];
   const sortedData = [...filteredData].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Batarya Raporu.xlsx`;
 
   const totalChanges = filteredData.length;
   const avgNewBattery = filteredData.length > 0 ? (filteredData.reduce((acc, item) => acc + item.newBattery, 0) / filteredData.length).toFixed(1) : 0;
-
-  // Mobile check
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");
@@ -119,6 +112,7 @@ const StaffReport = () => {
 
   return (
     <div>
+      <h1>Batarya Değişim Raporu</h1>
       {/* Üst Kartlar */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={12}>
@@ -141,19 +135,17 @@ const StaffReport = () => {
           <Col xs={24} md={8}>
             <label>Tarih Aralığı</label>
             <ConfigProvider locale={trTR}>
-              {isMobile ? (
-                <Space direction="vertical" size={12}>
-                  <DatePicker value={dates[0]} onChange={(val) => setDates([val || dates[0], dates[1]])} style={{ width: "100%" }} />
-                  <DatePicker value={dates[1]} onChange={(val) => setDates([dates[0], val || dates[1]])} style={{ width: "100%" }} />
-                </Space>
-              ) : (
-                <RangePicker value={dates} onChange={(val) => setDates(val || dates)} format="YYYY-MM-DD" style={{ width: "100%" }} />
-              )}
+              <RangePicker
+                value={dates}
+                onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
+                format="YYYY-MM-DD"
+                style={{ width: "100%" }}
+              />
             </ConfigProvider>
           </Col>
           <Col xs={24} md={8}>
             <label>Şehir Seçiniz</label>
-            <Select mode="multiple" value={selectedCities} onChange={setSelectedCities} style={{ width: "100%" }} options={cities.map((c) => ({ label: c, value: c }))} />
+            <Select mode="multiple" value={selectedCities.filter((city) => city !== "BURSA" && city !== "ANTALYA")} onChange={setSelectedCities} style={{ width: "100%" }} options={cities.map((c) => ({ label: c, value: c }))} />
           </Col>
           <Col xs={24} md={8} style={{ display: "flex", alignItems: "flex-end" }}>
             <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
@@ -193,16 +185,18 @@ const StaffReport = () => {
           columns={isMobile ? columns.slice(0, 2) : columns}
           dataSource={filteredData}
           loading={loading}
-          pagination={{ position: ["bottomCenter"], pageSizeOptions: ["5","10","20","50"], size: paginationSize }}
+          pagination={{ position: ["bottomCenter"], pageSizeOptions: ["5", "10", "20", "50"], size: paginationSize }}
           rowKey={(record) => `${record.created_date}-${record.device?.qrlabel}-${record.city}`}
-          expandable={isMobile ? { expandedRowRender: (record) => (
-            <div style={{ fontSize: 13 }}>
-              <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
-              <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
-              <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
-              <p><b>Şehir:</b> {record.city}</p>
-            </div>
-          ), expandRowByClick: true } : undefined}
+          expandable={isMobile ? {
+            expandedRowRender: (record) => (
+              <div style={{ fontSize: 13 }}>
+                <p><b>Cihaz QR:</b> {record.device?.qrlabel}</p>
+                <p><b>Eski Batarya:</b> {record.oldBattery} %</p>
+                <p><b>Yeni Batarya:</b> {record.newBattery} %</p>
+                <p><b>Şehir:</b> {record.city}</p>
+              </div>
+            ), expandRowByClick: true
+          } : undefined}
         />
       </Card>
     </div>

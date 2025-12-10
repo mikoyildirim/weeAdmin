@@ -17,18 +17,16 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../store/userSlice";
+import { logout } from "../redux/slices/authSlice.js";
 
 const { Sider, Content, Header } = Layout;
-const { useBreakpoint } = Grid;
 
 const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state.auth.user);
   const [collapsed, setCollapsed] = useState(false);
-  const screens = useBreakpoint();
 
   const toggleCollapsed = () => setCollapsed(!collapsed);
 
@@ -85,7 +83,7 @@ const MainLayout = () => {
       icon: <SettingOutlined />,
       label: "Yönetim İşlemleri",
       children: [
-        { key: "/panel/management/campaigns/campaigns", label: "Kampanyalar" },
+        { key: "/panel/management/campaigns/listCampaigns", label: "Kampanyalar" },
         { key: "/panel/management/financial", label: "Yönetim İşlemleri" },
         { key: "/panel/management/notifications", label: "Bildirimler" },
         { key: "/panel/management/staff", label: "Personel Yönetimi" },
@@ -95,7 +93,12 @@ const MainLayout = () => {
     { key: "/panel/rentals", icon: <FileTextOutlined />, label: "Aktif Kiralamalar" },
   ];
 
-  const handleMenuClick = ({ key }) => navigate(key);
+  const handleMenuClick = ({ key }) => {
+    navigate(key);
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  };
 
   const userMenu = {
     items: [
@@ -111,16 +114,23 @@ const MainLayout = () => {
     ],
   };
 
-  const siderWidth = collapsed ? 80 : 220;
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md; // mobile için true
+
+  const siderWidth = collapsed
+    ? (isMobile ? 0 : 80)   // mobile: tamamen kaybolur, desktop: daralır
+    : 220;
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
       {/* SABİT SİDEBAR */}
       <Sider
+        trigger={null}
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
         width={220}
+        collapsedWidth={isMobile ? 0 : 80}
         style={{
           background: "#001529",
           position: "fixed",
@@ -129,6 +139,8 @@ const MainLayout = () => {
           bottom: 0,
           height: "100vh",
           overflow: "auto",
+          transition: "all 0.2s ease",
+          zIndex: 100,
         }}
       >
         <div
@@ -155,6 +167,20 @@ const MainLayout = () => {
       </Sider>
 
       <Layout style={{ marginLeft: siderWidth, transition: "margin-left 0.2s" }}>
+        {isMobile && !collapsed && (
+          <div
+            onClick={() => setCollapsed(true)}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0,0,0,0.3)",
+              zIndex: 9,
+            }}
+          />
+        )}
         {/* SABİT HEADER */}
         <Header
           style={{
@@ -167,6 +193,7 @@ const MainLayout = () => {
             position: "fixed",
             top: 0,
             left: siderWidth,
+            transition: "left 0.2s",
             right: 0,
             height: 64,
             zIndex: 10,

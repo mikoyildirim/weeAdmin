@@ -2,24 +2,11 @@ dashboard sayfası
 kullanım sıklığı haritası
 scooter dağıtım önerisi
 az kullanılan cihazlar haritası ()
-kampanya create update
-bildirimler test
-personel yönetimi destek kaydı ve sonlandırma kayıtları 
 yetkilendirme
 
-users sayfasına sekmede ileri geri yapınca veri güncellenmiyor
-users sayfasında kiralamlara sürüş düzenle butonu eklenecek
-devices detail sayfasında kullanıcının telefon numarasına tıklama users sayfasına yönlendirme
-
-kayıp haritasında cihaz bulundu işlemi
-device detail sonkullanıcıda fotoğraf yoksa buton disabled yapılacak
 az kullanılan cihazlar sayfası
-destek kayıtları search çalışmıyor
-bildirim gönderme sayfasında tablo sıralama, input alanları görsel düzenleme, search işlemi, excel indirme,
-kampanyalar sayfasında showCampaign sayfasına yönşendirme ve burada kampanya düzenleme
-personel güncelleme sayfası izinler türkçe yazılacak
-batarya rapoorundan cihaza yönlendirme
 
+<<<<<<< HEAD
 responsive:
 aktif kiralamalar
 süpheli işlemler
@@ -38,3 +25,22 @@ yükleme raporu
 wee puan raporu
 
 aaa
+=======
+
+search inputları tabloların hemen üstüne alma işi
+sayfalara sayfa güncelleme butonu eklenmesi (modüler component olarak yapılacak)
+sayfalarda işlemler sonucunda bilgilendirme modalları
+users sayfasında para işlemleri gerçekleşince modal ile bilgilendirme
+cihaz yönetimine güvene al butonu eklenecek
+
+USERS İYZİCO/İADE işlem gerçekleşiyor ama backend response dönmüyor.
+backend konsola bunu basıyor:
+Error: Cannot set headers after they are sent to the client
+    at C:\Users\yildi\Desktop\murati\vscooter\v1\src\controllers\TransactionController.js:409:44
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\yildi\Desktop\murati\vscooter\v1\src\controllers\TransactionController.js:403:19
+    at async C:\Users\yildi\Desktop\murati\vscooter\v1\src\controllers\TransactionController.js:399:13
+    at async C:\Users\yildi\Desktop\murati\vscooter\v1\src\controllers\TransactionController.js:397:9
+    at async addTransactionPanel (C:\Users\yildi\Desktop\murati\vscooter\v1\src\controllers\TransactionController.js:380:5)
+
+>>>>>>> 0f9b9e7f3cbfe0c1619b4dca3110849ed4a1915c

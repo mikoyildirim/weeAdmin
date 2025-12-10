@@ -1,8 +1,6 @@
 // src/App.js
-import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { loadUserFromStorage } from "./store/userSlice";
+import { useSelector } from "react-redux";
 
 import MainLayout from "./layouts/MainLayout";
 import Login from "./pages/Login";
@@ -36,11 +34,14 @@ import DeviceCreate from "./pages/Devices/Create/DeviceCreate";
 // Users
 import Users from "./pages/Users/Users";
 import NegativeUsers from "./pages/Users/NegativeUsers";
+import ShowRental from "./pages/Users/ShowRental/ShowRental";
 
 // Others
 import Calls from "./pages/Calls";
 import Supports from "./pages/Supports";
 import Campaigns from "./pages/Management/Campaigns/Campaigns";
+import ShowCampaigns from "./pages/Management/Campaigns/ShowCampaigns";
+import CreateCampaign from "./pages/Management/Campaigns/CreateCampaign";
 import Financial from "./pages/Management/Financial";
 import Notifications from "./pages/Management/Notifications";
 import Staff from "./pages/Management/Staff/Staff";
@@ -51,8 +52,8 @@ import Rentals from "./pages/Rentals";
 
 
 function App() {
-  const token = useSelector((state) => state.user.token);
-  const user = useSelector((state) => state.user.user);
+  const token = useSelector((state) => state.auth.accessToken);
+  const user = useSelector((state) => state.auth.user);
   return (
     <Router>
       <Routes>
@@ -96,11 +97,13 @@ function App() {
           {/* Users */}
           <Route path="users" element={<Users />} />
           <Route path="users/negative" element={<NegativeUsers />} />
-
+          <Route path="users/showRental/:id" element={<ShowRental />} />
           {/* Others */}
           <Route path="calls" element={<Calls />} />
           <Route path="supports" element={<Supports />} />
-          <Route path="management/campaigns/campaigns" element={<Campaigns />} />
+          <Route path="management/campaigns/listCampaigns" element={<Campaigns />} />
+          <Route path="management/campaigns/showCampaigns/:id" element={<ShowCampaigns />} />
+          <Route path="management/campaigns/createCampaign" element={<CreateCampaign />} />
           <Route path="management/financial" element={<Financial />} />
           <Route path="management/notifications" element={<Notifications />} />
           <Route path="management/staff" element={<Staff />} />
@@ -108,6 +111,7 @@ function App() {
           <Route path="management/staff/update/:id" element={<StaffUpdate />} />
           <Route path="management/fraud" element={<Fraud />} />
           <Route path="rentals" element={<Rentals />} />
+
         </Route>
 
         {/* Fallback */}

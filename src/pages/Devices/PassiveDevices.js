@@ -3,8 +3,10 @@ import { Table, Tag, Button, Card, Input, Row, Col } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
-import exportToExcel from "../../utils/exportToExcel";
+import exportToExcel from "../../utils/methods/exportToExcel";
 import utc from 'dayjs/plugin/utc';
+import { Link } from "react-router-dom";
+import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 dayjs.extend(utc);
 dayjs.locale("tr");
@@ -17,17 +19,10 @@ const PassiveDevices = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState(""); // <-- search state
   const [filteredDevices, setFilteredDevices] = useState([]); // <-- search için
-  const [isMobile, setIsMobile] = useState(false);
   const [paginationSize, setPaginationSize] = useState("medium");
+  const isMobile = useIsMobile(991);
 
   const excelFileName = `${dayjs().format("DD.MM.YYYY_HH.mm")} Pasif Cihazlar.xlsx`;
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 991);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     fetchAllDevices()
@@ -109,9 +104,10 @@ const PassiveDevices = () => {
         <>
           <Button
             type="link"
-            href={`/panel/devices/detail/${record.qrlabel}`}
           >
-            {record.qrlabel}
+            <Link to={`/panel/devices/detail/${record.qrlabel}`}>
+              <span style={{ userSelect: "text" }}>{record.qrlabel}</span>
+            </Link>
           </Button>
         </>
       ),

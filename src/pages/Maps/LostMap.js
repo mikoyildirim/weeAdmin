@@ -6,6 +6,8 @@ import "leaflet/dist/leaflet.css";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc';
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 dayjs.extend(utc);
 
@@ -51,6 +53,9 @@ const LostMap = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [polygons, setPolygons] = useState([]);
+  const userName = useSelector((state) => state.auth.user?.name) || {};
+
+  console.log(devices)
 
   const fetchPolygons = async () => { // polygonları backend den çekiyoruz 
     try {
@@ -73,6 +78,17 @@ const LostMap = () => {
       setLoading(false);
     }
   };
+
+  const lostUpdate = async (supportID) => {
+    await axios.post(`supports/${supportID}`, {
+      status: 'DONE',
+      note: `${userName} tarafından cihaz bulundu.`
+    })
+      .then((res) => {
+        console.log(res)
+      })
+      .catch(err => console.log(err))
+  }
 
   useEffect(() => {
     fetchLostDevices();
@@ -111,7 +127,7 @@ const LostMap = () => {
           <Spin size="large" tip="Harita yükleniyor..." />
         </div>
       ) : (
-        <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
+        <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%", zIndex: 1 }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
@@ -126,7 +142,7 @@ const LostMap = () => {
                 <Popup minWidth={200}>
                   <div style={{ lineHeight: 1.5 }}>
                     <div><strong>TARİH:</strong> {dayjs.utc(device.created_date).format('DD.MM.YYYY HH:mm') || "-"}</div>
-                    <div><strong>QRCODE:</strong> {device.qrlabel || "-"}</div>
+                    <div><strong>QRCODE:</strong> {device.qrlabel} </div>
                     <div style={{ marginTop: 6 }}>
                       <a target="_blank" rel="noreferrer"
                         href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`}>
@@ -134,13 +150,12 @@ const LostMap = () => {
                       </a>
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <a rel="noreferrer"
-                        href={`/panel/devices/detail/${device.qrlabel}`}>
+                      <Link to={`/panel/devices/detail/${device.qrlabel}`}>
                         Son Kullanıcı
-                      </a>
+                      </Link>
                     </div>
                     <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                      <Button size="small" >Cihaz Bulundu</Button>
+                      <Button size="small" onClick={() => lostUpdate(device?.support_id)}>Cihaz Bulundu</Button>
                     </div>
                   </div>
                 </Popup>

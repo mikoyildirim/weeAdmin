@@ -1,0 +1,59 @@
+ /* ---- SADECE MOBİLDE GEÇERLİ ---- */
+ @media (max-width: 480px) {
+
+     /* Tek takvim görünümü için 2. panel gövdesini gizle */
+     .ant-picker-dropdown .ant-picker-panels>*:nth-child(2) .ant-picker-body {
+         display: none !important;
+     }
+
+     /* 2. paneli sadece ok butonları için bırakalım */
+     .ant-picker-dropdown .ant-picker-panels>*:nth-child(2) {
+         width: 40px !important;
+         position: relative;
+     }
+
+     /* Sol panel tam genişlik */
+     .ant-picker-dropdown .ant-picker-panels>*:first-child {
+         width: 250px !important;
+     }
+
+     /* Panel container */
+     .ant-picker-dropdown .ant-picker-panels {
+         width: 290px !important;
+         display: flex !important;
+         justify-content: flex-start !important;
+     }
+
+     /* Sağdaki ileri ok butonunu sola taşı */
+     /* --- AY İLERİ OKU (next-btn) --- */
+     .ant-picker-dropdown .ant-picker-panels>*:nth-child(2) .ant-picker-header-next-btn {
+         position: absolute !important;
+         left: -20px !important;
+         top: 7%;
+         transform: translateY(-50%);
+         z-index: 20;
+         background: white;
+         padding: 6px;
+         border-radius: 6px;
+     }
+
+     /* --- YIL İLERİ OKU (super-next-btn) AY OKUNUN YANINA GELECEK --- */
+     .ant-picker-dropdown .ant-picker-panels>*:nth-child(2) .ant-picker-header-super-next-btn {
+         position: absolute !important;
+         left: 5px !important;
+         /* ← ay okunun hemen sağına */
+         top: 7%;
+         transform: translateY(-50%);
+         z-index: 20;
+         background: white;
+         padding: 6px;
+         border-radius: 6px;
+     }
+
+
+     /* Ok hover efekti */
+     .ant-picker-header-prev-btn:hover,
+     .ant-picker-header-next-btn:hover {
+         background: #f5f5f5 !important;
+     }
+ }

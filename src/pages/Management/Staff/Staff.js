@@ -2,25 +2,20 @@ import React, { useEffect, useState } from "react";
 import { Table, Button, Tag, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "../../../api/axios";
+import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 
 const StaffList = () => {
   const [staffs, setStaffs] = useState([]);
   const [filteredStaffs, setFilteredStaffs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(991);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchStaffs();
-    handleResize(); // ilk yüklemede kontrol et
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleResize = () => {
-    setIsMobile(window.innerWidth <= 768);
-  };
 
   const fetchStaffs = async () => {
     setLoading(true);
@@ -107,14 +102,14 @@ const StaffList = () => {
           justifyContent: "space-between",
           alignItems: isMobile ? "stretch" : "center",
           margin: 16,
-          gap: isMobile ? 8 : 0, // 🔹 8px aralık mobilde
+          gap: isMobile ? 8 : 0, 
         }}
       >
         <Button
           type="primary"
           onClick={() => navigate("create")}
           style={{
-            width: isMobile ? "100%" : "auto", // 🔹 Mobilde tam genişlik
+            width: isMobile ? "100%" : "auto", 
           }}
         >
           Kullanıcı Oluştur
@@ -126,7 +121,7 @@ const StaffList = () => {
           value={searchText}
           onChange={(e) => handleSearch(e.target.value)}
           style={{
-            width: isMobile ? "100%" : 300, // 🔹 Mobilde tam genişlik
+            width: isMobile ? "100%" : 300, 
           }}
         />
       </div>
