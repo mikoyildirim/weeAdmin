@@ -458,19 +458,32 @@ const DeviceDetail = () => {
                 <Form.Item label="Cihaz QR Kodu">
                   <Input value={lastUserInfo.cihazQrKodu} disabled style={{ color: "black" }} />
                 </Form.Item>
-                <Form.Item label="Sürüş Fotoğrafı">
-                  {/* Buton */}
-                  <Button
-                    type="primary"
-                    disabled={!tableData[0]?.photo}
-                    onClick={() => {
-                      setSelectedImg(tableData[0].photo);
-                      setIsModalOpen(true);
-                    }}
-                  >
-                    Fotoğrafı Görüntüle
-                  </Button>
-                </Form.Item>
+                <Row>
+
+                  <Form.Item label="Sürüş Fotoğrafı">
+                    <Button
+                      type="primary"
+                      disabled={!tableData[0]?.photo}
+                      onClick={() => {
+                        setSelectedImg(tableData[0].photo);
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      <CameraFilled style={{ width: 50, display: 'flex', alignItems: "center", justifyContent: "center" }} />
+                    </Button>
+                  </Form.Item>
+                  <Form.Item label="Harita">
+                    <Button
+                      type="primary"
+                      disabled={!tableData[0]?.avldatas}
+                      onClick={() => {
+                        openMapModal(tableData[0].avldatas);
+                      }}
+                    >
+                      <GlobalOutlined style={{ width: 50, display: 'flex', alignItems: "center", justifyContent: "center" }} />
+                    </Button>
+                  </Form.Item>
+                </Row>
               </Col>
             </Row>
           </Form>
@@ -517,7 +530,14 @@ const DeviceDetail = () => {
                           setIsModalOpen(true);
                         }}
                       >
-                        Fotoğrafı Görüntüle
+                        <CameraFilled style={{ width: 50, display: 'flex', alignItems: "center", justifyContent: "center" }} />
+                      </Button>
+
+                      <Button type="primary" style={{ margin: 16 }} onClick={() => {
+                        openMapModal(record.avldatas)
+                      }}
+                      >
+                        <GlobalOutlined style={{ width: 50, display: 'flex', alignItems: "center", justifyContent: "center" }} />
                       </Button>
                     </div>
                   ),

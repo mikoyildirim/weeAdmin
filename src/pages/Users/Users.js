@@ -80,23 +80,12 @@ const Users = () => {
   const uploads = (userData?.wallet?.transactions?.filter(t => t.type === 1 || (t.type === -1 && !t.rental)) || [])
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
 
-
   let rentals = (userData?.wallet?.transactions?.filter(t => t.rental) || []) // transaction içerisinde rental değeri dolu ise rentals tablosuna ekle
     .sort((a, b) => new Date(a.rental?.start) - new Date(b.rental?.start))
     .reverse();
 
   const campaigns = (userData?.wallet?.transactions?.filter(t => t.type === 3) || [])
     .sort((a, b) => new Date(a.date) - new Date(b.date)).reverse();
-
-
-  // useEffect(() => {
-  //   const params = new URLSearchParams(window.location.search);
-  //   const gsm = params.get("gsm");
-  //   if (gsm) {
-  //     setPhone(gsm);
-  //     console.log("İlk yüklemede GSM:", gsm);
-  //   }
-  // }, []); // ✅ sadece ilk yüklemede çalışır
 
 
   const fetchGeofences = async () => {
@@ -408,7 +397,6 @@ const Users = () => {
       }
     });
 
-    // Temizleme Fonksiyonu: Listeden çıkan (sonlandırılan) haritaları temizler.
     return () => {
       Object.keys(miniMapRefs).forEach(id => {
         const rentalExists = rentals.some(r => r._id === id);
