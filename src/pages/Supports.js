@@ -39,7 +39,7 @@ const Supports = () => {
     setLoading(true);
     try {
       const res = await axios.get("/supports/find/listWithGroup");
-
+      console.log(res)
 
       setSupports(res.data || []);
       setFilteredSupports(res.data || []);
@@ -57,7 +57,7 @@ const Supports = () => {
   };
 
   const handleModalUpdate = async () => {
- 
+
     try {
       await axios.post("/supports/" + selectedSupport._id, {
         status: selectedSupport.status,
@@ -157,8 +157,9 @@ const Supports = () => {
     },
   ];
 
+  console.log(supports)
 
-  if (userPermissions.updateSupport && userEmail!=="info@weescooter.com.tr") {
+  if (userPermissions.updateSupport && userEmail !== "info@weescooter.com.tr") {
     columns.push({
       title: "İşlem",
       key: "action",

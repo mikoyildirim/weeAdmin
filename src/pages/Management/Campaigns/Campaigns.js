@@ -66,7 +66,7 @@ const CampaignsPage = () => {
     {
       title: "Kampanya Adı", dataIndex: "campaignName", key: "campaignName", align: "center",
       render: (text, record) => (
-        user.permissions.showCampaign ?
+        user?.permissions?.createCampaign ?
           (
             <Button
               type="link"
@@ -113,13 +113,15 @@ const CampaignsPage = () => {
             style={{ width: "100%" }}
           />
         </Col>
-        <Col xs={24} sm={24} md={12} lg={8}>
-          <Button type="primary" style={{width:isMobile&&"100%"}}>
-            <Link to={`/panel/management/campaigns/createCampaign`}>
-              Kampanya Oluştur
-            </Link>
-          </Button>
-        </Col>
+        {user?.permissions?.createCampaign && (
+          <Col xs={24} sm={24} md={12} lg={8}>
+            <Button type="primary" style={{ width: isMobile && "100%" }}>
+              <Link to={`/panel/management/campaigns/createCampaign`}>
+                Kampanya Oluştur
+              </Link>
+            </Button>
+          </Col>
+        )}
       </Row>
 
       <Table

@@ -83,7 +83,6 @@ const StaffUpdate = () => {
                         sonlandirmaKayitlari: staffDoneRes.data || [],
                     });
 
-                    console.log("Sonlandırma kayıtları:", staffDoneRes.data);
                 }
             } catch (error) {
                 message.error("Veri alınamadı!");
@@ -94,7 +93,6 @@ const StaffUpdate = () => {
         fetchData();
     }, [id]);
 
-    console.log(staff)
 
 
     const updateBilgiler = async (values) => {
@@ -163,11 +161,9 @@ const StaffUpdate = () => {
                 // 2️⃣ Sonlandırma kayıtlarını çek (staffDone)
                 if (res.data?.user?._id) {
                     const staffDoneRes = await axios.get(`/rentals/staffDone/${res.data.user._id}`);
-                    console.log("✅ staffDone verisi:", staffDoneRes.data);
                 }
 
             } catch (error) {
-                console.error("❌ Hata:", error);
                 message.error("Personel bilgileri alınamadı!");
             } finally {
                 setLoading(false);
@@ -176,7 +172,7 @@ const StaffUpdate = () => {
         fetchData();
     }, [id]);
 
-
+console.log(staff)
     const columnsSupports = [
         {
             title: "QR Kod",

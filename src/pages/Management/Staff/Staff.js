@@ -3,6 +3,7 @@ import { Table, Button, Tag, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "../../../api/axios";
 import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
+import { useSelector } from "react-redux";
 
 const StaffList = () => {
   const [staffs, setStaffs] = useState([]);
@@ -11,6 +12,7 @@ const StaffList = () => {
   const [searchText, setSearchText] = useState("");
   const isMobile = useIsMobile(991);
   const navigate = useNavigate();
+  const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
     fetchStaffs();
@@ -48,9 +50,13 @@ const StaffList = () => {
       dataIndex: "staffName",
       key: "staffName",
       sorter: (a, b) => a.staffName.localeCompare(b.staffName),
-      render: (text, record) => (
-        <a onClick={() => navigate(`update/${record._id}`)}>{text}</a>
-      ),
+      render: (text, record) =>
+        user?.permissions?.staffCreate ? (
+          <a onClick={() => navigate(`update/${record._id}`)}>{text}</a>
+        ) : (
+          <a style={{color:"#000"}}>{text}</a>
+        )
+      ,
     },
     {
       title: "Email",
@@ -102,18 +108,21 @@ const StaffList = () => {
           justifyContent: "space-between",
           alignItems: isMobile ? "stretch" : "center",
           margin: 16,
-          gap: isMobile ? 8 : 0, 
+          gap: isMobile ? 8 : 0,
         }}
       >
-        <Button
-          type="primary"
-          onClick={() => navigate("create")}
-          style={{
-            width: isMobile ? "100%" : "auto", 
-          }}
-        >
-          Kullanıcı Oluştur
-        </Button>
+        {user?.permissions?.staffCreate && (
+          <Button
+            type="primary"
+            onClick={() => navigate("create")}
+            style={{
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
+            Kullanıcı Oluştur
+          </Button>
+        )}
+
 
         <Input
           placeholder="İsim, email veya şehir ara..."
@@ -121,7 +130,7 @@ const StaffList = () => {
           value={searchText}
           onChange={(e) => handleSearch(e.target.value)}
           style={{
-            width: isMobile ? "100%" : 300, 
+            width: isMobile ? "100%" : 300,
           }}
         />
       </div>

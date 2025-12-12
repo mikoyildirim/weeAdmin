@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import exportToExcel from "../../utils/methods/exportToExcel";
 import utc from 'dayjs/plugin/utc';
 import { GlobalOutlined, CameraFilled } from "@ant-design/icons"; // üst kısma ekle
+import { useSelector } from "react-redux";
 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -43,6 +44,7 @@ const Users = () => {
   const [cardIsActive, setCardIsActive] = useState("");
   const [paginationSize, setPaginationSize] = useState("medium");
   const isMobile = useIsMobile(991);
+  const user = useSelector((state) => state.auth.user);
 
 
   const [transactionType, setTransactionType] = useState('5');
@@ -243,7 +245,7 @@ const Users = () => {
         console.log(res)
         //setLoading(false)
       }
-
+      
       message.success('İşlem başarıyla kaydedildi!');
       // İşlem sonrası formu sıfırla
       setAmount('');
@@ -546,7 +548,7 @@ const Users = () => {
   ];
 
 
-  const rentalColumns = [
+  let rentalColumns = [
     {
       title: "QR",
       dataIndex: ["rental", "device", "qrlabel"],
@@ -683,7 +685,9 @@ const Users = () => {
       )
     },
   ];
-
+  if (!user?.permissions?.rentalUpdate) {
+    rentalColumns = rentalColumns.filter(col => col.key !== "editDriving");
+  }
   const campaignColumns = [
     {
       title: "Tarih",
@@ -1120,14 +1124,16 @@ const Users = () => {
                                   }}
                                 />
                               </Descriptions.Item>
+                              {user?.permissions?.rentalUpdate && (
+                                <Descriptions.Item label="Sürüşü Düzenle">
+                                  <Button type="primary">
+                                    <Link to={`/panel/users/showRental/${record.rental._id}`}>
+                                      Sürüş Düzenle
+                                    </Link>
+                                  </Button>
+                                </Descriptions.Item>
+                              )}
 
-                              <Descriptions.Item label="Sürüşü Düzenle">
-                                <Button type="primary">
-                                  <Link to={`/panel/users/showRental/${record.rental._id}`}>
-                                    Sürüş Düzenle
-                                  </Link>
-                                </Button>
-                              </Descriptions.Item>
                             </Descriptions>
                           ),
 

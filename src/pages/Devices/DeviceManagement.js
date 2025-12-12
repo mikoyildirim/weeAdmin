@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch } from "antd";
+import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch, Spin } from "antd";
 import axios from "../../api/axios"; // kendi axios instance yolunu kullan
 import { Link } from "react-router-dom";
 import { EditOutlined } from "@ant-design/icons";
@@ -292,13 +292,17 @@ const DevicesPage = () => {
       align: "center",
       dataIndex: "qrlabel",
       key: "qrlabel",
-      render: (_, record) => (
-        <Button type="link" >
-          <Link to={`/panel/devices/update/${record?._id}`}>
-            <span style={{ userSelect: "text" }}>{record?.qrlabel}</span>
-          </Link>
-        </Button>
-      ),
+      render: (_, record) => {
+        return user?.permissions?.updateDevice ? (
+          <Button type="link">
+            <Link to={`/panel/devices/update/${record?._id}`}>
+              <span style={{ userSelect: "text" }}>{record?.qrlabel}</span>
+            </Link>
+          </Button>
+        ) : (
+          <span style={{ userSelect: "text" }}>{record?.qrlabel}</span>
+        );
+      },
       sorter: (a, b) => a.qrlabel?.localeCompare(b.qrlabel),
     },
     { title: "IMEI", align: "center", dataIndex: "imei", key: "imei" },
@@ -403,11 +407,14 @@ const DevicesPage = () => {
 
             {!isMobile ? (
               <Space style={{ marginBottom: 16 }}>
-                <Button type="primary">
-                  <Link to={`/panel/devices/create`}>
-                    Cihaz Oluştur
-                  </Link>
-                </Button>
+                {user?.permissions?.addDevice && (
+                  <Button type="primary">
+                    <Link to={`/panel/devices/create`}>
+                      Cihaz Oluştur
+                    </Link>
+                  </Button>
+                )}
+
                 <Input
                   placeholder="Cihaz ara..."
                   value={searchTextDevices}
@@ -422,15 +429,18 @@ const DevicesPage = () => {
                 style={{ width: "100%", marginBottom: 16 }}
                 size={16} // aradaki boşluk
               >
-                <Button
-                  type="primary"
-                  style={{ width: "100%" }}
-                  onClick={() => setOpenModal(true)}
-                >
-                  <Link to={`/panel/devices/create`}>
-                    Cihaz Oluştur
-                  </Link>
-                </Button>
+                {user?.permissions?.addDevice && (
+                  <Button
+                    type="primary"
+                    style={{ width: "100%" }}
+                    onClick={() => setOpenModal(true)}
+                  >
+                    <Link to={`/panel/devices/create`}>
+                      Cihaz Oluştur
+                    </Link>
+                  </Button>
+                )}
+
                 <Input
                   placeholder="Cihaz ara..."
                   value={searchTextDevices}
@@ -451,121 +461,126 @@ const DevicesPage = () => {
             />
           </TabPane>
 
-          <TabPane tab="Ücret Düzenleme" key="2">
-
-            {!isMobile ? (
-              <Space style={{ marginBottom: 16 }}>
-                <Button type="primary" onClick={() => setOpenModal(true)}>
-                  Şehir Oluştur
-                </Button>
-                <Input
-                  placeholder="Ara..."
-                  value={searchTextPrices}
-                  onChange={(e) => setSearchTextPrices(e.target.value)}
-                  allowClear
-                  style={{ width: 300 }}
-                />
-              </Space>
-            ) : (
-              <Space
-                direction="vertical"
-                style={{ width: "100%", marginBottom: 16 }}
-                size={16} // aradaki boşluk
-              >
-                <Button
-                  type="primary"
-                  style={{ width: "100%" }}
-                  onClick={() => setOpenModal(true)}
-                >
-                  Şehir Oluştur
-                </Button>
-                <Input
-                  placeholder="Ara..."
-                  value={searchTextPrices}
-                  onChange={(e) => setSearchTextPrices(e.target.value)}
-                  allowClear
-                  style={{ width: "100%" }}
-                />
-              </Space>
-            )}
-
-
-
-            <Table
-              columns={isMobile ? getMobileColumnsForPrices(columnsPrices) : columnsPrices}
-              expandable={isMobile ? getMobileExpandableForPrices(columnsPrices) : undefined}
-              dataSource={filteredPrices}
-              loading={loading}
-              rowKey={(record) => record._id}
-              scroll={{ x: true }}
-            />
-          </TabPane>
-
-          <TabPane tab="Cihaz Ücret Ataması" key="3">
-            <Form layout="vertical">
-              {/* Şehir Seçimi */}
-              <Form.Item label={<span> Şehir {<span style={{ color: "red" }}>(Cihazların ücreti burada seçili şehir olarak ayarlanmaktadır.)</span>}</span>}>
-                <Select
-                  value={cityValue}
-                  onChange={setCityValue}
-                  style={{ width: "100%" }}
-                >
-                  {prices.map((dp) => (
-                    <Select.Option
-                      key={dp._id}
-                      value={dp._id} // şehir seçme sırasında sadece id bilgisi gönderilir.
-                    >
-                      Şehir: {dp.name} - Başlangıç: {dp.startPrice}₺ - Dakika: {dp.minutePrice}₺
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-              {/* QR Ekleme */}
-              <Form.Item label="QR">
-                <Input.Group compact>
-                  <Input
-                    value={qrInput}
-                    onChange={(e) => setQrInput(e.target.value)}
-                    style={{ width: "calc(100% - 70px)" }}
-                  />
-                  <Button type="primary" onClick={handleAddQRToTable}>
-                    + Ekle
+          {user?.permissions?.updatePrice && (
+            <TabPane tab="Ücret Düzenleme" key="2">
+              {!isMobile ? (
+                <Space style={{ marginBottom: 16 }}>
+                  <Button type="primary" onClick={() => setOpenModal(true)}>
+                    Şehir Oluştur
                   </Button>
-                </Input.Group>
-              </Form.Item>
-
-              {/* Tablo Göster / Gizle */}
-              <div style={{ marginBottom: 10 }}>
-                <Switch
-                  checked={tableVisible}
-                  onChange={() => setTableVisible(!tableVisible)}
-                />{" "}
-                <span style={{ marginLeft: 8 }}>Göster / Gizle</span>
-              </div>
-
-              {/* QR Tablosu */}
-              {tableVisible && (
-                <Table
-                  bordered
-                  dataSource={qrList}
-                  columns={columnsDevicePriceAssignment}
-                  rowKey="qr"
-                  pagination={false}
-                />
+                  <Input
+                    placeholder="Ara..."
+                    value={searchTextPrices}
+                    onChange={(e) => setSearchTextPrices(e.target.value)}
+                    allowClear
+                    style={{ width: 300 }}
+                  />
+                </Space>
+              ) : (
+                <Space
+                  direction="vertical"
+                  style={{ width: "100%", marginBottom: 16 }}
+                  size={16} // aradaki boşluk
+                >
+                  <Button
+                    type="primary"
+                    style={{ width: "100%" }}
+                    onClick={() => setOpenModal(true)}
+                  >
+                    Şehir Oluştur
+                  </Button>
+                  <Input
+                    placeholder="Ara..."
+                    value={searchTextPrices}
+                    onChange={(e) => setSearchTextPrices(e.target.value)}
+                    allowClear
+                    style={{ width: "100%" }}
+                  />
+                </Space>
               )}
 
-              {/* Gönder */}
-              <Button
-                type="primary"
-                style={{ marginTop: 15 }}
-                onClick={handleSubmitDevicePriceUpdate}
-                disabled={qrList.length === 0}
-              >
-                Gönder
-              </Button>
-            </Form>
-          </TabPane>
+
+
+              <Table
+                columns={isMobile ? getMobileColumnsForPrices(columnsPrices) : columnsPrices}
+                expandable={isMobile ? getMobileExpandableForPrices(columnsPrices) : undefined}
+                dataSource={filteredPrices}
+                loading={loading}
+                rowKey={(record) => record._id}
+                scroll={{ x: true }}
+              />
+            </TabPane>
+          )}
+
+          {user?.permissions?.updateDevice && (
+            <TabPane tab="Cihaz Ücret Ataması" key="3">
+              <Spin spinning={loading}>
+                <Form layout="vertical">
+                  {/* Şehir Seçimi */}
+                  <Form.Item label={<span> Şehir {<span style={{ color: "red" }}>(Cihazların ücreti burada seçili şehir olarak ayarlanmaktadır.)</span>}</span>}>
+                    <Select
+                      value={cityValue}
+                      onChange={setCityValue}
+                      style={{ width: "100%" }}
+                    >
+                      {prices.map((dp) => (
+                        <Select.Option
+                          key={dp._id}
+                          value={dp._id} // şehir seçme sırasında sadece id bilgisi gönderilir.
+                        >
+                          Şehir: {dp.name} - Başlangıç: {dp.startPrice}₺ - Dakika: {dp.minutePrice}₺
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+
+                  {/* QR Ekleme */}
+                  <Form.Item label="QR">
+                    <Input.Group compact>
+                      <Input
+                        value={qrInput}
+                        onChange={(e) => setQrInput(e.target.value)}
+                        style={{ width: "calc(100% - 70px)" }}
+                      />
+                      <Button type="primary" onClick={handleAddQRToTable}>
+                        + Ekle
+                      </Button>
+                    </Input.Group>
+                  </Form.Item>
+
+                  {/* Tablo Göster / Gizle */}
+                  <div style={{ marginBottom: 10 }}>
+                    <Switch
+                      checked={tableVisible}
+                      onChange={() => setTableVisible(!tableVisible)}
+                    />{" "}
+                    <span style={{ marginLeft: 8 }}>Göster / Gizle</span>
+                  </div>
+
+                  {/* QR Tablosu */}
+                  {tableVisible && (
+                    <Table
+                      bordered
+                      dataSource={qrList}
+                      columns={columnsDevicePriceAssignment}
+                      rowKey="qr"
+                      pagination={false}
+                    />
+                  )}
+
+                  {/* Gönder */}
+                  <Button
+                    type="primary"
+                    style={{ marginTop: 15 }}
+                    onClick={handleSubmitDevicePriceUpdate}
+                    disabled={qrList.length === 0}
+                  >
+                    Gönder
+                  </Button>
+                </Form>
+              </Spin>
+            </TabPane>
+          )}
         </Tabs>
 
         <Modal

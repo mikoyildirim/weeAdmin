@@ -26,13 +26,15 @@ const MainLayout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const userPermissions = user.permissions
   const [collapsed, setCollapsed] = useState(false);
-
   const toggleCollapsed = () => setCollapsed(!collapsed);
+
+  console.log("userPermissions", userPermissions)
 
   const menuItems = [
     { key: "/panel/dashboard", icon: <DashboardOutlined />, label: "Ana Sayfa" },
-    {
+    user?.permissions?.showReport && {
       key: "raporlar",
       icon: <FileTextOutlined />,
       label: "Raporlar",
@@ -67,7 +69,7 @@ const MainLayout = () => {
         { key: "/panel/devices/all", label: "Cihaz Yönetimi" },
       ],
     },
-    {
+    user?.permissions?.showMember && {
       key: "users",
       icon: <TeamOutlined />,
       label: "Kullanıcı İşlemleri",
@@ -76,21 +78,21 @@ const MainLayout = () => {
         { key: "/panel/users/negative", label: "Borçlu Kullanıcılar" },
       ],
     },
-    { key: "/panel/calls", icon: <PhoneOutlined />, label: "Çağrı İşlemleri" },
-    { key: "/panel/supports", icon: <InfoCircleOutlined />, label: "Destek Kayıtları" },
+    user?.permissions?.audioRecording && { key: "/panel/calls", icon: <PhoneOutlined />, label: "Çağrı İşlemleri" },
+    user?.permissions?.showSupport && { key: "/panel/supports", icon: <InfoCircleOutlined />, label: "Destek Kayıtları" },
     {
       key: "management",
       icon: <SettingOutlined />,
       label: "Yönetim İşlemleri",
       children: [
-        { key: "/panel/management/campaigns/listCampaigns", label: "Kampanyalar" },
-        { key: "/panel/management/financial", label: "Yönetim İşlemleri" },
-        { key: "/panel/management/notifications", label: "Bildirimler" },
+        user?.permissions?.showCampaign && { key: "/panel/management/campaigns/listCampaigns", label: "Kampanyalar" },
+        user?.permissions?.management && { key: "/panel/management/financial", label: "Yönetim İşlemleri" },
+        user?.permissions?.sendNotification && { key: "/panel/management/notifications", label: "Bildirimler" },
         { key: "/panel/management/staff", label: "Personel Yönetimi" },
-        { key: "/panel/management/fraud", label: "Şüpheli İşlemler" },
+        user?.permissions?.checkFraud && { key: "/panel/management/fraud", label: "Şüpheli İşlemler" },
       ],
     },
-    { key: "/panel/rentals", icon: <FileTextOutlined />, label: "Aktif Kiralamalar" },
+    user?.permissions?.showRental && { key: "/panel/rentals", icon: <FileTextOutlined />, label: "Aktif Kiralamalar" },
   ];
 
   const handleMenuClick = ({ key }) => {
@@ -193,7 +195,6 @@ const MainLayout = () => {
             position: "fixed",
             top: 0,
             left: siderWidth,
-            transition: "left 0.2s",
             right: 0,
             height: 64,
             zIndex: 10,
