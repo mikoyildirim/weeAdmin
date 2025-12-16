@@ -166,8 +166,8 @@ const Supports = () => {
       align: "center",
       render: (s) => <Tag color={statusColors[s]} style={{ margin: 0 }}>{statusTr[s]}</Tag>
     },
-
-    { title: "Şehir", dataIndex: "city", key: "city", render: (c) => c || "Yok" },
+    { title: "İşlem Versiyon", dataIndex: "version", key: "version", render: (c) => c || "Yok", align: "center", },
+    { title: "Şehir", dataIndex: "city", key: "city", render: (c) => c || "Yok", align: "center", },
     {
       title: "Açıklama",
       dataIndex: "note",

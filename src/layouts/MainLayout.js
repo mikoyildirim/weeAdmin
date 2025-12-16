@@ -41,8 +41,8 @@ const MainLayout = () => {
       children: [
         { key: "/panel/reports/rentals", label: "Kiralamalar Raporu" },
         { key: "/panel/reports/weepuan", label: "Wee Puan Raporu" },
-        { key: "/panel/reports/transactions", label: "Yükleme Raporu" },
-        { key: "/panel/reports/staff", label: "Batarya Değişim Raporu" },
+        user?.permissions?.successTransactions && { key: "/panel/reports/transactions", label: "Yükleme Raporu" },
+        user?.permissions?.staffRecord && { key: "/panel/reports/staff", label: "Batarya Değişim Raporu" },
       ],
     },
     {
@@ -54,11 +54,11 @@ const MainLayout = () => {
         { key: "/panel/maps/passive", label: "Pasif Haritası" },
         { key: "/panel/maps/lost", label: "Kayıp Haritası" },
         { key: "/panel/maps/polygons", label: "Haritalar" },
-        { key: "/panel/maps/heatmap", label: "Kullanım Sıklığı Haritası" },
+        user?.permissions?.showHeatMap && { key: "/panel/maps/heatmap", label: "Kullanım Sıklığı Haritası" },
         { key: "/panel/maps/distribution", label: "Scooter Dağılım Önerisi" },
       ],
     },
-    {
+    user?.permissions?.showDevice && {
       key: "devices",
       icon: <CarOutlined />,
       label: "Cihaz İşlemleri",

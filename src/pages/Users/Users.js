@@ -667,39 +667,48 @@ const Users = () => {
         />
       )
     },
-    {
-      title: "Görsel",
-      key: "image",
-      align: "center",
-      render: (_, record) => (
-        <Button
-          type="primary"
-          disabled={!record?.rental?.imageObj}
-          onClick={() => {
-            // console.log("Clicked:", record);
-            showImage(record?.rental?.imageObj);
-            setIsModalOpen(true);
-          }}
-          icon={<CameraFilled />}
-        />
-      ),
-    },
-    {
-      title: "Sürüşü Düzenle",
-      dataIndex: "editDriving",
-      key: "editDriving",
-      align: "center",
-      render: (_, record) => (
-        <Button type="primary">
-          <Link to={`/panel/users/showRental/${record.rental._id}`}>
-            Sürüş Düzenle
-          </Link>
-        </Button>
-      )
-    },
+
+    ,
   ];
-  if (!user?.permissions?.rentalUpdate) {
-    rentalColumns = rentalColumns.filter(col => col.key !== "editDriving");
+
+  if (user?.permissions?.showImage) {
+    rentalColumns.push(
+      {
+        title: "Görsel",
+        key: "image",
+        align: "center",
+        render: (_, record) => (
+          <Button
+            type="primary"
+            disabled={!record?.rental?.imageObj}
+            onClick={() => {
+              // console.log("Clicked:", record);
+              showImage(record?.rental?.imageObj);
+              setIsModalOpen(true);
+            }}
+            icon={<CameraFilled />}
+          />
+        ),
+      },
+    )
+  }
+
+  if (user?.permissions?.rentalUpdate) {
+    rentalColumns.push(
+      {
+        title: "Sürüşü Düzenle",
+        dataIndex: "editDriving",
+        key: "editDriving",
+        align: "center",
+        render: (_, record) => (
+          <Button type="primary">
+            <Link to={`/panel/users/showRental/${record.rental._id}`}>
+              Sürüş Düzenle
+            </Link>
+          </Button>
+        )
+      }
+    )
   }
   const campaignColumns = [
     {
@@ -1126,17 +1135,19 @@ const Users = () => {
                                 />
                               </Descriptions.Item>
 
-                              <Descriptions.Item label="Görsel">
-                                <Button
-                                  type="primary"
-                                  disabled={!record?.rental?.imageObj}
-                                  icon={<CameraFilled />}
-                                  onClick={() => {
-                                    showImage(record?.rental?.imageObj);
-                                    setIsModalOpen(true);
-                                  }}
-                                />
-                              </Descriptions.Item>
+                              {user?.permissions?.showImage && (
+                                <Descriptions.Item label="Görsel">
+                                  <Button
+                                    type="primary"
+                                    disabled={!record?.rental?.imageObj}
+                                    icon={<CameraFilled />}
+                                    onClick={() => {
+                                      showImage(record?.rental?.imageObj);
+                                      setIsModalOpen(true);
+                                    }}
+                                  />
+                                </Descriptions.Item>
+                              )}
                               {user?.permissions?.rentalUpdate && (
                                 <Descriptions.Item label="Sürüşü Düzenle">
                                   <Button type="primary">

@@ -7,6 +7,7 @@ import "dayjs/locale/tr";
 import utc from 'dayjs/plugin/utc';
 import { Link } from "react-router-dom";
 import { useIsMobile } from "../../../../utils/customHooks/useIsMobile";
+import { useSelector } from "react-redux";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -25,6 +26,7 @@ const StaffUpdate = () => {
     const [formSonlandirma] = Form.useForm();
     const [staffDone, setStaffDone] = useState([]);
     const isMobile = useIsMobile(991);
+    const currentUserPermissions = useSelector((state) => state.auth.user.permissions)
 
     const permissionLabels = {
         showHeatMap: "Isı Haritası Görüntüleme",
@@ -64,7 +66,7 @@ const StaffUpdate = () => {
                 setLoading(true);
                 const res = await axios.get(`/staffs/${id}`);
                 setStaff(res.data);
-                console.log("İZİNLER::: ",res.data.user.permissions)
+                console.log("İZİNLER::: ", res.data.user.permissions)
                 setPermissions(res.data.user.permissions || {});
                 formBilgiler.setFieldsValue({
                     staffName: res.data.staffName,
@@ -75,7 +77,7 @@ const StaffUpdate = () => {
                 });
                 formYetkiler.setFieldsValue(res.data.user.permissions || {});
 
-                // ✅ Sonlandırma kayıtlarını al
+                // Sonlandırma kayıtları
                 if (res.data?.user?._id) {
                     const staffDoneRes = await axios.get(`/rentals/staffDone/${res.data.user._id}`);
                     setStaffDone(staffDoneRes.data || []);
@@ -141,40 +143,7 @@ const StaffUpdate = () => {
             .finally(() => setLoading(false));
     };
 
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-
-                // 1️⃣ Staff bilgileri çek
-                const res = await axios.get(`/staffs/${id}`);
-                setStaff(res.data);
-                setPermissions(res.data.user.permissions || {});
-                formBilgiler.setFieldsValue({
-                    staffName: res.data.staffName,
-                    email: res.data.user.email,
-                    staffGsm: res.data.staffGsm,
-                    staffDate: res.data.staffDate ? dayjs.utc(res.data.staffDate) : null,
-                    status: res.data.user.passiveType
-                });
-                formYetkiler.setFieldsValue(res.data.user.permissions || {});
-                console.log(res.data.user.permissions)
-                // 2️⃣ Sonlandırma kayıtlarını çek (staffDone)
-                if (res.data?.user?._id) {
-                    const staffDoneRes = await axios.get(`/rentals/staffDone/${res.data.user._id}`);
-                }
-
-            } catch (error) {
-                message.error("Personel bilgileri alınamadı!");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [id]);
-
-console.log(staff)
+    console.log(staff)
     const columnsSupports = [
         {
             title: "QR Kod",
@@ -245,6 +214,7 @@ console.log(staff)
             key: "created_date",
             render: (date) => dayjs.utc(date).format("DD.MM.YYYY HH.mm.ss"),
             sorter: (a, b) => new Date(a.created_date) - new Date(b.created_date),
+            defaultSortOrder: "descent"
         },
     ];
 
@@ -290,6 +260,7 @@ console.log(staff)
             key: "start",
             render: (text) => dayjs.utc(text).format("YYYY-MM-DD HH:mm"),
             sorter: (a, b) => dayjs.utc(a.start).unix() - dayjs.utc(b.start).unix(),
+            defaultSortOrder: "descent"
         },
         {
             title: "Duration (dk)",
@@ -317,7 +288,6 @@ console.log(staff)
 
 
 
-
     return (
         <Spin spinning={loading} tip="Yükleniyor...">
             <Card style={{ padding: "16px", borderRadius: "12px" }}>
@@ -326,10 +296,10 @@ console.log(staff)
                     {/* Bilgiler */}
                     <TabPane tab="Bilgiler" key="1">
                         <Form form={formBilgiler} layout="vertical" onFinish={updateBilgiler}>
-                            {
+                            {currentUserPermissions.updatePassiveType && (
                                 isMobile ?
                                     (
-                                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }} >
                                             <Form.Item label="Kullanıcı Durumu" name="status">
                                                 <Radio.Group>
                                                     <Radio value="NONE">Aktif</Radio>
@@ -352,8 +322,8 @@ console.log(staff)
                                             <Button type="primary" htmlType="submit" style={{ marginBottom: 16 }}>Durum Güncelle</Button>
                                         </>
                                     )
+                            )
                             }
-
 
                             <Form.Item label="İsim" name="staffName" rules={[{ required: true, message: "İsim giriniz!" }]}>
                                 <Input />

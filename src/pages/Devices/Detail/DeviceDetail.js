@@ -9,6 +9,7 @@ import { GlobalOutlined, CameraFilled } from "@ant-design/icons"; // üst kısma
 import Title from "antd/es/typography/Title";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useSelector } from 'react-redux';
 
 dayjs.extend(utc);
 
@@ -45,6 +46,10 @@ const DeviceDetail = () => {
 
   const navigate = useNavigate();
   const { id: qrlabel } = useParams();
+  const currentUserPermissions = useSelector(state => state.auth.user.permissions)
+
+  console.log("device details", currentUserPermissions)
+
 
   // Büyük harita Leaflet referansları
   const mapRef = useRef(null);
@@ -412,7 +417,11 @@ const DeviceDetail = () => {
         />
       )
     },
-    {
+  ];
+
+
+  if (currentUserPermissions.showImage) { // fotoğraf görüntüleme izni varsa tabloya fotoğraf görüntüleme kolonu eklenir.
+    columns.push({
       title: "Sürüş Fotoğrafı",
       dataIndex: "photo",
       key: "photo",
@@ -429,8 +438,10 @@ const DeviceDetail = () => {
           <CameraFilled />
         </Button>
       ),
-    },
-  ];
+    })
+  }
+
+
 
   return (
     <Card title={`Sürüş Bilgileri: ${qrlabel}`}>
@@ -460,18 +471,21 @@ const DeviceDetail = () => {
                 </Form.Item>
                 <Row>
 
-                  <Form.Item label="Sürüş Fotoğrafı">
-                    <Button
-                      type="primary"
-                      disabled={!tableData[0]?.photo}
-                      onClick={() => {
-                        setSelectedImg(tableData[0].photo);
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      <CameraFilled style={{ width: 50, display: 'flex', alignItems: "center", justifyContent: "center" }} />
-                    </Button>
-                  </Form.Item>
+                  {currentUserPermissions.showImage && (
+                    <Form.Item label="Sürüş Fotoğrafı">
+                      <Button
+                        type="primary"
+                        disabled={!tableData[0]?.photo}
+                        onClick={() => {
+                          setSelectedImg(tableData[0].photo);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <CameraFilled style={{ width: 50, display: 'flex', alignItems: "center", justifyContent: "center" }} />
+                      </Button>
+                    </Form.Item>
+                  )}
+
                   <Form.Item label="Harita">
                     <Button
                       type="primary"
@@ -522,17 +536,19 @@ const DeviceDetail = () => {
                           {record.memberGsm}
                         </Link></p>
                       <p><b>Sürüş Süresi:</b> {record.timeDrive} </p>
-                      <Button
-                        type="primary"
-                        disabled={!record.photo}
-                        onClick={() => {
-                          setSelectedImg(record.photo);
-                          setIsModalOpen(true);
-                        }}
-                      >
-                        <CameraFilled style={{ width: 50, display: 'flex', alignItems: "center", justifyContent: "center" }} />
-                      </Button>
-
+                      {currentUserPermissions.showImage &&
+                        (
+                          <Button
+                            type="primary"
+                            disabled={!record.photo}
+                            onClick={() => {
+                              setSelectedImg(record.photo);
+                              setIsModalOpen(true);
+                            }}
+                          >
+                            <CameraFilled style={{ width: 50, display: 'flex', alignItems: "center", justifyContent: "center" }} />
+                          </Button>
+                        )}
                       <Button type="primary" style={{ margin: 16 }} onClick={() => {
                         openMapModal(record.avldatas)
                       }}
@@ -550,24 +566,27 @@ const DeviceDetail = () => {
       </Tabs>
 
       {/* Modal tek yerde duruyor */}
-      <Modal
-        title="Sürüş Fotoğrafı"
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={null}
-        height="800px"
-        width="fit-content"
-      >
-        {selectedImg ? (
-          <img
-            src={`data:image/png;base64,${selectedImg}`}
-            alt="Base64 Görsel"
-            style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-          />
-        ) : (
-          <p>Görsel bulunamadı</p>
-        )}
-      </Modal>
+      {currentUserPermissions.showImage && (
+        <Modal
+          title="Sürüş Fotoğrafı"
+          open={isModalOpen}
+          onCancel={() => setIsModalOpen(false)}
+          footer={null}
+          height="800px"
+          width="fit-content"
+        >
+          {selectedImg ? (
+            <img
+              src={`data:image/png;base64,${selectedImg}`}
+              alt="Base64 Görsel"
+              style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+            />
+          ) : (
+            <p>Görsel bulunamadı</p>
+          )}
+        </Modal>
+      )}
+
 
       {/*Büyük Harita Modalı*/}
       <Modal
