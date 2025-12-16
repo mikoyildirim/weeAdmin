@@ -66,6 +66,19 @@ const Users = () => {
   const [filteredRentals, setFilteredRentals] = useState([]);
   const [filteredCampaigns, setFilteredCampaigns] = useState([]);
 
+  let optionsTransactions = [
+    { value: '2', label: 'Para İade' },
+    { value: '3', label: 'Ceza Ekle' },
+    { value: '4', label: 'İyzico Para İade' },
+    { value: '5', label: 'Wee Puan Ekle' },
+  ];
+
+  if (user.permissions.addGift) {
+    optionsTransactions.unshift({ value: '1', label: 'Hediye Ekle' });
+  }
+
+
+
 
   // Büyük harita Leaflet referansları
   const mapRef = useRef(null);
@@ -245,7 +258,7 @@ const Users = () => {
         console.log(res)
         //setLoading(false)
       }
-      
+
       message.success('İşlem başarıyla kaydedildi!');
       // İşlem sonrası formu sıfırla
       setAmount('');
@@ -1243,13 +1256,7 @@ const Users = () => {
                               value={transactionType}
                               onChange={setTransactionType}
                               style={{ minWidth: "150px" }}
-                              options={[
-                                { value: '1', label: 'Hediye Ekle' },
-                                { value: '2', label: 'Para İade' },
-                                { value: '3', label: 'Ceza Ekle' },
-                                { value: '4', label: 'İyzico Para İade' },
-                                { value: '5', label: 'Wee Puan Ekle' },
-                              ]}
+                              options={optionsTransactions}
                             />
                           </Form.Item>
                         </Col>
@@ -1706,13 +1713,7 @@ const Users = () => {
                                 value={transactionType}
                                 onChange={setTransactionType}
                                 style={{ minWidth: "150px" }}
-                                options={[
-                                  { value: '1', label: 'Hediye Ekle' },
-                                  { value: '2', label: 'Para İade' },
-                                  { value: '3', label: 'Ceza Ekle' },
-                                  { value: '4', label: 'İyzico Para İade' },
-                                  { value: '5', label: 'Wee Puan Ekle' },
-                                ]}
+                                options={optionsTransactions}
                               />
                             </Form.Item>
                           </Col>

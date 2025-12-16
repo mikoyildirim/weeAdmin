@@ -31,6 +31,26 @@ const Supports = () => {
   const [filteredSupports, setFilteredSupports] = useState([]);
 
 
+  let supportStatusSelectOptions = []
+
+  userPermissions.supports.map((item) => {
+    switch (item) {
+      case 'ACTIVE':
+        supportStatusSelectOptions.push({ value: 'ACTIVE', label: 'AKTİF' })
+        break
+      case 'CONTROLLED':
+        supportStatusSelectOptions.push({ value: 'CONTROLLED', label: 'İNCELENDİ' })
+        break
+      case 'DONE':
+        supportStatusSelectOptions.push({ value: 'ÇÖZÜLDÜ', label: 'ÇÖZÜLDÜ' })
+        break
+      default:
+        break
+    }
+  })
+
+
+
   useEffect(() => {
     fetchSupports();
   }, []);
@@ -159,7 +179,7 @@ const Supports = () => {
 
   console.log(supports)
 
-  if (userPermissions.updateSupport && userEmail !== "info@weescooter.com.tr") {
+  if (userPermissions.updateSupport && userEmail !== "info@weescooter.com.tr" && userPermissions?.supports.length !== 0) {
     columns.push({
       title: "İşlem",
       key: "action",
@@ -220,11 +240,7 @@ const Supports = () => {
               setSelectedSupport({ ...selectedSupport, status: value })
             }}
             style={{ minWidth: "150px" }}
-            options={[
-              { value: 'ACTIVE', label: 'AKTİF' },
-              { value: 'CONTROLLED', label: 'İNCELENDİ' },
-              { value: 'DONE', label: 'ÇÖZÜLDÜ' },
-            ]}
+            options={supportStatusSelectOptions}
           />
         </Form.Item>
 

@@ -39,6 +39,7 @@ const StaffUpdate = () => {
         showSupport: "Destek Kaydı Görüntüleme",
         updatePassiveType: "Kullanıcı Tipi Güncelleme",
         addPrice: "Fiyat Ekleme",
+        createCampaign: "Kampanya Ekleme",
         showCampaign: "Kampanya Görüntüleme",
         staffRecord: "Batarya Değişim Kayıtları",
         endRental: "Kiralama Sonlandırma",
@@ -54,7 +55,7 @@ const StaffUpdate = () => {
         checkFraud: "Şüpheli İşlemler",
         staffCreate: "Staff Oluşturma",
         successTransactions: "Başarılı İşlemler",
-        // buraya tüm izinlerini ekleyebilirsin
+        audits: "Giriş Kayıtları"
     };
 
     useEffect(() => {
@@ -63,6 +64,7 @@ const StaffUpdate = () => {
                 setLoading(true);
                 const res = await axios.get(`/staffs/${id}`);
                 setStaff(res.data);
+                console.log("İZİNLER::: ",res.data.user.permissions)
                 setPermissions(res.data.user.permissions || {});
                 formBilgiler.setFieldsValue({
                     staffName: res.data.staffName,
@@ -157,7 +159,7 @@ const StaffUpdate = () => {
                     status: res.data.user.passiveType
                 });
                 formYetkiler.setFieldsValue(res.data.user.permissions || {});
-
+                console.log(res.data.user.permissions)
                 // 2️⃣ Sonlandırma kayıtlarını çek (staffDone)
                 if (res.data?.user?._id) {
                     const staffDoneRes = await axios.get(`/rentals/staffDone/${res.data.user._id}`);
@@ -387,7 +389,7 @@ console.log(staff)
                         <Form form={formYetkiler} layout="vertical" onFinish={updatePermissions}>
                             <Row gutter={[16, 16]}>
                                 {Object.keys(permissions)
-                                    .filter((perm) => typeof permissions[perm] === "boolean" && perm !== "createCampaign")
+                                    .filter((perm) => typeof permissions[perm] === "boolean")
                                     .map((perm) => (
                                         <Col xs={24} sm={12} md={12} lg={6} key={perm}>
                                             <Form.Item label={permissionLabels[perm] || perm} name={perm}>

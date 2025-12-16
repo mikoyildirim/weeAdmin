@@ -3,9 +3,9 @@ import { store } from "../redux/store"
 import { logout } from "../redux/slices/authSlice";
 import { message } from "antd";
 
-
-// const baseURL= "https://app.weedevices.com/api/v1"
-const baseURL= "http://192.168.3.29:8082/api/v1/"
+//const baseURL= "https://app.weedevices.com/api/v1"
+// const baseURL= "http://192.168.3.29:8082/api/v1/"
+ const baseURL = "http://192.168.1.112:8082/api/v1/"
 
 
 const instance = axios.create({
@@ -42,6 +42,7 @@ instance.interceptors.response.use(   // eğer token geçerliliğini yitirdiyse 
     return Promise.reject(error);
   }
 );
+
 
 
 export default instance;

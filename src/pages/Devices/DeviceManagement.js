@@ -243,7 +243,7 @@ const DevicesPage = () => {
     }
   };
 
-  const columnsPrices = [
+  let columnsPrices = [
     {
       title: "Şehir",
       align: "center",
@@ -268,7 +268,10 @@ const DevicesPage = () => {
       dataIndex: "priceRate",
       key: "priceRate",
     },
-    {
+  ]
+
+  if (user?.permissions?.updatePrice) { // izin varsa güncelleyebilir.
+    columnsPrices.push({
       title: "Düzenle",
       align: "center",
       render: (_, record) => (
@@ -282,9 +285,9 @@ const DevicesPage = () => {
             }
           />
         </div>
-      )
-    },
-  ]
+      ),
+    });
+  }
 
   const columnsDevices = [
     {
@@ -461,56 +464,62 @@ const DevicesPage = () => {
             />
           </TabPane>
 
-          {user?.permissions?.updatePrice && (
-            <TabPane tab="Ücret Düzenleme" key="2">
-              {!isMobile ? (
-                <Space style={{ marginBottom: 16 }}>
-                  <Button type="primary" onClick={() => setOpenModal(true)}>
-                    Şehir Oluştur
-                  </Button>
-                  <Input
-                    placeholder="Ara..."
-                    value={searchTextPrices}
-                    onChange={(e) => setSearchTextPrices(e.target.value)}
-                    allowClear
-                    style={{ width: 300 }}
-                  />
-                </Space>
-              ) : (
-                <Space
-                  direction="vertical"
-                  style={{ width: "100%", marginBottom: 16 }}
-                  size={16} // aradaki boşluk
-                >
-                  <Button
-                    type="primary"
-                    style={{ width: "100%" }}
-                    onClick={() => setOpenModal(true)}
-                  >
-                    Şehir Oluştur
-                  </Button>
-                  <Input
-                    placeholder="Ara..."
-                    value={searchTextPrices}
-                    onChange={(e) => setSearchTextPrices(e.target.value)}
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </Space>
-              )}
+
+          <TabPane tab="Ücret Düzenleme" key="2">
+            {user?.permissions?.addPrice && (
+              <>
+                {
+                  !isMobile ? (
+                    <Space style={{ marginBottom: 16 }}>
+                      <Button type="primary" onClick={() => setOpenModal(true)}>
+                        Şehir Oluştur
+                      </Button>
+                      <Input
+                        placeholder="Ara..."
+                        value={searchTextPrices}
+                        onChange={(e) => setSearchTextPrices(e.target.value)}
+                        allowClear
+                        style={{ width: 300 }}
+                      />
+                    </Space>
+                  ) : (
+                    <Space
+                      direction="vertical"
+                      style={{ width: "100%", marginBottom: 16 }}
+                      size={16} // aradaki boşluk
+                    >
+                      <Button
+                        type="primary"
+                        style={{ width: "100%" }}
+                        onClick={() => setOpenModal(true)}
+                      >
+                        Şehir Oluştur
+                      </Button>
+                      <Input
+                        placeholder="Ara..."
+                        value={searchTextPrices}
+                        onChange={(e) => setSearchTextPrices(e.target.value)}
+                        allowClear
+                        style={{ width: "100%" }}
+                      />
+                    </Space>
+                  )}
+              </>
+            )}
 
 
 
-              <Table
-                columns={isMobile ? getMobileColumnsForPrices(columnsPrices) : columnsPrices}
-                expandable={isMobile ? getMobileExpandableForPrices(columnsPrices) : undefined}
-                dataSource={filteredPrices}
-                loading={loading}
-                rowKey={(record) => record._id}
-                scroll={{ x: true }}
-              />
-            </TabPane>
-          )}
+
+            <Table
+              columns={isMobile ? getMobileColumnsForPrices(columnsPrices) : columnsPrices}
+              expandable={isMobile ? getMobileExpandableForPrices(columnsPrices) : undefined}
+              dataSource={filteredPrices}
+              loading={loading}
+              rowKey={(record) => record._id}
+              scroll={{ x: true }}
+            />
+          </TabPane>
+
 
           {user?.permissions?.updateDevice && (
             <TabPane tab="Cihaz Ücret Ataması" key="3">
