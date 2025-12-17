@@ -18,6 +18,7 @@ import exportToExcel from "../../utils/methods/exportToExcel";
 import formatTL from "../../utils/methods/formatTL";
 import "../../utils/styles/rangePickerMobile.css"
 import { useIsMobile } from "../../utils/customHooks/useIsMobile";
+import { useSelector } from "react-redux";
 
 
 dayjs.locale("tr");
@@ -36,6 +37,7 @@ const TransactionsReport = () => {
   const excelFileName = `${dates[0].format("YYYY-MM-DD")}_${dates[1].format("YYYY-MM-DD")} Yükleme Raporu.xlsx`;
   const totalAmount = filteredData.reduce((acc, item) => acc + Number(item.amount), 0);
 
+  const user = useSelector((state) => state.auth.user);
   useEffect(() => {
     isMobile ? setPaginationSize("small") : setPaginationSize("medium");
   }, [isMobile]);
@@ -98,25 +100,26 @@ const TransactionsReport = () => {
       </Row>
 
       {/* Filtre Card */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} md={12}>
-            <label>Tarih Aralığı</label>
-            <ConfigProvider locale={trTR}>
-              <RangePicker
-                value={dates}
-                onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
-                format="YYYY-MM-DD"
-                style={{ width: "100%" }}
-              />
-            </ConfigProvider>
-          </Col>
-          <Col xs={24} md={12} style={{ display: "flex", alignItems: "flex-end" }}>
-            <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
-          </Col>
-        </Row>
-      </Card>
-
+      {user.permissions.showFilter && (
+        <Card style={{ marginBottom: 16 }}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <label>Tarih Aralığı</label>
+              <ConfigProvider locale={trTR}>
+                <RangePicker
+                  value={dates}
+                  onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
+                  format="YYYY-MM-DD"
+                  style={{ width: "100%" }}
+                />
+              </ConfigProvider>
+            </Col>
+            <Col xs={24} md={12} style={{ display: "flex", alignItems: "flex-end" }}>
+              <Button type="primary" onClick={fetchData} style={{ width: "100%" }}>Filtrele</Button>
+            </Col>
+          </Row>
+        </Card>
+      )}
       {/* Arama & Excel */}
       <Row gutter={[16, 16]} style={{ marginBottom: 12 }}>
         <Col xs={24} md={12}>

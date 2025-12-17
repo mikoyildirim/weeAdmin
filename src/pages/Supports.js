@@ -42,7 +42,7 @@ const Supports = () => {
         supportStatusSelectOptions.push({ value: 'CONTROLLED', label: 'İNCELENDİ' })
         break
       case 'DONE':
-        supportStatusSelectOptions.push({ value: 'ÇÖZÜLDÜ', label: 'ÇÖZÜLDÜ' })
+        supportStatusSelectOptions.push({ value: 'DONE', label: 'ÇÖZÜLDÜ' })
         break
       default:
         break

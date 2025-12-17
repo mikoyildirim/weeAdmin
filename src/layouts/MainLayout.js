@@ -54,8 +54,8 @@ const MainLayout = () => {
         { key: "/panel/maps/passive", label: "Pasif Haritası" },
         { key: "/panel/maps/lost", label: "Kayıp Haritası" },
         { key: "/panel/maps/polygons", label: "Haritalar" },
-        user?.permissions?.showHeatMap && { key: "/panel/maps/heatmap", label: "Kullanım Sıklığı Haritası" },
-        { key: "/panel/maps/distribution", label: "Scooter Dağılım Önerisi" },
+        //user?.permissions?.showHeatMap && { key: "/panel/maps/heatmap", label: "Kullanım Sıklığı Haritası" },
+        //{ key: "/panel/maps/distribution", label: "Scooter Dağılım Önerisi" },
       ],
     },
     user?.permissions?.showDevice && {

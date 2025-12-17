@@ -132,17 +132,20 @@ const StaffReport = () => {
       {/* Filtre Card */}
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={[16, 16]}>
-          <Col xs={24} md={8}>
-            <label>Tarih Aralığı</label>
-            <ConfigProvider locale={trTR}>
-              <RangePicker
-                value={dates}
-                onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
-                format="YYYY-MM-DD"
-                style={{ width: "100%" }}
-              />
-            </ConfigProvider>
-          </Col>
+          {user.permissions.showFilter && (
+            <Col xs={24} md={8}>
+              <label>Tarih Aralığı</label>
+              <ConfigProvider locale={trTR}>
+                <RangePicker
+                  value={dates}
+                  onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
+                  format="YYYY-MM-DD"
+                  style={{ width: "100%" }}
+                />
+              </ConfigProvider>
+            </Col>
+          )}
+
           <Col xs={24} md={8}>
             <label>Şehir Seçiniz</label>
             <Select mode="multiple" value={selectedCities.filter((city) => city !== "BURSA" && city !== "ANTALYA")} onChange={setSelectedCities} style={{ width: "100%" }} options={cities.map((c) => ({ label: c, value: c }))} />

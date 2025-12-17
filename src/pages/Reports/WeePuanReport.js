@@ -127,13 +127,13 @@ const WeePuanReport = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={12}>
           <Card style={{ textAlign: "center", background: "#fafafa" }}>
-            <p style={{ fontSize: 24, margin: 0 }}>{new Intl.NumberFormat("tr-TR").format(totalWeePuan)} WEEPUAN</p>
+            <p style={{ fontSize: 28, margin: 0, fontWeight: "bold" }}>{new Intl.NumberFormat("tr-TR").format(totalWeePuan)} WEEPUAN</p>
             <span>Toplam WeePuan</span>
           </Card>
         </Col>
         <Col xs={24} md={12}>
           <Card style={{ textAlign: "center", background: "#fafafa" }}>
-            <p style={{ fontSize: 24, margin: 0 }}>{new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(totalTL).replace("₺", "").trim()} ₺</p>
+            <p style={{ fontSize: 28, margin: 0, fontWeight: "bold" }}>{new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(totalTL).replace("₺", "").trim()} ₺</p>
             <span>TL Karşılığı</span>
           </Card>
         </Col>
@@ -142,17 +142,20 @@ const WeePuanReport = () => {
       {/* Filtre Card */}
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={[16, 16]}>
-          <Col xs={24} md={8}>
-            <label>Tarih Aralığı</label> <br />
-            <ConfigProvider locale={trTR}>
-              <RangePicker
-                value={dates}
-                onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
-                format="YYYY-MM-DD"
-                style={{ width: "100%" }}
-              />
-            </ConfigProvider>
-          </Col>
+          {user.permissions.showFilter && (
+            <Col xs={24} md={8}>
+              <label>Tarih Aralığı</label> <br />
+              <ConfigProvider locale={trTR}>
+                <RangePicker
+                  value={dates}
+                  onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
+                  format="YYYY-MM-DD"
+                  style={{ width: "100%" }}
+                />
+              </ConfigProvider>
+            </Col>
+          )}
+
           <Col xs={24} md={8}>
             <label>Şehir Seçiniz</label>
             <Select
@@ -207,7 +210,7 @@ const WeePuanReport = () => {
                     </p>
                   </div>
                 ),
-                expandRowByClick: true,  
+                expandRowByClick: true,
               }
               : undefined
           }

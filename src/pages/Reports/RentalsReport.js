@@ -136,22 +136,20 @@ const RentalsReport = () => {
           {/* Filtre Card */}
           <Card>
             <Row gutter={[16, 16]}>
-              <Col xs={24} md={12}>
-                <label>Tarih Aralığı</label>
-                <ConfigProvider locale={trTR}>
+              {user.permissions.showFilter && (
+                <Col xs={24} md={12}>
+                  <label>Tarih Aralığı</label>
+                  <ConfigProvider locale={trTR}>
+                    <RangePicker
+                      value={dates}
+                      onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
+                      format="YYYY-MM-DD"
+                      style={{ width: "100%" }}
+                    />
+                  </ConfigProvider>
+                </Col>
+              )}
 
-
-
-                  <RangePicker
-                    value={dates}
-                    onChange={(val) => setDates(val || [dayjs().subtract(1, "day"), dayjs()])}
-                    format="YYYY-MM-DD"
-                    style={{ width: "100%" }}
-                  />
-
-
-                </ConfigProvider>
-              </Col>
               <Col xs={24} md={12}>
                 <label>Şehir</label>
                 <Select
