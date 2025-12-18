@@ -9,13 +9,13 @@ import {
   Col,
   Input,
   message,
-  Flex,
 } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import "../../utils/styles/rangePickerMobile.css"
 import { useIsMobile } from "../../utils/customHooks/useIsMobile";
+import { useSelector } from "react-redux";
 
 dayjs.locale("tr");
 const { RangePicker } = DatePicker;
@@ -24,7 +24,6 @@ const { Search } = Input;
 const FraudCheck = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
   const [selectedDates, setSelectedDates] = useState([
@@ -32,6 +31,7 @@ const FraudCheck = () => {
     dayjs(),
   ]);
   const isMobile = useIsMobile(991);
+  const user = useSelector((state) => state.auth.user);
 
   const fetchTransactions = async () => {
     const startDate = selectedDates[0].format("YYYY-MM-DD");
@@ -56,7 +56,6 @@ const FraudCheck = () => {
 
   const checkTransaction = async (id) => {
     setLoading(true);
-    setStatus(null);
     try {
       const res = await axios.get(`transactions/iyzico/fraud/check/${id}`);
 
@@ -75,13 +74,9 @@ const FraudCheck = () => {
           );
         }
       } else {
-        setStatus({ success: false, message: res.data.message });
       }
     } catch (error) {
-      setStatus({
-        success: false,
-        message: error.response?.data?.message || "Hata oluştu",
-      });
+
     } finally {
       setLoading(false);
     }
@@ -215,24 +210,26 @@ const FraudCheck = () => {
         Şüpheli İşlemler
       </h1>
       <div>
+        {user?.permissions?.showFilter && (
+          <Card title="Filtreleme" className="mb-4">
+            <Form form={form} layout="vertical" onFinish={onFinish}>
+              <Row gutter={[16, 16]}>
+                <RangePicker
+                  value={selectedDates}
+                  onChange={(val) => setSelectedDates(val || [])}
+                  style={{ width: isMobile ? "95%" : 250, margin: isMobile && "auto" }}
+                  allowEmpty={[false, false]}
+                />
+                <Col xs={24} sm={12} md={4}>
+                  <Button type="primary" htmlType="submit" block>
+                    Filtrele
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
+          </Card>
+        )}
 
-        <Card title="Filtreleme" className="mb-4">
-          <Form form={form} layout="vertical" onFinish={onFinish}>
-            <Row gutter={[16, 16]}>
-              <RangePicker
-                value={selectedDates}
-                onChange={(val) => setSelectedDates(val || [])}
-                style={{ width: isMobile ? "95%" : 250, margin: isMobile && "auto" }}
-                allowEmpty={[false, false]}
-              />
-              <Col xs={24} sm={12} md={4}>
-                <Button type="primary" htmlType="submit" block>
-                  Filtrele
-                </Button>
-              </Col>
-            </Row>
-          </Form>
-        </Card>
 
         <Card
           title={

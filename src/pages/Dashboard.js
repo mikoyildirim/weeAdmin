@@ -47,6 +47,8 @@ const Dashboard = () => {
     dayjs().subtract(7, "day"),
     dayjs(),
   ]);
+  const [transactionDataPromise, setTransactionDataPromise] = useState({})
+  const [rentalDataPromise, setRentalDataPromise] = useState([])
 
   // 2. DURUM YÖNETİMİ
   const [memberCount, setMemberCount] = useState(null);
@@ -186,18 +188,18 @@ const Dashboard = () => {
     }
 
     const [startDayjs, endDayjs] = selectedDates;
-    const startDate = startDayjs.format("YYYY-MM-DD");
+    let startDate = startDayjs.format("YYYY-MM-DD");
     const endDate = endDayjs.format("YYYY-MM-DD");
-
+    console.log(user)
     // --- Kiralama ve İşlem Verileri Eş Zamanlı Çekilir ---
     setLoadingRentals(true);
     setLoadingCharts(true);
-    const rentalDataPromise = fetchRentalData(
-      startDate,
-      endDate,
-      selectedCities
-    );
-    const transactionDataPromise = fetchTransactionData(startDate, endDate);
+    if (user?.permissions?.showReport) {
+      setRentalDataPromise(fetchRentalData(startDate, endDate, selectedCities))
+    }
+    if (user?.permissions?.showReport && user?.permissions?.successTransactions) {
+      setTransactionDataPromise(fetchTransactionData(startDate, endDate))
+    }
 
     const [rentalData, dailyTransactions] = await Promise.all([
       rentalDataPromise,
@@ -379,13 +381,16 @@ const Dashboard = () => {
                   </Option>
                 ))}
               </Select>
-              <RangePicker
-                value={selectedDates}
-                onChange={(val) => setSelectedDates(val || [])}
-                style={{ width: 250 }}
-                disabledDate={disabledDate}
-                allowEmpty={[false, false]}
-              />
+              {user?.permissions?.showFilter && (
+                <RangePicker
+                  value={selectedDates}
+                  onChange={(val) => setSelectedDates(val || [])}
+                  style={{ width: 250 }}
+                  disabledDate={disabledDate}
+                  allowEmpty={[false, false]}
+                />
+              )}
+
               <Button
                 type="primary"
                 onClick={fetchAllData}
@@ -454,38 +459,43 @@ const Dashboard = () => {
             </div>
           </Card>
         </Col>
-
-        {/* Kiralama Gelir Kartı (Filtreli) */}
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable style={cardStyle}>
-            <Tabs defaultActiveKey="total">
-              <TabPane tab="Toplam Kiralama Geliri" key="total">
-                {loadingRentals ? (
-                  <Spin />
-                ) : (
-                  <Title level={3}>{currencyFormatter(totalRevenue)}</Title>
-                )}
-              </TabPane>
-            </Tabs>
-          </Card>
-        </Col>
-
+        {user?.permissions?.showReport && (
+          /* Kiralama Gelir Kartı (Filtreli) */
+          < Col xs={24} sm={12} lg={6}>
+            <Card hoverable style={cardStyle}>
+              <Tabs defaultActiveKey="total">
+                <TabPane tab="Toplam Kiralama Geliri" key="total">
+                  {loadingRentals ? (
+                    <Spin />
+                  ) : (
+                    <Title level={3}>{currencyFormatter(totalRevenue)}</Title>
+                  )}
+                </TabPane>
+              </Tabs>
+            </Card>
+          </Col>
+        )}
         {/* Yükleme (Transaction) Kartı (Filtreli) */}
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable style={cardStyle}>
-            <Tabs defaultActiveKey="transaction">
-              <TabPane tab="Toplam Yükleme (İşlem)" key="transaction">
-                {loadingTransactions ? (
-                  <Spin />
-                ) : (
-                  <Title level={3}>
-                    {currencyFormatter(totalTransactionAmount)}
-                  </Title>
-                )}
-              </TabPane>
-            </Tabs>
-          </Card>
-        </Col>
+        {user?.permissions?.showReport && user?.permissions?.successTransactions && (
+          <Col xs={24} sm={12} lg={6}>
+            <Card hoverable style={cardStyle}>
+              <Tabs defaultActiveKey="transaction">
+                <TabPane tab="Toplam Yükleme (İşlem)" key="transaction">
+                  {loadingTransactions ? (
+                    <Spin />
+                  ) : (
+                    <Title level={3}>
+                      {currencyFormatter(totalTransactionAmount)}
+                    </Title>
+                  )}
+                </TabPane>
+              </Tabs>
+            </Card>
+          </Col>
+        )}
+
+
+
       </Row>
 
       {/* 📊 Grafikler (Filtreli) */}

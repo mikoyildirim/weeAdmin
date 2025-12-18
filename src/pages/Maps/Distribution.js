@@ -9,6 +9,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
 import "leaflet.markercluster";
 import utc from "dayjs/plugin/utc";
+import { useSelector } from "react-redux";
 
 dayjs.extend(utc);
 dayjs.locale("tr");
@@ -19,6 +20,7 @@ const Distribution = () => {
   const [points, setPoints] = useState([]);
   const [mapInstance, setMapInstance] = useState(null);
   const [dateRange, setDateRange] = useState([dayjs().startOf("day"), dayjs().endOf("day")]);
+  const user = useSelector((state) => state.auth.user);
 
   // Leaflet map init
   useEffect(() => {
@@ -112,17 +114,20 @@ const Distribution = () => {
       <Row gutter={[16, 16]}>
         <Col span={24}>
           <Card title="Scooter Dağılım Önerisi" bordered={false}>
-            <Space style={{ marginBottom: 16 }}>
-              <DatePicker.RangePicker
-                format="HH:mm"
-                picker="time"
-                value={dateRange}
-                onChange={(val) => setDateRange(val)}
-              />
-              <Button type="primary" onClick={fetchDistribution}>
-                Verileri Getir
-              </Button>
-            </Space>
+            {user?.permissions?.showFilter && (
+              <Space style={{ marginBottom: 16 }}>
+                <DatePicker.RangePicker
+                  format="HH:mm"
+                  picker="time"
+                  value={dateRange}
+                  onChange={(val) => setDateRange(val)}
+                />
+                <Button type="primary" onClick={fetchDistribution}>
+                  Verileri Getir
+                </Button>
+              </Space>
+            )}
+
             <p>
               Toplam Aktif Scooter:{" "}
               <strong>{activeDevicesCount}</strong>
