@@ -4,13 +4,10 @@ import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/methods/exportToExcel";
 import utc from 'dayjs/plugin/utc';
-import { GlobalOutlined, CameraFilled } from "@ant-design/icons"; // üst kısma ekle
+import { GlobalOutlined, CameraFilled } from "@ant-design/icons";
 import { useSelector } from "react-redux";
-
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import Title from "antd/es/typography/Title";
 import { useIsMobile } from "../../utils/customHooks/useIsMobile";
@@ -29,8 +26,6 @@ L.Icon.Default.mergeOptions({
 
 // Mini harita referanslarını saklamak için bileşen dışında bir nesne kullanılır.
 const miniMapRefs = {};
-
-
 
 const Users = () => {
   const location = useLocation();
@@ -65,20 +60,6 @@ const Users = () => {
   const [filteredUploads, setFilteredUploads] = useState([]);
   const [filteredRentals, setFilteredRentals] = useState([]);
   const [filteredCampaigns, setFilteredCampaigns] = useState([]);
-
-  let optionsTransactions = [
-    { value: '2', label: 'Para İade' },
-    { value: '3', label: 'Ceza Ekle' },
-    { value: '4', label: 'İyzico Para İade' },
-    { value: '5', label: 'Wee Puan Ekle' },
-  ];
-
-  if (user.permissions.addGift) {
-    optionsTransactions.unshift({ value: '1', label: 'Hediye Ekle' });
-  }
-
-
-
 
   // Büyük harita Leaflet referansları
   const mapRef = useRef(null);
@@ -183,7 +164,6 @@ const Users = () => {
       setSearched(true);
     }
   };
-
   const showImage = async (imageObj) => {
     setSelectedImg("")
     try {
@@ -239,40 +219,76 @@ const Users = () => {
   const handleMakeMoney = async () => {
     try {
       //setLoading(true)
-      const dateHourSecond = dayjs().format("HH:mm:ss")
-      const date = dayjs().format("YYYY-MM-DD")
-      let payload = { gsm: userData.gsm, amount };
+      const payloadBase = {
+        gsm: userData.gsm,
+        amount,
+      };
 
-      if (transactionType === '3') {
-        payload = { ...payload, qrlabel: qrCode, fineType };
-        console.log("para işlemi yapılıyor...", `\ntransactionType: ${transactionType} \npayload: ${payload.toString} \nendpoint: /transactions/addFine`)
-        const res = await axios.post('/transactions/addFine', payload);
-        console.log(res)
-        //setLoading(false)
-      } else {
-        payload = { ...payload, type: transactionType, dateHourSecond, date };
-        if (iyzicoID) payload.iyzicoID = iyzicoID;
+      // TYPE != 3 → NORMAL İŞLEM
+      if (transactionType !== "3") {
+        const payload = {
+          ...payloadBase,
+          type: transactionType,
+          date: dayjs().format("YYYY-MM-DD"),
+          dateHourSecond: dayjs()
+            .format("HH:mm:ss"),
+        };
 
-        console.log("para işlemi yapılıyor...", `\ntransactionType: ${transactionType} \npayload: ${JSON.stringify(payload)} \nendpoint: /transactions/addTransactionPanel`)
+        if (iyzicoID) {
+          payload.iyzicoID = iyzicoID;
+        }
+
+        //console.log("para işlemi yapılıyor...", `\ntransactionType: ${transactionType} \npayload: ${JSON.stringify(payload)} \nendpoint: /transactions/addTransactionPanel`)
         const res = await axios.post('/transactions/addTransactionPanel', payload);
-        console.log(res)
+        //console.log(res)
         //setLoading(false)
       }
 
-      message.success('İşlem başarıyla kaydedildi!');
-      // İşlem sonrası formu sıfırla
-      setAmount('');
-      setFineType('');
-      setQrCode('');
-      setTransactionNo('');
-      setTransactionType('5');
-      searchUser()
+      // TYPE == 3 → CEZA İŞLEMİ
+      else {
+        const payload = {
+          ...payloadBase,
+          qrlabel: qrCode,
+          fineType,
+        };
 
+        // console.log(
+        //   "ceza işlemi yapılıyor...",
+        //   `\nendpoint: /transactions/addFine`,
+        //   payload
+        // );
+
+        const res = await axios.post('/transactions/addFine', payload);
+        //console.log(res)
+        //setLoading(false)
+      }
+
+      message.success("İşlem başarıyla kaydedildi!");
+
+      // Form reset
+      setAmount("");
+      setFineType("");
+      setQrCode("");
+      setTransactionNo("");
+      setTransactionType("5");
+
+      searchUser();
     } catch (error) {
-      //console.error(error);
-      message.error('İşlem sırasında bir hata oluştu!');
+
+      console.error("İşlem sırasında bir hata oluştu!");
+      console.error(error);
+      if (error.response.data.error.message === "Ödeme(ler) bulunamadı.") {
+        setAmount("");
+        setFineType("");
+        setQrCode("");
+        setTransactionNo("");
+        setTransactionType("5");
+        searchUser();
+      }
+
     }
   };
+
 
 
   const openMapModal = (avldatas) => {
@@ -1244,98 +1260,102 @@ const Users = () => {
                         }}
                       />
                     </TabPane>
+                    {user?.permissions?.addGift && (
+                      <TabPane tab={`Para İşlemleri`} key="5">
+                        <Form layout="vertical" labelAlign="left">
 
-                    {/* Para İşlemleri Tab */}
-                    <TabPane tab={`Para İşlemleri`} key="5">
-                      <Form layout="vertical" labelAlign="left">
-
-                        <Col span={24}>
-                          <Form.Item label="Kullanıcı Adı Soyadı">
-                            <Input disabled style={{ color: "black" }} value={userData.user?.name} />
-                          </Form.Item>
-                        </Col>
-                        <Col span={24}>
-                          <Form.Item label="Kullanıcı GSM">
-                            <Input disabled style={{ color: "black" }} value={userData.gsm} />
-                          </Form.Item>
-                        </Col>
-
-
-                        <Col span={24}>
-                          <Form.Item label="İşlem Türü">
-                            <Select
-                              value={transactionType}
-                              onChange={setTransactionType}
-                              style={{ minWidth: "150px" }}
-                              options={optionsTransactions}
-                            />
-                          </Form.Item>
-                        </Col>
-
-                        {['1', '2', '5'].includes(transactionType) && (
                           <Col span={24}>
-                            <Form.Item label="Tutar">
-                              <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                            <Form.Item label="Kullanıcı Adı Soyadı">
+                              <Input disabled style={{ color: "black" }} value={userData.user?.name} />
                             </Form.Item>
                           </Col>
-                        )}
+                          <Col span={24}>
+                            <Form.Item label="Kullanıcı GSM">
+                              <Input disabled style={{ color: "black" }} value={userData.gsm} />
+                            </Form.Item>
+                          </Col>
 
-                        {transactionType === '3' && (
-                          <>
-                            <Col span={24}>
-                              <Form.Item label="Ceza Türü">
-                                <Select
-                                  value={fineType}
-                                  onChange={setFineType}
-                                  style={{ minWidth: "150px" }}
-                                  options={[
-                                    { value: 'park', label: 'Park' },
-                                    { value: 'lock', label: 'Kilit' },
-                                    { value: 'photo', label: 'Fotoğraf' },
-                                    { value: 'damage', label: 'Cihaz Hasar' },
-                                    { value: 'stolenCard', label: 'Çalıntı Kart' },
-                                    { value: 'stolenDevice', label: 'Çalıntı Cihaz' },
-                                    { value: 'other', label: 'Diğer' },
-                                  ]}
-                                />
-                              </Form.Item>
-                            </Col>
-                            <Col span={24}>
-                              <Form.Item label="QR Kod">
-                                <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
-                              </Form.Item>
-                            </Col>
+
+                          <Col span={24}>
+                            <Form.Item label="İşlem Türü">
+                              <Select
+                                value={transactionType}
+                                onChange={setTransactionType}
+                                style={{ minWidth: "150px" }}
+                                options={[{ value: '1', label: 'Hediye Ekle' },
+                                { value: '2', label: 'Para İade' },
+                                { value: '3', label: 'Ceza Ekle' },
+                                { value: '4', label: 'İyzico Para İade' },
+                                { value: '5', label: 'Wee Puan Ekle' }]}
+                              />
+                            </Form.Item>
+                          </Col>
+
+                          {['1', '2', '5'].includes(transactionType) && (
                             <Col span={24}>
                               <Form.Item label="Tutar">
                                 <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
                               </Form.Item>
                             </Col>
-                          </>
-                        )}
+                          )}
 
-                        {transactionType === '4' && (
-                          <>
-                            <Col span={24}>
-                              <Form.Item label="Tutar">
-                                <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
-                              </Form.Item>
-                            </Col>
-                            <Col span={24}>
-                              <Form.Item label="İşlem No">
-                                <Input style={{ color: "black" }} value={iyzicoID} onChange={e => setTransactionNo(e.target.value)} />
-                              </Form.Item>
-                            </Col>
-                          </>
-                        )}
+                          {transactionType === '3' && (
+                            <>
+                              <Col span={24}>
+                                <Form.Item label="Ceza Türü">
+                                  <Select
+                                    value={fineType}
+                                    onChange={setFineType}
+                                    style={{ minWidth: "150px" }}
+                                    options={[
+                                      { value: 'park', label: 'Park' },
+                                      { value: 'lock', label: 'Kilit' },
+                                      { value: 'photo', label: 'Fotoğraf' },
+                                      { value: 'damage', label: 'Cihaz Hasar' },
+                                      { value: 'stolenCard', label: 'Çalıntı Kart' },
+                                      { value: 'stolenDevice', label: 'Çalıntı Cihaz' },
+                                      { value: 'other', label: 'Diğer' },
+                                    ]}
+                                  />
+                                </Form.Item>
+                              </Col>
+                              <Col span={24}>
+                                <Form.Item label="QR Kod">
+                                  <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={24}>
+                                <Form.Item label="Tutar">
+                                  <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                            </>
+                          )}
+
+                          {transactionType === '4' && (
+                            <>
+                              <Col span={24}>
+                                <Form.Item label="Tutar">
+                                  <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                              <Col span={24}>
+                                <Form.Item label="İşlem No">
+                                  <Input style={{ color: "black" }} value={iyzicoID} onChange={e => setTransactionNo(e.target.value)} />
+                                </Form.Item>
+                              </Col>
+                            </>
+                          )}
 
 
-                        <Col span={24}>
-                          <Button type="primary" style={{ width: '100%' }} onClick={handleMakeMoney}>
-                            İşlemi Kaydet
-                          </Button>
-                        </Col>
-                      </Form>
-                    </TabPane>
+                          <Col span={24}>
+                            <Button type="primary" style={{ width: '100%' }} onClick={handleMakeMoney}>
+                              İşlemi Kaydet
+                            </Button>
+                          </Col>
+                        </Form>
+                      </TabPane>
+                    )}
 
                   </Tabs>
                   <Modal
@@ -1702,100 +1722,105 @@ const Users = () => {
                         }}
                       />
                     </TabPane>
-                    <TabPane tab={`Para İşlemleri`} key="5">
-                      <Form layout="vertical" labelAlign="left">
-                        <Row gutter={[24]}>
-                          <Col span={12}>
-                            <Form.Item label="Kullanıcı Adı Soyadı">
-                              <Input disabled style={{ color: "black" }} value={userData.user?.name} />
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item label="Kullanıcı GSM">
-                              <Input disabled style={{ color: "black" }} value={userData.gsm} />
-                            </Form.Item>
-                          </Col>
-                        </Row>
-
-                        <Row gutter={[24]}>
-                          <Col span={12}>
-                            <Form.Item label="İşlem Türü">
-                              <Select
-                                value={transactionType}
-                                onChange={setTransactionType}
-                                style={{ minWidth: "150px" }}
-                                options={optionsTransactions}
-                              />
-                            </Form.Item>
-                          </Col>
-
-                          {['1', '2', '5'].includes(transactionType) && (
+                    {user?.permissions?.addGift && (
+                      <TabPane tab={`Para İşlemleri`} key="5">
+                        <Form layout="vertical" labelAlign="left">
+                          <Row gutter={[24]}>
                             <Col span={12}>
-                              <Form.Item label="Tutar">
-                                <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                              <Form.Item label="Kullanıcı Adı Soyadı">
+                                <Input disabled style={{ color: "black" }} value={userData.user?.name} />
                               </Form.Item>
                             </Col>
-                          )}
+                            <Col span={12}>
+                              <Form.Item label="Kullanıcı GSM">
+                                <Input disabled style={{ color: "black" }} value={userData.gsm} />
+                              </Form.Item>
+                            </Col>
+                          </Row>
 
-                          {transactionType === '3' && (
-                            <>
-                              <Col span={12}>
-                                <Form.Item label="Ceza Türü">
-                                  <Select
-                                    value={fineType}
-                                    onChange={setFineType}
-                                    style={{ minWidth: "150px" }}
-                                    options={[
-                                      { value: 'park', label: 'Park' },
-                                      { value: 'lock', label: 'Kilit' },
-                                      { value: 'photo', label: 'Fotoğraf' },
-                                      { value: 'damage', label: 'Cihaz Hasar' },
-                                      { value: 'stolenCard', label: 'Çalıntı Kart' },
-                                      { value: 'stolenDevice', label: 'Çalıntı Cihaz' },
-                                      { value: 'other', label: 'Diğer' },
-                                    ]}
-                                  />
-                                </Form.Item>
-                              </Col>
-                              <Col span={12}>
-                                <Form.Item label="QR Kod">
-                                  <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
-                                </Form.Item>
-                              </Col>
+                          <Row gutter={[24]}>
+                            <Col span={12}>
+                              <Form.Item label="İşlem Türü">
+                                <Select
+                                  value={transactionType}
+                                  onChange={setTransactionType}
+                                  style={{ minWidth: "150px" }}
+                                  options={[{ value: '1', label: 'Hediye Ekle' },
+                                  { value: '2', label: 'Para İade' },
+                                  { value: '3', label: 'Ceza Ekle' },
+                                  { value: '4', label: 'İyzico Para İade' },
+                                  { value: '5', label: 'Wee Puan Ekle' }]}
+                                />
+                              </Form.Item>
+                            </Col>
+
+                            {['1', '2', '5'].includes(transactionType) && (
                               <Col span={12}>
                                 <Form.Item label="Tutar">
                                   <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
                                 </Form.Item>
                               </Col>
-                            </>
-                          )}
+                            )}
 
-                          {transactionType === '4' && (
-                            <>
-                              <Col span={12}>
-                                <Form.Item label="Tutar">
-                                  <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
-                                </Form.Item>
-                              </Col>
-                              <Col span={12}>
-                                <Form.Item label="İşlem No">
-                                  <Input style={{ color: "black" }} value={iyzicoID} onChange={e => setTransactionNo(e.target.value)} />
-                                </Form.Item>
-                              </Col>
-                            </>
-                          )}
-                        </Row>
+                            {transactionType === '3' && (
+                              <>
+                                <Col span={12}>
+                                  <Form.Item label="Ceza Türü">
+                                    <Select
+                                      value={fineType}
+                                      onChange={setFineType}
+                                      style={{ minWidth: "150px" }}
+                                      options={[
+                                        { value: 'park', label: 'Park' },
+                                        { value: 'lock', label: 'Kilit' },
+                                        { value: 'photo', label: 'Fotoğraf' },
+                                        { value: 'damage', label: 'Cihaz Hasar' },
+                                        { value: 'stolenCard', label: 'Çalıntı Kart' },
+                                        { value: 'stolenDevice', label: 'Çalıntı Cihaz' },
+                                        { value: 'other', label: 'Diğer' },
+                                      ]}
+                                    />
+                                  </Form.Item>
+                                </Col>
+                                <Col span={12}>
+                                  <Form.Item label="QR Kod">
+                                    <Input style={{ color: "black" }} value={qrCode} onChange={e => setQrCode(e.target.value)} />
+                                  </Form.Item>
+                                </Col>
+                                <Col span={12}>
+                                  <Form.Item label="Tutar">
+                                    <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                                  </Form.Item>
+                                </Col>
+                              </>
+                            )}
 
-                        <Row gutter={[24]} style={{ marginTop: 16 }}>
-                          <Col>
-                            <Button type="primary" onClick={handleMakeMoney}>
-                              İşlemi Kaydet
-                            </Button>
-                          </Col>
-                        </Row>
-                      </Form>
-                    </TabPane>
+                            {transactionType === '4' && (
+                              <>
+                                <Col span={12}>
+                                  <Form.Item label="Tutar">
+                                    <Input style={{ color: "black" }} value={amount} onChange={e => setAmount(e.target.value)} />
+                                  </Form.Item>
+                                </Col>
+                                <Col span={12}>
+                                  <Form.Item label="İşlem No">
+                                    <Input style={{ color: "black" }} value={iyzicoID} onChange={e => setTransactionNo(e.target.value)} />
+                                  </Form.Item>
+                                </Col>
+                              </>
+                            )}
+                          </Row>
 
+                          <Row gutter={[24]} style={{ marginTop: 16 }}>
+                            <Col>
+                              <Button type="primary" onClick={handleMakeMoney}>
+                                İşlemi Kaydet
+                              </Button>
+                            </Col>
+                          </Row>
+                        </Form>
+                      </TabPane>
+                    )}
                   </Tabs>
                   <Modal
                     title="Sürüş Fotoğrafı"
