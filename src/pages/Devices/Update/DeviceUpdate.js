@@ -4,10 +4,12 @@ import axios from "../../../api/axios";
 import { Card, Form, Input, Select, Spin, Row, Col, Button, Modal } from "antd";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { App } from "antd";
 
 const { Option } = Select;
 
 const DeviceUpdate = () => {
+    const { message } = App.useApp();
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -82,6 +84,7 @@ const DeviceUpdate = () => {
     // Konum Kaydetme İşlemi
     const handleLocationSave = async () => {
         try {
+            setLoading(true)
             const response = await axios.post(`/devices/${id}/updatelocation`, {
                 last_location: {
                     location: {
@@ -90,7 +93,38 @@ const DeviceUpdate = () => {
                     }
                 }
             });
+            setLocationModalOpen(false)
             console.log("cihaz konumu güncellendi.")
+            message.success("Cihaz konumu başarıyla güncellendi");
+            getDeviceById(id)
+                .then((data) => {
+                    form.setFieldsValue({
+                        controller: data.controller,
+                        tenant: data.tenant,
+                        imei: data.imei,
+                        gsm: data.gsm,
+                        city: data.city,
+                        town: data.town,
+                        lockType: data.lockType,
+                        status: data.status,
+                        qrlabel: data.qrlabel,
+                        name: data.name,
+                        key_secret: data.key_secret,
+                        serial_number: data.serial_number,
+                        battery: data.battery,
+                        price: `Şehir: ${data?.priceObject?.name}, Başlangıç Ücreti: ${data.priceObject?.startPrice} ₺, Dakika Ücreti: ${data?.priceObject?.minutePrice} ₺`,
+                    });
+
+                    // cihaz konumu varsa haritada başlangıç olarak kullanacağız
+                    if (data.last_location?.location?.coordinates) {
+                        setDeviceLocation({
+                            lat: data.last_location?.location?.coordinates[1],
+                            lng: data.last_location?.location?.coordinates[0],
+                        });
+                    }
+                })
+                .catch(() => alert("Cihaz verileri alınırken bir hata oluştu"))
+                .finally(() => setLoading(false));
             return response.data;
         } catch (error) {
             console.error("Konum güncelleme hatası:", error);
@@ -171,7 +205,7 @@ const DeviceUpdate = () => {
         <Card title={`Cihaz Güncelle - ${form.getFieldValue("qrlabel")}`} style={{ maxWidth: 900, margin: "20px auto" }}>
 
             <Spin spinning={loading} tip="Yükleniyor..." size="large" >
-                <Button style={{marginBottom:16}} type="primary" onClick={() => setLocationModalOpen(true)}>Cihaz Konumunu Güncelle</Button>
+                <Button style={{ marginBottom: 16 }} type="primary" onClick={() => setLocationModalOpen(true)}>Cihaz Konumunu Güncelle</Button>
                 {/* KONUM GÜNCELLEME MODALI */}
                 <Modal
                     open={locationModalOpen}

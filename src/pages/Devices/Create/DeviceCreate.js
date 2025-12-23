@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import axios from "../../../api/axios";
 import { Card, Form, Input, Select, Spin, Row, Col, Button } from "antd";
 import { useNavigate } from "react-router-dom";
+import { App } from "antd";
 
 const { Option } = Select;
 
 const DeviceUpdate = () => {
+    const { message } = App.useApp();
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [form] = Form.useForm();

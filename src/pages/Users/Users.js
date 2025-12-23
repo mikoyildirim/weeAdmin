@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, message, Table, Modal, Descriptions } from "antd";
+import { Card, Tabs, Form, Input, Row, Col, Select, Button, Spin, Table, Modal, Descriptions } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import exportToExcel from "../../utils/methods/exportToExcel";
@@ -11,6 +11,7 @@ import "leaflet/dist/leaflet.css";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import Title from "antd/es/typography/Title";
 import { useIsMobile } from "../../utils/customHooks/useIsMobile";
+import { App } from "antd";
 dayjs.extend(utc);
 dayjs.locale("tr");
 
@@ -28,6 +29,7 @@ L.Icon.Default.mergeOptions({
 const miniMapRefs = {};
 
 const Users = () => {
+const { message } = App.useApp();
   const location = useLocation();
   const [form] = Form.useForm();
   const navigate = useNavigate();
