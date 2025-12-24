@@ -1,20 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-    Card,
-    Typography,
-    Form,
-    Input,
-    Select,
-    DatePicker,
-    InputNumber,
-    Radio,
-    Button,
-    List,
-    Upload,
-    Spin,
-    Row,
-    Col,
-} from "antd";
+import { Card, Typography, Form, Input, Select, DatePicker, InputNumber, Radio, Button, List, Upload, Spin, Row, Col, App } from "antd";
 import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "../../../api/axios";
@@ -25,12 +10,12 @@ const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-const ShowCampaignsPage = () => {
+const UpdateCampaign = () => {
+    const { message } = App.useApp()
     const navigate = useNavigate()
     const [campaign, setCampaign] = useState(null);
     const [loading, setLoading] = useState(true);
     const { id } = useParams();
-
     const [form] = Form.useForm();
     const [conditions, setConditions] = useState([]);
     const [fileList, setFileList] = useState([]);
@@ -51,7 +36,6 @@ const ShowCampaignsPage = () => {
                     ? [{ url: res.data.image, name: "Kampanya Görseli", uid: "-1" }]
                     : []
             );
-            console.log(campaign)
             form.setFieldsValue({
                 campaignName: res.data.campaignName,
                 description: res.data.description,
@@ -65,7 +49,7 @@ const ShowCampaignsPage = () => {
                 status: res.data.status,
             });
         } catch (err) {
-            console.error("Kampanya çekilirken hata:", err);
+            message.error("Kampanya çekilirken hata:", err);
             setCampaign(null);
         } finally {
             setLoading(false);
@@ -94,7 +78,6 @@ const ShowCampaignsPage = () => {
                 reader.onerror = reject;
             });
         } else if (fileList[0]?.url) {
-            // Eğer eski bir görsel varsa (örneğin kampanyayı düzenliyorsan)
             imageBase64 = fileList[0].url;
         }
         const payload = {
@@ -102,13 +85,13 @@ const ShowCampaignsPage = () => {
             conditions,
             image: imageBase64,
         }
-        console.log("Kaydedilecek değerler:", payload);
+        //console.log("Kaydedilecek değerler:", payload);
         await axios.patch(`/campaigns/${id}`, payload)
-            .then((res) => {
-                console.log(res.data)
+            .then(() => {
+                message.success("Kampanya güncelleme başarılı.")
                 navigate("/panel/management/campaigns/listCampaigns")
             })
-            .catch((err) => console.log(err))
+            .catch((err) => message.error(<>Kampanya güncelleme başarısız. <br/>{err.response.data.error.message}</>))
     };
 
     if (loading)
@@ -159,14 +142,12 @@ const ShowCampaignsPage = () => {
                                 onRemove={(file) => setFileList(fileList.filter((f) => f.uid !== file.uid))}
                                 beforeUpload={(file) => {
                                     setFileList([{ ...file, url: URL.createObjectURL(file), originFileObj: file }]);
-                                    return false; // yükleme iptal
+                                    return false; 
                                 }}
                             >
                                 <Button icon={<UploadOutlined />}>Yükle</Button>
                             </Upload>
 
-
-                            {/* Burada büyük önizleme */}
                             {fileList.length > 0 && (
                                 <img
                                     src={fileList[0].url}
@@ -194,9 +175,9 @@ const ShowCampaignsPage = () => {
                                             onChange={(e) =>
                                                 handleConditionChange(index, e.target.value)
                                             }
-                                            style={{ width: isMobile?"80%":"85%", marginRight: 8 }}
+                                            style={{ width: isMobile ? "80%" : "85%", marginRight: 8 }}
                                         />
-                                        <Button danger onClick={() => removeCondition(index)} style={{flex:isMobile&&"1",}} >
+                                        <Button danger onClick={() => removeCondition(index)} style={{ flex: isMobile && "1", }} >
                                             Sil
                                         </Button>
                                     </List.Item>
@@ -302,4 +283,4 @@ const ShowCampaignsPage = () => {
     );
 };
 
-export default ShowCampaignsPage;
+export default UpdateCampaign;

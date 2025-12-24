@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch, Spin } from "antd";
+import { Table, Tag, Button, Card, Input, Space, Tabs, Modal, Form, InputNumber, Select, Switch, Spin, App } from "antd";
 import axios from "../../api/axios"; // kendi axios instance yolunu kullan
 import { Link } from "react-router-dom";
 import { EditOutlined } from "@ant-design/icons";
@@ -9,6 +9,7 @@ import { useIsMobile } from "../../utils/customHooks/useIsMobile";
 
 const { TabPane } = Tabs;
 const DevicesPage = () => {
+  const { message } = App.useApp();
   const [devices, setDevices] = useState([]);
   const [filteredDevices, setFilteredDevices] = useState([]);
   const [prices, setPrices] = useState([]);
@@ -50,6 +51,14 @@ const DevicesPage = () => {
         setField: "priceObject",
         getData: qrList.map((x) => x.qr),
         setData: cityValue.split("|")[0],
+      }).then((res) => {
+        const matchedCount = res.data.matchedCount
+        const modifiedCount = res.data.modifiedCount
+        message.success(<div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+          <div>Eşleşen cihaz sayısı: <span style={{ fontWeight: 700 }}>{matchedCount}</span></div>
+          <div>Güncellenen cihaz sayısı: <span style={{ fontWeight: 700 }}>{modifiedCount}</span></div>
+        </div>)
+        // console.log(res)
       })
         .finally(() => {
           fetchDevices() // şehirlerin ücret güncellenmesi tamamlandıktan sonra tüm cihazların tablosunun güncellemek için
@@ -57,7 +66,8 @@ const DevicesPage = () => {
 
       setQrList([]);
     } catch (error) {
-      message.error("Gönderim sırasında hata oluştu");
+      // console.log(error)
+      message.error(<>Gönderim sırasında hata oluştu<br />{error.response.data.error.message}</>);
     }
   };
 
@@ -78,7 +88,7 @@ const DevicesPage = () => {
           minutePrice: values.perMinuteFee,
           priceRate: values.rate,
         });
-        message.success("Şehir fiyatı güncellendi.");
+        message.success("Şehir ücretlendirmesi güncellendi.");
       } else {
         // YENİ OLUŞTURMA
         await axios.post("/prices", {
@@ -131,14 +141,14 @@ const DevicesPage = () => {
   }
 
   const fetchDangerType = async (qrlabel) => {
-    console.log(qrlabel)
     try {
       await axios.post(`devices/update/danger`, {
         qrlabel: qrlabel,
         dangerType: "SAFE", // dangerType = SAFE
       });
+      message.success("Cihaz Güvenli durumuna alındı.")
       fetchDevices() // işlem yapıldıktan sonra tabloyu yenilemek için tekrardan bütün cihazlar çekilir.
-    } catch (e) { console.log(e.message) }
+    } catch (e) { message.error(e.response.data.error.message) }
   }
 
   useEffect(() => {
@@ -550,8 +560,9 @@ const DevicesPage = () => {
                         value={qrInput}
                         onChange={(e) => setQrInput(e.target.value)}
                         style={{ width: "calc(100% - 70px)" }}
+                        onPressEnter={handleAddQRToTable}
                       />
-                      <Button type="primary" onClick={handleAddQRToTable}>
+                      <Button type="primary" onClick={handleAddQRToTable} >
                         + Ekle
                       </Button>
                     </Input.Group>
@@ -606,7 +617,6 @@ const DevicesPage = () => {
             </Button>,
             <Button key="submit" type="primary" onClick={() => form.submit()}>
               {editingPrice ? "Düzenle" : "Oluştur"}
-
             </Button>,
           ]}
           destroyOnClose

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../../api/axios";
-import { Card, Form, Input, Select, Spin, Row, Col, Button } from "antd";
+import { Card, Form, Input, Select, Spin, Row, Col, Button, App } from "antd";
 import { useNavigate } from "react-router-dom";
-import { App } from "antd";
 
 const { Option } = Select;
 
@@ -21,19 +20,21 @@ const DeviceUpdate = () => {
             const payload = { ...values };
             // burada price değişikliği yapılmaması için JSON içerisinden eklemiyoruz
             // burada tenant değişikliği yapılmaması için JSON içerisinden eklemiyoruz
-            console.log(payload)
+            //console.log(payload)
 
             await axios.post(`/devices`, payload)
                 .then(res => {
-                    console.log(res)
-                    alert("Cihaz başarıyla oluşturuldu!")
+                    //console.log(res)
+                    message.destroy();
+                    message.success("Cihaz başarıyla oluşturuldu!")
                     navigate("/panel/devices/all");
                 })
                 .catch(err => {
-                    console.log(err)
-                    alert("Cihaz oluşturulamadı!")
+                    //console.log(err)
+                    message.destroy();
+                    message.warning(<>Cihaz oluşturulamadı! <br/> {err.response.data.error.message}</>)
                 })
-
+ 
 
         } catch (err) {
             //console.error(err.response.data.error.message);

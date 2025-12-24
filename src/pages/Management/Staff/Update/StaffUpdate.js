@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Tabs, Form, Input, Button, Radio, DatePicker, message, Card, Row, Col, Spin, Table, Tag } from "antd";
+import { Tabs, Form, Input, Button, Radio, DatePicker, Card, Row, Col, Spin, Table, Tag, App } from "antd";
 import axios from "../../../../api/axios";
 import { useParams } from "react-router-dom";
 import dayjs from "dayjs";
@@ -17,6 +17,7 @@ dayjs.extend(utc);
 dayjs.locale("tr");
 
 const StaffUpdate = () => {
+    const {message} = App.useApp()
     const { id } = useParams();
     const [loading, setLoading] = useState(false);
     const [staff, setStaff] = useState(null);
@@ -66,7 +67,6 @@ const StaffUpdate = () => {
                 setLoading(true);
                 const res = await axios.get(`/staffs/${id}`);
                 setStaff(res.data);
-                console.log("İZİNLER::: ", res.data.user.permissions)
                 setPermissions(res.data.user.permissions || {});
                 formBilgiler.setFieldsValue({
                     staffName: res.data.staffName,
@@ -82,21 +82,20 @@ const StaffUpdate = () => {
                     const staffDoneRes = await axios.get(`/rentals/staffDone/${res.data.user._id}`);
                     setStaffDone(staffDoneRes.data || []);
 
-                    // formSonlandirma içine de setle
+                    // formSonlandirma tabında verilerin doldurulması
                     formSonlandirma.setFieldsValue({
                         sonlandirmaKayitlari: staffDoneRes.data || [],
                     });
 
                 }
             } catch (error) {
-                message.error("Veri alınamadı!");
+                message.error(<>Kullancıı bilgisi alınamadı!<br />{error.respoonse.data.error.message} </>);
             } finally {
                 setLoading(false);
             }
         };
         fetchData();
     }, [id]);
-
 
 
     const updateBilgiler = async (values) => {
@@ -111,9 +110,9 @@ const StaffUpdate = () => {
 
             handlePassiveType(values.status);
             await axios.patch(`/staffs/update/password/${id}`, payload);
-            message.success("Bilgiler başarıyla güncellendi!");
+            message.success("Staff bilgileri başarıyla güncellendi!");
         } catch (error) {
-            message.error("Bilgiler güncellenemedi!");
+            message.error(<>Bilgiler güncellenemedi!<br />{error.response.data.error.message}</>);
         } finally {
             setLoading(false);
         }
@@ -125,7 +124,7 @@ const StaffUpdate = () => {
             await axios.patch(`/users/update/permissions/${staff?.user?._id}`, values);
             message.success("Yetkiler başarıyla güncellendi!");
         } catch (error) {
-            message.error("Yetkiler güncellenemedi!");
+            message.error(<>Yetkiler güncellenemedi!<br />{error.response.data.error.message}</>);
         } finally {
             setLoading(false);
         }
@@ -139,11 +138,10 @@ const StaffUpdate = () => {
             passiveType: passiveType,
         })
             .then(() => message.success("Kullanıcı durumu başarıyla güncellendi!"))
-            .catch(() => message.error("Durum güncellenemedi!"))
+            .catch((err) => message.error(<>Durum güncellenemedi!<br />{err.response.data.error.message}</>))
             .finally(() => setLoading(false));
     };
 
-    console.log(staff)
     const columnsSupports = [
         {
             title: "QR Kod",

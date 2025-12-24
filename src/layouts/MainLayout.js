@@ -26,11 +26,11 @@ const MainLayout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const userPermissions = user.permissions
+  //const userPermissions = user.permissions
   const [collapsed, setCollapsed] = useState(false);
   const toggleCollapsed = () => setCollapsed(!collapsed);
 
-  console.log("userPermissions", userPermissions)
+  //console.log("userPermissions", userPermissions)
 
   const menuItems = [
     { key: "/panel/dashboard", icon: <DashboardOutlined />, label: "Ana Sayfa" },

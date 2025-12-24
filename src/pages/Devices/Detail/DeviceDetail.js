@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from "react";
-import { Card, Tabs, Form, Input, Row, Col, Table, Typography, Spin, Button, Modal } from "antd";
+import { Card, Tabs, Form, Input, Row, Col, Table, Typography, Spin, Button, Modal, App } from "antd";
 import axios from "../../../api/axios";
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { useIsMobile } from '../../../utils/customHooks/useIsMobile';
-import { GlobalOutlined, CameraFilled } from "@ant-design/icons"; // üst kısma ekle
+import { GlobalOutlined, CameraFilled } from "@ant-design/icons";
 import Title from "antd/es/typography/Title";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -28,6 +28,7 @@ L.Icon.Default.mergeOptions({
 const miniMapRefs = {};
 
 const DeviceDetail = () => {
+  const { message } = App.useApp();
   const [lastTenUser, setLastTenUser] = useState([]);
   const [lastUser, setLastUser] = useState({});
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,7 @@ const DeviceDetail = () => {
   const { id: qrlabel } = useParams();
   const currentUserPermissions = useSelector(state => state.auth.user.permissions)
 
-  console.log("device details", currentUserPermissions)
+  //console.log("device details", currentUserPermissions)
 
 
   // Büyük harita Leaflet referansları
@@ -95,14 +96,12 @@ const DeviceDetail = () => {
 
             return { ...item, base64Img: imgRes.data.image };
           } catch (err) {
-            //console.error("Görsel alınırken hata oluştu");
             return { ...item, base64Img: null };
           }
         })
       );
       setLastTenUser(usersWithImages);
     } catch (err) {
-      //console.error("/devices/findLastTenUser alınırken hata oluştu");
       setLastTenUser([]);
     } finally {
       setLoading(false);
@@ -126,7 +125,6 @@ const DeviceDetail = () => {
       );
       setLastUser(res.data);
     } catch (err) {
-      //console.error("/devices/findLastUser alınırken hata oluştu", err);
       setLastUser({});
     }
   };
@@ -140,7 +138,7 @@ const DeviceDetail = () => {
       const res = await axios.get("/geofences");
       setGeofences(res.data || []);
     } catch {
-      console.log("Geofence alınamadı");
+      message.error("Geofence alınamadı");
     }
   };
 
@@ -274,8 +272,7 @@ const DeviceDetail = () => {
         miniMapRefs[r._id] = miniMap;
       }
     });
-
-    // Temizleme Fonksiyonu: Listeden çıkan (sonlandırılan) haritaları temizler.
+    // Temizleme Fonksiyonu: konumu olmayanları listeden çıkarır.
     return () => {
       Object.keys(miniMapRefs).forEach(id => {
         const rentalExists = lastTenUser.some(r => r._id === id);

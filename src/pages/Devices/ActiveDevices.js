@@ -57,7 +57,7 @@ const ActiveDevices = () => {
       const devRes = await axios.get("/devices/connected");
       setDevices(Array.isArray(devRes.data) ? devRes.data : []);
     } catch (err) {
-      console.error("devices/connected alınırken hata:", err);
+      //console.error("devices/connected alınırken hata:", err);
       setDevices([]);
     } finally {
       setLoading(false);

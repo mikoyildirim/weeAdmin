@@ -1,41 +1,33 @@
-import React, { useState } from "react";
-import { Form, Input, Button, Select, message, Card } from "antd";
+import { useState } from "react";
+import { Form, Input, Button, Select, Card, App } from "antd";
 import axios from "../../../../api/axios";
 import { useNavigate } from "react-router-dom";
 
 const { Option } = Select;
 
 const StaffCreate = () => {
+  const { message } = App.useApp()
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
-  setLoading(true);
-  try {
-    await axios.post("/staffs/create", {
-      tenant: values.tenant,
-      staffName: values.staffName,
-      staffPassword: values.staffPassword,
-      staffGsm: values.staffGsm,
-      email: values.email,
-    });
-
-    message.success("Personel başarıyla oluşturuldu!");
-    navigate("/panel/management/staff");
-  } catch (error) {
-    console.error("Personel oluşturulamadı:", error);
-
-    // Backend'den gelen mesajı yakala
-    const backendMessage =
-      error.response?.data?.error?.message  || "Bilinmeyen hata!";
-
-    alert("Hata: " + backendMessage);
-
-    message.error("Personel oluşturulurken hata oluştu!");
-  }
-  setLoading(false);
-};
-
+    setLoading(true);
+    try {
+      await axios.post("/staffs/create", {
+        tenant: values.tenant,
+        staffName: values.staffName,
+        staffPassword: values.staffPassword,
+        staffGsm: values.staffGsm,
+        email: values.email,
+      });
+      message.success("Personel oluşturma başarılı.");
+      navigate("/panel/management/staff");
+    } catch (error) {
+      const backendMessage = error.response?.data?.error?.message || "Bilinmeyen hata!";
+      message.error(<> Personel oluşturulurken hata oluştu! <br />{backendMessage} </>);
+    }
+    setLoading(false);
+  };
 
   return (
     <div
@@ -111,7 +103,7 @@ const StaffCreate = () => {
               type="primary"
               htmlType="submit"
               loading={loading}
-              block // butonu tam genişlik yapar (mobil için güzel)
+              block 
             >
               Oluştur
             </Button>

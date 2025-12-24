@@ -54,7 +54,7 @@ const StaffList = () => {
         user?.permissions?.staffCreate ? (
           <a onClick={() => navigate(`update/${record._id}`)}>{text}</a>
         ) : (
-          <a style={{color:"#000"}}>{text}</a>
+          <a style={{ color: "#000" }}>{text}</a>
         )
       ,
     },

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, Card, Input, Row, Col } from "antd";
+import { Table, Tag, Button, Card, Input, Row, Col, App } from "antd";
 import axios from "../../api/axios";
 import dayjs from "dayjs";
 import "dayjs/locale/tr";
@@ -12,7 +12,7 @@ dayjs.extend(utc);
 dayjs.locale("tr");
 
 const PassiveDevices = () => {
-
+  const { message } = App.useApp();
   const [activeDevices, setActiveDevices] = useState([]);
   const [allDevices, setAllDevices] = useState([]);
   const [passiveDevices, setPassiveDevices] = useState([]);
@@ -67,7 +67,7 @@ const PassiveDevices = () => {
       const devRes = await axios.get("/devices/connected");
       setActiveDevices(Array.isArray(devRes.data) ? devRes.data : []); // response sonucu bir array ise o array i bizim değerimize yüklüyor. yok değilse boş array yüklüyor
     } catch (err) {
-      console.error("devices/connected alınırken hata:", err);
+      message.error("Bağlı cihazlar yüklenemedi.");
       setActiveDevices([]);
     } finally {
       //setLoading(false);
@@ -80,7 +80,7 @@ const PassiveDevices = () => {
       const devRes = await axios.get("/devices")
       setAllDevices(Array.isArray(devRes.data) ? devRes.data : []) // response sonucu bir array ise o array i bizim değerimize yüklüyor. yok değilse boş array yüklüyor
     } catch (err) {
-      console.error("devices alınırken hata:", err);
+      message.error("Cihazlar yüklenemedi.");
       setAllDevices([]);
     } finally {
       setLoading(false)

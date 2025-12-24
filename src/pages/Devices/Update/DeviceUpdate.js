@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useRef, Children } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../../api/axios";
-import { Card, Form, Input, Select, Spin, Row, Col, Button, Modal } from "antd";
+import { Card, Form, Input, Select, Spin, Row, Col, Button, Modal, App } from "antd";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { App } from "antd";
 
 const { Option } = Select;
 
@@ -76,7 +75,9 @@ const DeviceUpdate = () => {
                     });
                 }
             })
-            .catch(() => alert("Cihaz verileri alınırken bir hata oluştu"))
+            .catch(() => {
+                message.error("Cihaz verileri alınırken bir hata oluştu")
+            })
             .finally(() => setLoading(false));
     }, [id, form]);
 
@@ -94,7 +95,8 @@ const DeviceUpdate = () => {
                 }
             });
             setLocationModalOpen(false)
-            console.log("cihaz konumu güncellendi.")
+            //console.log("cihaz konumu güncellendi.")
+            message.destroy();
             message.success("Cihaz konumu başarıyla güncellendi");
             getDeviceById(id)
                 .then((data) => {
@@ -123,11 +125,16 @@ const DeviceUpdate = () => {
                         });
                     }
                 })
-                .catch(() => alert("Cihaz verileri alınırken bir hata oluştu"))
+                .catch(() => {
+                    message.destroy();
+                    message.error("Cihaz verileri alınırken bir hata oluştu")
+                })
                 .finally(() => setLoading(false));
             return response.data;
         } catch (error) {
-            console.error("Konum güncelleme hatası:", error);
+            message.destroy();
+            message.warning("Cihaz konum güncellenemedi")
+            //console.error("Konum güncelleme hatası:", error);
             throw error;
         }
     };
@@ -190,10 +197,12 @@ const DeviceUpdate = () => {
             // burada tenant değişikliği yapılmaması için JSON içerisinden eklemiyoruz
 
             await axios.patch(`/devices/${id}`, payload, {}); // PATCH ile güncelleme
-
+            message.destroy();
+            message.success("Cihaz güncelleme başarılı.")
             navigate(`/panel/devices/all`);
         } catch (err) {
-            alert(`Güncelleme sırasında bir hata oluştu.\n${err.response.data.error.message}`);
+            message.destroy();
+            message.error(<>Güncelleme sırasında bir hata oluştu. <br />{err.response.data.error.message}</>)
         } finally {
             setSaving(false);
             setLoading(false);

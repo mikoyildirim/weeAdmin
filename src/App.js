@@ -40,7 +40,7 @@ import ShowRental from "./pages/Users/ShowRental/ShowRental";
 import Calls from "./pages/Calls";
 import Supports from "./pages/Supports";
 import Campaigns from "./pages/Management/Campaigns/Campaigns";
-import ShowCampaigns from "./pages/Management/Campaigns/ShowCampaigns";
+import UpdateCampaign from "./pages/Management/Campaigns/UpdateCampaign";
 import CreateCampaign from "./pages/Management/Campaigns/CreateCampaign";
 import Financial from "./pages/Management/Financial";
 import Notifications from "./pages/Management/Notifications";
@@ -102,7 +102,7 @@ function App() {
           <Route path="calls" element={<Calls />} />
           <Route path="supports" element={<Supports />} />
           <Route path="management/campaigns/listCampaigns" element={<Campaigns />} />
-          <Route path="management/campaigns/showCampaigns/:id" element={<ShowCampaigns />} />
+          <Route path="management/campaigns/showCampaigns/:id" element={<UpdateCampaign />} />
           <Route path="management/campaigns/createCampaign" element={<CreateCampaign />} />
           <Route path="management/financial" element={<Financial />} />
           <Route path="management/notifications" element={<Notifications />} />

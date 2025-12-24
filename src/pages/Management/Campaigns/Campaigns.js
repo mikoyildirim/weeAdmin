@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, Card, Input, Row, Col, Typography, Spin } from "antd";
+import { Table, Tag, Button, Card, Input, Row, Col, Typography, Spin, App } from "antd";
 import axios from "../../../api/axios";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
@@ -9,13 +9,13 @@ import { useIsMobile } from "../../../utils/customHooks/useIsMobile";
 const { Title } = Typography;
 
 const CampaignsPage = () => {
+  const { message } = App.useApp();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [filteredCampaigns, setFilteredCampaigns] = useState([]);
   const [paginationSize, setPaginationSize] = useState("medium");
   const isMobile = useIsMobile(991);
-
 
   const user = useSelector((state) => state.auth.user);
   const navigate = useNavigate()
@@ -41,10 +41,8 @@ const CampaignsPage = () => {
       c.status.toLowerCase().includes(lowerSearch)
     );
     setFilteredCampaigns(filtered);
-    console.log(filtered)
   }, [searchText, campaigns]);
 
-  console.log(campaigns)
   const fetchCampaigns = async () => {
     setLoading(true);
     try {
@@ -52,7 +50,7 @@ const CampaignsPage = () => {
       setCampaigns(Array.isArray(res.data) ? res.data : []);
       setFilteredCampaigns(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("Kampanyalar çekilirken hata:", err);
+      message.error(<>Kampanyalar yüklenemedi. <br /> {err.response.data.error.message}</>);
       setCampaigns([]);
       setFilteredCampaigns([]);
     } finally {

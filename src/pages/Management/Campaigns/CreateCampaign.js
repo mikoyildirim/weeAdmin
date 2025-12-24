@@ -1,21 +1,5 @@
-import React, { useEffect, useState } from "react";
-import {
-    Card,
-    Typography,
-    Form,
-    Input,
-    Select,
-    DatePicker,
-    InputNumber,
-    Radio,
-    Button,
-    List,
-    Upload,
-    Spin,
-    Row,
-    Col,
-    Modal,
-} from "antd";
+import { useState } from "react";
+import { Card, Typography, Form, Input, Select, DatePicker, InputNumber, Radio, Button, List, Upload, Spin, Row, Col, Modal, App } from "antd";
 import dayjs from "dayjs";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "../../../api/axios";
@@ -27,15 +11,14 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 const CreateCampaign = () => {
+    const { message } = App.useApp();
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
     const [form] = Form.useForm();
     const [conditions, setConditions] = useState([]);
     const [fileList, setFileList] = useState([]);
     const isMobile = useIsMobile(991);
-
     const addCondition = () => setConditions([...conditions, ""]);
     const removeCondition = (index) => setConditions(conditions.filter((_, i) => i !== index));
     const handleConditionChange = (index, value) => {
@@ -43,8 +26,6 @@ const CreateCampaign = () => {
         newConditions[index] = value;
         setConditions(newConditions);
     };
-
-
 
     const showModal = () => {
         setIsModalOpen(true);
@@ -58,12 +39,8 @@ const CreateCampaign = () => {
         setIsModalOpen(false);
     };
 
-
-
     const handleFinish = async (values) => {
         const emptyFields = [];
-
-        // 🔹 Form alanlarını kontrol et
         Object.entries(values).forEach(([key, value]) => {
             if (key === "percentage" || key === "amount") return;
             if (!value || value === "" || value === null) {
@@ -76,7 +53,7 @@ const CreateCampaign = () => {
             return;
         }
 
-        // 🔹 Görseli Base64'e çevir
+        // Görseli backende Base64 olarak gönderiyoru o yüzden burada Base64'e çevriliyor.
         let imageBase64 = null;
         if (fileList[0]?.originFileObj) {
             const file = fileList[0].originFileObj;
@@ -90,7 +67,6 @@ const CreateCampaign = () => {
             imageBase64 = fileList[0].url;
         }
 
-        // 🔹 Gönderilecek veri
         const payload = {
             ...values,
             conditions,
@@ -99,18 +75,19 @@ const CreateCampaign = () => {
 
         //console.log("Kaydedilecek değerler:", payload);
         if (emptyFields.length > 0) {
-            console.log(emptyFields)
+            //console.log(emptyFields)
             showModal()
             setLoading(false)
         } else {
             setLoading(true);
             await axios.post(`/campaigns`, payload)
-                .then((res) => navigate("/panel/management/campaigns/listCampaigns"))
-                .catch((err) => console.log("Bir hata oluştu!", err))
+                .then(() => {
+                    message.success("Kampanya oluşturma başarılı.")
+                    navigate("/panel/management/campaigns/listCampaigns")
+                })
+                .catch((err) => message.error("Kampanya oluşturulamadı!", err.response.data.error.message))
                 .finally(() => setLoading(false))
         }
-
-
     };
 
     if (loading)
@@ -121,7 +98,6 @@ const CreateCampaign = () => {
                 style={{ display: "block", marginTop: 50, textAlign: "center" }}
             />
         );
-
 
     return (
         <Card>
@@ -137,7 +113,7 @@ const CreateCampaign = () => {
                     required: "Bu alan boş bırakılamaz!",
                 }}
                 initialValues={{
-                    status: "PASSIVE", // 👈 varsayılan değer
+                    status: "PASSIVE", // radio button default olarak pasif ayarlanıyor. kullanıcı kampanyayı oluşturmadan önce aktif e çekebilir.
                     startDate: dayjs(),
                     endDate: dayjs(),
                 }}
